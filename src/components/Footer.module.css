@@ -1,0 +1,148 @@
+.footer {
+  width: 100%;
+  background: #09090b;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin-top: 80px;
+  padding: 60px 0 32px;
+  color: var(--text-muted);
+  position: relative;
+  z-index: 10;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+
+.topSection {
+  display: grid;
+  grid-template-columns: 1.5fr 3fr;
+  gap: 48px;
+}
+
+.brandCol {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-main);
+  text-decoration: none;
+  letter-spacing: -0.02em;
+}
+
+.accent {
+  color: var(--primary);
+}
+
+.tagline {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+  max-width: 320px;
+}
+
+.attribution {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.4);
+  padding-top: 8px;
+}
+
+.linksGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+
+.linkGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.groupTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.linkList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.linkList a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.88rem;
+  transition: color var(--transition-fast);
+}
+
+.linkList a:hover {
+  color: var(--primary);
+}
+
+.staticLink {
+  font-size: 0.88rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.bottomSection {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 0.82rem;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.copyright {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.madeWith {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.heartIcon {
+  color: var(--primary);
+  fill: var(--primary);
+}
+
+@media (max-width: 1024px) {
+  .topSection {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  .linksGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 32px;
+  }
+}
+
+@media (max-width: 640px) {
+  .linksGrid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .bottomSection {
+    flex-direction: column;
+    text-align: center;
+  }
+}

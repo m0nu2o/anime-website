@@ -1,0 +1,166 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  text-decoration: none;
+  border-radius: var(--radius-lg, 14px);
+  overflow: hidden;
+  background: var(--glass-standard-bg, rgba(18, 18, 28, 0.72));
+  backdrop-filter: var(--glass-standard-blur, blur(18px));
+  -webkit-backdrop-filter: var(--glass-standard-blur, blur(18px));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.12), 0 10px 24px rgba(0, 0, 0, 0.5);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease, border-color 0.35s ease;
+  outline: none;
+}
+
+.card:hover,
+.card:focus-visible {
+  transform: translateY(-8px) scale(1.02);
+  border-color: rgba(255, 255, 255, 0.22);
+  box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.2), 0 20px 42px rgba(0, 0, 0, 0.7), 0 0 24px var(--primary-glow, rgba(244, 63, 94, 0.25));
+}
+
+.imageContainer {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  overflow: hidden;
+  background: #14141c;
+}
+
+.poster {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.card:hover .poster {
+  transform: scale(1.08);
+}
+
+.overlayGradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.35) 0%,
+    transparent 30%,
+    transparent 60%,
+    rgba(0, 0, 0, 0.88) 100%
+  );
+  pointer-events: none;
+}
+
+.topBadges {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  z-index: 2;
+}
+
+.scoreBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 7px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #fef08a;
+  background: rgba(10, 10, 16, 0.78);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 6px;
+  border: 1px solid rgba(250, 204, 21, 0.35);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+}
+
+.formatBadge {
+  padding: 3px 7px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: var(--text-main, #fff);
+  background: rgba(10, 10, 16, 0.78);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+}
+
+.watchlistBtn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 3;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 10, 16, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background 0.2s ease, border-color 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.watchlistBtn:hover {
+  transform: scale(1.14);
+  background: var(--primary);
+  border-color: var(--primary);
+  box-shadow: 0 0 14px var(--primary-glow);
+}
+
+.activeWatchlist {
+  background: var(--primary);
+  border-color: var(--primary);
+  box-shadow: 0 0 14px var(--primary-glow);
+}
+
+.content {
+  padding: 12px 14px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  background: var(--glass-standard-bg, rgba(18, 18, 28, 0.72));
+  flex: 1;
+}
+
+.title {
+  font-size: 0.94rem;
+  font-weight: 700;
+  color: var(--text-main, #f8fafc);
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.2s ease;
+}
+
+.card:hover .title {
+  color: var(--accent, #38bdf8);
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.76rem;
+  color: var(--text-muted, #94a3b8);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

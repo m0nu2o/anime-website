@@ -1,0 +1,146 @@
+.container {
+  background: var(--surface);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.titleWrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.titleWrapper h3 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.branchIcon {
+  color: var(--primary);
+}
+
+.count {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.graphGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.relationCard {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  transition: all var(--transition-fast);
+  position: relative;
+}
+
+.relationCard:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(244, 63, 94, 0.4);
+  transform: translateY(-2px);
+}
+
+.posterWrapper {
+  width: 48px;
+  aspect-ratio: 2 / 3;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #18181c;
+  flex-shrink: 0;
+}
+
+.poster {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  overflow: hidden;
+  flex: 1;
+}
+
+.roleBadge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 2px 6px;
+  border-radius: 3px;
+  width: fit-content;
+}
+
+.sequel {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+}
+
+.prequel {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+}
+
+.adaptation {
+  background: rgba(168, 85, 247, 0.15);
+  color: #c084fc;
+}
+
+.spinoff {
+  background: rgba(234, 179, 8, 0.15);
+  color: #facc15;
+}
+
+.default {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+}
+
+.title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.arrowIcon {
+  color: var(--text-muted);
+  opacity: 0.4;
+  transition: all var(--transition-fast);
+}
+
+.relationCard:hover .arrowIcon {
+  color: var(--primary);
+  opacity: 1;
+  transform: translateX(3px);
+}

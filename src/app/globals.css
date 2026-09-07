@@ -1,0 +1,518 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@500;700;800&family=Space+Grotesk:wght@500;700&family=Syne:wght@600;700;800&display=swap');
+
+:root {
+  /* Dynamic Theme & Simulator Variables */
+  --bg-gradient: radial-gradient(circle at 50% 15%, #18091e 0%, #0d0a14 50%, #050508 100%);
+  --text-color: #f8fafc;
+  --accent-color: #38bdf8;
+  --font-family: 'Inter', -apple-system, sans-serif;
+  --card-bg: rgba(18, 18, 24, 0.75);
+  --site-brightness: 1;
+
+  /* Layout */
+  --navbar-height: 92px;
+  --content-max-width: 1400px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --transition-fast: 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-normal: 280ms cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Color Palette */
+  --bg-main: #06060a;
+  --bg-card: var(--card-bg, rgba(18, 18, 24, 0.75));
+  --bg-card-solid: #121218;
+  --bg-hover: rgba(32, 32, 42, 0.85);
+  --surface: rgba(18, 18, 24, 0.72);
+  
+  --text-main: var(--text-color, #ffffff);
+  --text-muted: #b8c4d8;
+  --text-secondary: #e2e8f0;
+  
+  --primary: #f43f5e; /* Dynamically morphed by simulation theme */
+  --primary-hover: #e11d48;
+  --primary-glow: rgba(244, 63, 94, 0.45);
+  
+  --accent: #38bdf8; /* Dynamically morphed by simulation theme */
+  --accent-gold: #f59e0b; /* Solar corona gold */
+  
+  /* ============================================================
+     2026 LIQUID GLASS & MORPHIC MATERIAL SYSTEM (4 TIERS)
+     ============================================================ */
+  /* Tier 1: Glass Ambient - Ultra-subtle backdrop utilities */
+  --glass-ambient-bg: rgba(14, 14, 22, 0.45);
+  --glass-ambient-border: 1px solid rgba(255, 255, 255, 0.05);
+  --glass-ambient-blur: blur(10px) saturate(140%);
+  --glass-ambient-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+
+  /* Tier 2: Glass Standard - Surface cards, panels, and standard modules */
+  --glass-standard-bg: var(--card-bg, rgba(18, 18, 26, 0.72));
+  --glass-standard-border: 1px solid rgba(255, 255, 255, 0.09);
+  --glass-standard-highlight: inset 0 1px 1px 0 rgba(255, 255, 255, 0.12);
+  --glass-standard-blur: blur(18px) saturate(180%);
+  --glass-standard-shadow: 0 16px 36px rgba(0, 0, 0, 0.55);
+
+  /* Tier 3: Glass Elevated - Floating navigation, action bars, high-rank cards */
+  --glass-elevated-bg: rgba(22, 22, 34, 0.82);
+  --glass-elevated-border: 1px solid rgba(255, 255, 255, 0.15);
+  --glass-elevated-highlight: inset 0 1.5px 1.5px 0 rgba(255, 255, 255, 0.20);
+  --glass-elevated-blur: blur(28px) saturate(200%);
+  --glass-elevated-shadow: 0 24px 60px rgba(0, 0, 0, 0.7), 0 0 28px var(--primary-glow);
+
+  /* Tier 4: Glass Focus - Search dialog, modals, major command palette */
+  --glass-focus-bg: rgba(12, 12, 20, 0.90);
+  --glass-focus-border: 1px solid rgba(255, 255, 255, 0.22);
+  --glass-focus-highlight: inset 0 2px 2px 0 rgba(255, 255, 255, 0.28);
+  --glass-focus-blur: blur(36px) saturate(220%);
+  --glass-focus-shadow: 0 36px 90px rgba(0, 0, 0, 0.85), 0 0 44px var(--primary-glow);
+
+  /* Generic Glass Fallbacks for backwards compatibility */
+  --glass-bg: var(--glass-standard-bg);
+  --glass-border: var(--glass-standard-border);
+  --glass-border-hover: 1px solid var(--primary, rgba(244, 63, 94, 0.45));
+  --glass-blur: var(--glass-standard-blur);
+  --glass-shadow: var(--glass-standard-shadow);
+
+  /* Aurora & Ambient Lighting Variables */
+  --aurora-primary: var(--primary-glow, rgba(244, 63, 94, 0.35));
+  --aurora-accent: rgba(56, 189, 248, 0.25);
+  --specular-sheen: linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.08) 100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --transition-fast: 0ms;
+    --transition-normal: 0ms;
+  }
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Modern WebKit & Standard Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #090b10;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
+html {
+  background: var(--bg-gradient, #06060a);
+  filter: brightness(var(--site-brightness, 1));
+  transition: background 0.8s cubic-bezier(0.16, 1, 0.3, 1), filter 0.3s ease;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.18) #090b10;
+}
+
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  background: transparent;
+  font-family: var(--font-family, 'Inter', sans-serif);
+  color: var(--text-color, var(--text-main));
+  line-height: 1.6;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: color 0.4s ease, font-family 0.2s ease;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: inherit;
+  transition: color 0.4s ease;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* Base Utility Classes */
+.container {
+  width: 100%;
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+@media (max-width: 768px) {
+  :root {
+    --navbar-height: 76px;
+  }
+  .container {
+    padding: 0 16px;
+    padding-bottom: 90px;
+  }
+}
+
+/* ============================================================
+   LIQUID GLASS MATERIAL UTILITY CLASSES
+   ============================================================ */
+
+/* Glass Tier 01: Ambient */
+.glass-ambient {
+  background: var(--glass-ambient-bg);
+  backdrop-filter: var(--glass-ambient-blur);
+  -webkit-backdrop-filter: var(--glass-ambient-blur);
+  border: var(--glass-ambient-border);
+  box-shadow: var(--glass-ambient-shadow);
+}
+
+/* Glass Tier 02: Standard */
+.glass-standard,
+.glassCard,
+.glass-card {
+  background: var(--glass-standard-bg);
+  backdrop-filter: var(--glass-standard-blur);
+  -webkit-backdrop-filter: var(--glass-standard-blur);
+  border: var(--glass-standard-border);
+  box-shadow: var(--glass-standard-highlight), var(--glass-standard-shadow);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-normal);
+}
+
+.glass-standard:hover,
+.glassCard:hover,
+.glass-card:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: var(--glass-standard-highlight), 0 22px 48px rgba(0, 0, 0, 0.65), 0 0 22px var(--primary-glow);
+  transform: translateY(-4px);
+}
+
+/* Glass Tier 03: Elevated */
+.glass-elevated {
+  background: var(--glass-elevated-bg);
+  backdrop-filter: var(--glass-elevated-blur);
+  -webkit-backdrop-filter: var(--glass-elevated-blur);
+  border: var(--glass-elevated-border);
+  box-shadow: var(--glass-elevated-highlight), var(--glass-elevated-shadow);
+  border-radius: var(--radius-xl);
+  transition: all var(--transition-normal);
+}
+
+/* Glass Tier 04: Focus */
+.glass-focus {
+  background: var(--glass-focus-bg);
+  backdrop-filter: var(--glass-focus-blur);
+  -webkit-backdrop-filter: var(--glass-focus-blur);
+  border: var(--glass-focus-border);
+  box-shadow: var(--glass-focus-highlight), var(--glass-focus-shadow);
+  border-radius: var(--radius-xl);
+}
+
+/* Morphic Surface with Ambient Glow & Edge Refraction */
+.morphic-surface {
+  position: relative;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%), var(--glass-standard-bg);
+  backdrop-filter: var(--glass-standard-blur);
+  -webkit-backdrop-filter: var(--glass-standard-blur);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-xl);
+  box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.16), 0 20px 48px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+  transition: all var(--transition-normal);
+}
+
+/* Aurora Ambient Glow helper */
+.aurora-glow {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.28;
+  z-index: 0;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+/* Specular Sheen Sweep Animation */
+@keyframes sheenSweep {
+  0% { transform: translateX(-120%) rotate(25deg); }
+  100% { transform: translateX(220%) rotate(25deg); }
+}
+
+.sheen-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.sheen-effect::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    60deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.12) 50%,
+    transparent 60%
+  );
+  transform: translateX(-120%) rotate(25deg);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.sheen-effect:hover::after {
+  opacity: 1;
+  animation: sheenSweep 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ============================================================
+   BENTO GRID SPATIAL ARCHITECTURE
+   ============================================================ */
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 20px;
+  width: 100%;
+}
+
+.bento-col-12 { grid-column: span 12; }
+.bento-col-8  { grid-column: span 8; }
+.bento-col-7  { grid-column: span 7; }
+.bento-col-6  { grid-column: span 6; }
+.bento-col-5  { grid-column: span 5; }
+.bento-col-4  { grid-column: span 4; }
+.bento-col-3  { grid-column: span 3; }
+
+@media (max-width: 1024px) {
+  .bento-col-8, .bento-col-7, .bento-col-6, .bento-col-5, .bento-col-4, .bento-col-3 {
+    grid-column: span 12;
+  }
+}
+
+/* Anime Card Hover Effects */
+.anime-card,
+[class*="AnimeCard"],
+[class*="epCard"],
+[class*="animeCard"] {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.anime-card:hover,
+[class*="AnimeCard"]:hover {
+  transform: translateY(-8px) scale(1.015);
+  box-shadow: 0 20px 42px rgba(0, 0, 0, 0.7), 0 0 24px var(--primary-glow);
+}
+
+/* Gradient Titles */
+.anime-title,
+.gradient-title {
+  background: linear-gradient(90deg, var(--primary, #f43f5e) 0%, var(--accent, #38bdf8) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  transition: all 0.4s ease;
+}
+
+/* ============================================================
+   6 SIMULATED THEMES: FULL TYPOGRAPHY & COLOR CASCADE
+   ============================================================ */
+
+/* 1. Solar Sun: Energetic, warm Outfit typography with golden fusion glow */
+body.theme-sun, html.theme-sun {
+  --primary: #f59e0b !important;
+  --primary-hover: #d97706 !important;
+  --primary-glow: rgba(245, 158, 11, 0.55) !important;
+  --accent: #fbbf24 !important;
+  --accent-color: #fbbf24 !important;
+  --text-main: #fffbeb !important;
+  --text-color: #fffbeb !important;
+  --text-muted: #d97706 !important;
+  --font-family: 'Outfit', -apple-system, sans-serif !important;
+  --card-bg: rgba(42, 21, 5, 0.85) !important;
+  --bg-gradient: radial-gradient(circle at 50% 15%, #2a1505 0%, #170902 60%, #0a0300 100%) !important;
+  --glass-ambient-bg: rgba(42, 21, 5, 0.42) !important;
+  --glass-standard-bg: rgba(42, 21, 5, 0.85) !important;
+  --glass-elevated-bg: rgba(52, 26, 6, 0.88) !important;
+  --glass-focus-bg: rgba(30, 14, 3, 0.93) !important;
+  --glass-elevated-shadow: 0 24px 60px rgba(0,0,0,0.7), 0 0 28px rgba(245, 158, 11, 0.4) !important;
+  font-family: 'Outfit', -apple-system, sans-serif !important;
+}
+body.theme-sun *, 
+body.theme-sun h1, 
+body.theme-sun h2, 
+body.theme-sun h3, 
+body.theme-sun h4, 
+body.theme-sun button, 
+body.theme-sun a, 
+body.theme-sun input {
+  font-family: 'Outfit', -apple-system, sans-serif !important;
+}
+
+/* 2. Neural Mind: High-tech, clean Plus Jakarta Sans with electric blue/cyan glow */
+body.theme-neural, html.theme-neural {
+  --primary: #0284c7 !important;
+  --primary-hover: #0369a1 !important;
+  --primary-glow: rgba(2, 132, 199, 0.55) !important;
+  --accent: #38bdf8 !important;
+  --accent-color: #38bdf8 !important;
+  --text-main: #f0fdf4 !important;
+  --text-color: #f0fdf4 !important;
+  --text-muted: #38bdf8 !important;
+  --font-family: 'Plus Jakarta Sans', -apple-system, sans-serif !important;
+  --card-bg: rgba(8, 27, 41, 0.85) !important;
+  --bg-gradient: radial-gradient(circle at 50% 15%, #081b29 0%, #040d18 60%, #02070d 100%) !important;
+  --glass-ambient-bg: rgba(8, 27, 41, 0.42) !important;
+  --glass-standard-bg: rgba(8, 27, 41, 0.85) !important;
+  --glass-elevated-bg: rgba(10, 32, 50, 0.88) !important;
+  --glass-focus-bg: rgba(4, 15, 26, 0.93) !important;
+  --glass-elevated-shadow: 0 24px 60px rgba(0,0,0,0.7), 0 0 28px rgba(2, 132, 199, 0.4) !important;
+  font-family: 'Plus Jakarta Sans', -apple-system, sans-serif !important;
+}
+body.theme-neural *, 
+body.theme-neural h1, 
+body.theme-neural h2, 
+body.theme-neural h3, 
+body.theme-neural h4, 
+body.theme-neural button, 
+body.theme-neural a, 
+body.theme-neural input {
+  font-family: 'Plus Jakarta Sans', -apple-system, sans-serif !important;
+}
+
+/* 3. 4D Attractor: Avant-garde, stylized geometric Syne with neon magenta/rose glow */
+body.theme-attractor, html.theme-attractor {
+  --primary: #e11d48 !important;
+  --primary-hover: #be123c !important;
+  --primary-glow: rgba(225, 29, 72, 0.55) !important;
+  --accent: #f97316 !important;
+  --accent-color: #f97316 !important;
+  --text-main: #fff1f2 !important;
+  --text-color: #fff1f2 !important;
+  --text-muted: #f97316 !important;
+  --font-family: 'Syne', -apple-system, sans-serif !important;
+  --card-bg: rgba(43, 15, 42, 0.85) !important;
+  --bg-gradient: radial-gradient(circle at 50% 20%, #2b0f2a 0%, #1a081f 60%, #0b020d 100%) !important;
+  --glass-ambient-bg: rgba(43, 15, 42, 0.42) !important;
+  --glass-standard-bg: rgba(43, 15, 42, 0.85) !important;
+  --glass-elevated-bg: rgba(54, 18, 52, 0.88) !important;
+  --glass-focus-bg: rgba(28, 8, 27, 0.93) !important;
+  --glass-elevated-shadow: 0 24px 60px rgba(0,0,0,0.7), 0 0 28px rgba(225, 29, 72, 0.4) !important;
+  font-family: 'Syne', -apple-system, sans-serif !important;
+}
+body.theme-attractor *, 
+body.theme-attractor h1, 
+body.theme-attractor h2, 
+body.theme-attractor h3, 
+body.theme-attractor h4, 
+body.theme-attractor button, 
+body.theme-attractor a, 
+body.theme-attractor input {
+  font-family: 'Syne', -apple-system, sans-serif !important;
+}
+
+/* 4. Black Hole: Relativistic Inter typography with cosmic violet accretion glow */
+body.theme-blackhole, html.theme-blackhole {
+  --primary: #9333ea !important;
+  --primary-hover: #7e22ce !important;
+  --primary-glow: rgba(147, 51, 234, 0.55) !important;
+  --accent: #c084fc !important;
+  --accent-color: #c084fc !important;
+  --text-main: #e2e8f0 !important;
+  --text-color: #e2e8f0 !important;
+  --text-muted: #c084fc !important;
+  --font-family: 'Inter', -apple-system, sans-serif !important;
+  --card-bg: rgba(19, 10, 36, 0.85) !important;
+  --bg-gradient: radial-gradient(circle at 50% 15%, #130a24 0%, #07040f 60%, #020105 100%) !important;
+  --glass-ambient-bg: rgba(19, 10, 36, 0.42) !important;
+  --glass-standard-bg: rgba(19, 10, 36, 0.85) !important;
+  --glass-elevated-bg: rgba(24, 12, 44, 0.88) !important;
+  --glass-focus-bg: rgba(10, 5, 20, 0.93) !important;
+  --glass-elevated-shadow: 0 24px 60px rgba(0,0,0,0.7), 0 0 28px rgba(147, 51, 234, 0.4) !important;
+  font-family: 'Inter', -apple-system, sans-serif !important;
+}
+body.theme-blackhole *, 
+body.theme-blackhole h1, 
+body.theme-blackhole h2, 
+body.theme-blackhole h3, 
+body.theme-blackhole h4, 
+body.theme-blackhole button, 
+body.theme-blackhole a, 
+body.theme-blackhole input {
+  font-family: 'Inter', -apple-system, sans-serif !important;
+}
+
+/* 5. Neuroplasticity: Cybernetic, sharp Space Grotesk with bio-electric emerald glow */
+body.theme-neuro, html.theme-neuro {
+  --primary: #059669 !important;
+  --primary-hover: #047857 !important;
+  --primary-glow: rgba(5, 150, 105, 0.55) !important;
+  --accent: #34d399 !important;
+  --accent-color: #34d399 !important;
+  --text-main: #ecfdf5 !important;
+  --text-color: #ecfdf5 !important;
+  --text-muted: #34d399 !important;
+  --font-family: 'Space Grotesk', -apple-system, sans-serif !important;
+  --card-bg: rgba(6, 35, 27, 0.85) !important;
+  --bg-gradient: radial-gradient(circle at 50% 20%, #06231b 0%, #031410 60%, #010806 100%) !important;
+  --glass-ambient-bg: rgba(6, 35, 27, 0.42) !important;
+  --glass-standard-bg: rgba(6, 35, 27, 0.85) !important;
+  --glass-elevated-bg: rgba(8, 42, 32, 0.88) !important;
+  --glass-focus-bg: rgba(3, 18, 13, 0.93) !important;
+  --glass-elevated-shadow: 0 24px 60px rgba(0,0,0,0.7), 0 0 28px rgba(5, 150, 105, 0.4) !important;
+  font-family: 'Space Grotesk', -apple-system, sans-serif !important;
+}
+body.theme-neuro *, 
+body.theme-neuro h1, 
+body.theme-neuro h2, 
+body.theme-neuro h3, 
+body.theme-neuro h4, 
+body.theme-neuro button, 
+body.theme-neuro a, 
+body.theme-neuro input {
+  font-family: 'Space Grotesk', -apple-system, sans-serif !important;
+}
+
+/* 6. Quantum Steam: Precision computational JetBrains Mono with thermal ruby glow */
+body.theme-quantum, html.theme-quantum {
+  --primary: #dc2626 !important;
+  --primary-hover: #b91c1c !important;
+  --primary-glow: rgba(220, 38, 38, 0.55) !important;
+  --accent: #06b6d4 !important;
+  --accent-color: #06b6d4 !important;
+  --text-main: #fef2f2 !important;
+  --text-color: #fef2f2 !important;
+  --text-muted: #06b6d4 !important;
+  --font-family: 'JetBrains Mono', monospace, sans-serif !important;
+  --card-bg: rgba(41, 8, 12, 0.85) !important;
+  --bg-gradient: radial-gradient(circle at 50% 20%, #29080c 0%, #170407 60%, #0a0103 100%) !important;
+  --glass-ambient-bg: rgba(41, 8, 12, 0.42) !important;
+  --glass-standard-bg: rgba(41, 8, 12, 0.85) !important;
+  --glass-elevated-bg: rgba(50, 10, 15, 0.88) !important;
+  --glass-focus-bg: rgba(22, 4, 6, 0.93) !important;
+  --glass-elevated-shadow: 0 24px 60px rgba(0,0,0,0.7), 0 0 28px rgba(220, 38, 38, 0.4) !important;
+  font-family: 'JetBrains Mono', monospace, sans-serif !important;
+}
+body.theme-quantum *, 
+body.theme-quantum h1, 
+body.theme-quantum h2, 
+body.theme-quantum h3, 
+body.theme-quantum h4, 
+body.theme-quantum button, 
+body.theme-quantum a, 
+body.theme-quantum input {
+  font-family: 'JetBrains Mono', monospace, sans-serif !important;
+}
+

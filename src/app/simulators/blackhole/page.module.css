@@ -1,0 +1,153 @@
+.hudPanel {
+  position: absolute;
+  top: 85px;
+  left: 24px;
+  z-index: 10;
+  width: 320px;
+  background: rgba(10, 10, 15, 0.85);
+  border: 1px solid rgba(96, 165, 250, 0.25);
+  border-radius: 18px;
+  padding: 22px;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(96, 165, 250, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.hudHeader {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 12px;
+}
+
+.hudBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(96, 165, 250, 0.15);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  color: #60a5fa;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+
+.hudTitle {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.01em;
+}
+
+.hudSubtitle {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.controlGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sliderLabelRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  color: #d1d5db;
+  font-weight: 600;
+}
+
+.paramVal {
+  color: #60a5fa;
+  font-family: monospace;
+}
+
+.slider {
+  width: 100%;
+  accent-color: #60a5fa;
+  cursor: pointer;
+}
+
+.qualityBtn {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-muted);
+  padding: 5px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.qualityBtnActive {
+  background: rgba(96, 165, 250, 0.25);
+  border-color: #60a5fa;
+  color: #fff;
+}
+
+.hudActions {
+  display: flex;
+  gap: 10px;
+}
+
+.actionBtn {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.actionBtn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.telemetryCard {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.75rem;
+}
+
+.telemetryRow {
+  display: flex;
+  justify-content: space-between;
+  color: var(--text-muted);
+}
+
+.telemetryValue {
+  font-family: monospace;
+  color: #e5e7eb;
+}
+
+@media (max-width: 640px) {
+  .hudPanel {
+    top: auto;
+    bottom: 20px;
+    left: 16px;
+    right: 16px;
+    width: auto;
+    max-height: 45vh;
+    overflow-y: auto;
+  }
+}

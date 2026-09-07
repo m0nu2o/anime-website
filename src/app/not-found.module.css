@@ -1,0 +1,75 @@
+.container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 20px;
+  background: var(--bg-main);
+  background-image: radial-gradient(circle at center, rgba(244, 63, 94, 0.05) 0%, transparent 50%);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  max-width: 500px;
+}
+
+.glitch {
+  font-size: 8rem;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--text-main);
+  position: relative;
+  text-shadow: 0 0 20px rgba(244, 63, 94, 0.3);
+}
+
+.content h2 {
+  font-size: 2rem;
+  color: var(--text-main);
+}
+
+.content p {
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  line-height: 1.6;
+}
+
+.actions {
+  display: flex;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.primaryBtn, .secondaryBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  transition: all var(--transition-fast);
+  text-decoration: none;
+}
+
+.primaryBtn {
+  background: var(--primary);
+  color: white;
+  box-shadow: var(--shadow-glow);
+}
+
+.primaryBtn:hover {
+  background: var(--primary-hover);
+  transform: translateY(-2px);
+}
+
+.secondaryBtn {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-main);
+}
+
+.secondaryBtn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
