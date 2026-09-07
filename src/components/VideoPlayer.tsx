@@ -38,6 +38,16 @@ interface VideoPlayerProps {
 
 type ServerType = "native_hls" | "gogo_embed" | "streamwish" | "trailer" | "demo_mp4";
 
+interface CachedEpisodeData {
+  animeId: string;
+  episode: number;
+  data: {
+    success: boolean;
+    sources?: { url: string; quality: string; isM3U8: boolean }[];
+    embedUrls?: { label: string; url: string; serverType: string; isDub?: boolean }[];
+  };
+}
+
 export default function VideoPlayer({
   animeId = "",
   animeTitle = "Anime Episode",
@@ -52,10 +62,13 @@ export default function VideoPlayer({
   onNextEpisode,
 }: VideoPlayerProps) {
   const router = useRouter();
-  const [activeServer, setActiveServer] = useState<ServerType>("native_hls");
+  const [activeServer, setActiveServer] = useState<ServerType | null>(null);
   const [isDub, setIsDub] = useState(false);
   const [dubAvailable, setDubAvailable] = useState<boolean | null>(null);
+  const [subAvailable, setSubAvailable] = useState<boolean | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [statusBanner, setStatusBanner] = useState<{ text: string; type: "success" | "warning" | "error" } | null>(null);
+  const statusTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [autoNext, setAutoNext] = useState(true);
   
   const showToast = (msg: string) => {
@@ -63,11 +76,16 @@ export default function VideoPlayer({
     setTimeout(() => setToastMessage(null), 3500);
   };
 
+  const showStatus = useCallback((text: string, type: "success" | "warning" | "error" = "success") => {
+    setStatusBanner({ text, type });
+    if (statusTimerRef.current) clearTimeout(statusTimerRef.current);
+    statusTimerRef.current = setTimeout(() => setStatusBanner(null), 3500);
+  }, []);
+
   // Playback state
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(initialTime);
-  const [duration, setDuration] = useState(1440);
-  const [volume, setVolume] = useState(1);
+  const [duration, setDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isLoadingStream, setIsLoadingStream] = useState(false);
@@ -82,7 +100,7 @@ export default function VideoPlayer({
   const [resumeNotice, setResumeNotice] = useState<{ episode: number; time: number } | null>(null);
   
   // Stream data from API
-  const [streamSources, setStreamSources] = useState<any[]>([]);
+  const [streamSources, setStreamSources] = useState<{ url: string; quality: string; isM3U8: boolean }[]>([]);
   const [embedUrls, setEmbedUrls] = useState<{ label: string; url: string; isDub?: boolean }[]>([]);
   const [activeEmbedIdx, setActiveEmbedIdx] = useState(0);
 
@@ -146,15 +164,16 @@ export default function VideoPlayer({
       setIsBuffering(true);
 
       // Check preloaded cache first for instant switch
-      if (typeof window !== "undefined" && (window as any).__nextEpisodeCache) {
-        const cached = (window as any).__nextEpisodeCache;
-        if (cached.animeId === animeId && cached.episode === episodeNumber && cached.data?.success) {
+      if (typeof window !== "undefined") {
+        const winWithCache = window as unknown as { __nextEpisodeCache?: CachedEpisodeData };
+        const cached = winWithCache.__nextEpisodeCache;
+        if (cached && cached.animeId === animeId && cached.episode === episodeNumber && cached.data?.success) {
           setStreamSources(cached.data.sources || []);
           setEmbedUrls(cached.data.embedUrls || []);
           setActiveEmbedIdx(0);
           if (cached.data.sources && cached.data.sources.length > 0) {
             setActiveServer("native_hls");
-          } else if (cached.data.embedUrls?.length > 0) {
+          } else if (cached.data.embedUrls && cached.data.embedUrls.length > 0) {
             setActiveServer("gogo_embed");
           }
           setIsLoadingStream(false);
@@ -172,23 +191,44 @@ export default function VideoPlayer({
           if (!isCancelled && data.success) {
             setStreamSources(data.sources || []);
             setEmbedUrls(data.embedUrls || []);
-            setDubAvailable(Boolean(data.dubAvailable));
+            const hasDubServer = Boolean(data.dubAvailable && (data.embedUrls || []).some((e: { isDub?: boolean }) => Boolean(e.isDub) === true));
+            const hasSubServer = Boolean(data.subAvailable || (data.embedUrls || []).some((e: { isDub?: boolean }) => !e.isDub));
+            setDubAvailable(hasDubServer);
+            setSubAvailable(hasSubServer);
 
-            let currentDub = isDub;
-            if (isDub && !data.dubAvailable) {
-              setIsDub(false);
-              currentDub = false;
-              showToast("Dub not available for this anime. Switching to Sub.");
-              try { localStorage.setItem("preferredLanguage", "sub"); } catch {}
+            // Determine active language: respect user saved preference or fallback
+            const savedPref = typeof window !== "undefined" ? localStorage.getItem("preferredLanguage") : null;
+            let targetIsDub = false;
+            if (savedPref === "dub") {
+              if (hasDubServer) {
+                targetIsDub = true;
+                showStatus("🎤 Playing English Dub", "success");
+              } else {
+                targetIsDub = false;
+                showStatus("🎬 English Dub not available. Playing Sub instead.", "warning");
+                try { localStorage.setItem("preferredLanguage", "sub"); } catch {}
+              }
+            } else if (savedPref === "sub") {
+              targetIsDub = false;
+              showStatus("📝 Playing Japanese with English Subtitles", "success");
+            } else {
+              targetIsDub = hasDubServer;
+              if (targetIsDub) {
+                showStatus("🎤 Playing English Dub", "success");
+              } else {
+                showStatus("📝 Playing Japanese with English Subtitles", "success");
+              }
             }
 
-            // Find first matching embed for currentDub preference
-            const matchIdx = (data.embedUrls || []).findIndex((e: any) => Boolean(e.isDub) === currentDub);
+            setIsDub(targetIsDub);
+
+            // Find first matching embed for active audio preference
+            const matchIdx = (data.embedUrls || []).findIndex((e: { isDub?: boolean }) => Boolean(e.isDub) === targetIsDub);
             setActiveEmbedIdx(matchIdx >= 0 ? matchIdx : 0);
 
             if (data.sources && data.sources.length > 0) {
               setActiveServer("native_hls");
-            } else if (data.embedUrls?.length > 0) {
+            } else if (data.embedUrls && data.embedUrls.length > 0) {
               setActiveServer("gogo_embed");
             }
           }
@@ -221,7 +261,8 @@ export default function VideoPlayer({
         if (res.ok) {
           const data = await res.json();
           if (typeof window !== "undefined") {
-            (window as any).__nextEpisodeCache = {
+            const winWithCache = window as unknown as { __nextEpisodeCache?: CachedEpisodeData };
+            winWithCache.__nextEpisodeCache = {
               animeId,
               episode: nextEp,
               data,
@@ -252,8 +293,12 @@ export default function VideoPlayer({
       if (sourceUrl.includes(".m3u8") && Hls.isSupported()) {
         const hls = new Hls({
           enableWorker: true,
-          lowLatencyMode: true,
-          backBufferLength: 90,
+          lowLatencyMode: false,
+          maxBufferLength: 30,
+          maxMaxBufferLength: 120,
+          backBufferLength: 60,
+          maxBufferSize: 60 * 1000 * 1000,
+          maxBufferHole: 0.5,
         });
 
         hls.loadSource(sourceUrl);
@@ -261,11 +306,15 @@ export default function VideoPlayer({
 
         hls.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
           if (data.levels && data.levels.length > 0) {
-            const qualities = data.levels.map((lvl: any) => `${lvl.height || 720}p`);
+            const qualities = data.levels.map((lvl: { height?: number }) => `${lvl.height || 720}p`);
             setAvailableQualities(Array.from(new Set(qualities)));
           }
           video.play().catch(() => {});
           setIsPlaying(true);
+          setIsBuffering(false);
+        });
+
+        hls.on(Hls.Events.FRAG_BUFFERED, () => {
           setIsBuffering(false);
         });
 
@@ -326,11 +375,27 @@ export default function VideoPlayer({
   const handleTimeUpdate = () => {
     if (!videoRef.current) return;
     const curr = videoRef.current.currentTime;
-    const dur = videoRef.current.duration || 1440;
+    const rawDur = videoRef.current.duration;
+    const dur = !isNaN(rawDur) && isFinite(rawDur) && rawDur > 0 ? rawDur : 0;
     setCurrentTime(curr);
     setDuration(dur);
+    if (isBuffering && curr > 0) {
+      setIsBuffering(false);
+    }
     onProgress?.(curr, dur);
   };
+
+  // Buffer safety auto-clear: never allow spinner to remain if playback is running
+  useEffect(() => {
+    if (isBuffering) {
+      const timer = setTimeout(() => {
+        if (videoRef.current && !videoRef.current.paused && videoRef.current.currentTime > 0) {
+          setIsBuffering(false);
+        }
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [isBuffering]);
 
   // Smart Next Episode Transition
   const goToNextEpisode = useCallback(() => {
@@ -375,17 +440,20 @@ export default function VideoPlayer({
   // Fullscreen toggle handler
   const toggleFullscreen = useCallback(() => {
     if (!containerRef.current) return;
-    if (!document.fullscreenElement) {
-      if (containerRef.current.requestFullscreen) {
-        containerRef.current.requestFullscreen().catch(() => {});
-      } else if ((containerRef.current as any).webkitRequestFullscreen) {
-        (containerRef.current as any).webkitRequestFullscreen();
+    const doc = document as Document & { webkitFullscreenElement?: Element; webkitExitFullscreen?: () => Promise<void> };
+    const elem = containerRef.current as HTMLElement & { webkitRequestFullscreen?: () => Promise<void> };
+
+    if (!document.fullscreenElement && !doc.webkitFullscreenElement) {
+      if (elem.requestFullscreen) {
+        elem.requestFullscreen().catch(() => {});
+      } else if (elem.webkitRequestFullscreen) {
+        elem.webkitRequestFullscreen().catch?.(() => {});
       }
     } else {
       if (document.exitFullscreen) {
         document.exitFullscreen().catch(() => {});
-      } else if ((document as any).webkitExitFullscreen) {
-        (document as any).webkitExitFullscreen();
+      } else if (doc.webkitExitFullscreen) {
+        doc.webkitExitFullscreen().catch?.(() => {});
       }
     }
   }, []);
@@ -397,6 +465,87 @@ export default function VideoPlayer({
     videoRef.current.muted = next;
     setIsMuted(next);
   };
+
+  // Subtitle & Audio track management for HLS / Video element
+  const applyAudioAndSubtitles = useCallback((dubMode: boolean) => {
+    // 1. Text tracks / Subtitles
+    if (videoRef.current?.textTracks) {
+      const tracks = videoRef.current.textTracks;
+      for (let i = 0; i < tracks.length; i++) {
+        if (tracks[i].kind === "subtitles" || tracks[i].kind === "captions") {
+          tracks[i].mode = dubMode ? "disabled" : "showing";
+        }
+      }
+    }
+
+    // 2. HLS Audio tracks
+    if (hlsRef.current && hlsRef.current.audioTracks) {
+      const audioTracks = hlsRef.current.audioTracks;
+      if (audioTracks.length > 1) {
+        if (dubMode) {
+          const enIdx = audioTracks.findIndex((t) =>
+            t.lang?.toLowerCase().includes("en") ||
+            t.name?.toLowerCase().includes("dub") ||
+            t.name?.toLowerCase().includes("english")
+          );
+          if (enIdx >= 0) hlsRef.current.audioTrack = enIdx;
+        } else {
+          const jaIdx = audioTracks.findIndex((t) =>
+            t.lang?.toLowerCase().includes("ja") ||
+            t.name?.toLowerCase().includes("jap") ||
+            t.name?.toLowerCase().includes("orig")
+          );
+          if (jaIdx >= 0) hlsRef.current.audioTrack = jaIdx;
+        }
+      }
+    }
+  }, []);
+
+  const hasDub = Boolean(dubAvailable ?? embedUrls.some((e) => e.isDub === true));
+  const hasSub = Boolean(subAvailable ?? embedUrls.some((e) => !e.isDub));
+
+  // Language switch handler with full status banner feedback & subtitle sync
+  const switchLanguage = useCallback((targetLang: "dub" | "sub") => {
+    if (isLoadingStream) return;
+
+    if (targetLang === "dub") {
+      if (!hasDub) {
+        showStatus("🎬 English Dub not available for this anime.", "warning");
+        if (hasSub) {
+          setIsDub(false);
+          try { localStorage.setItem("preferredLanguage", "sub"); } catch {}
+        }
+        return;
+      }
+
+      setIsDub(true);
+      try { localStorage.setItem("preferredLanguage", "dub"); } catch {}
+      showStatus("🎤 Playing English Dub", "success");
+
+      const dubIdx = embedUrls.findIndex((e) => e.isDub === true);
+      if (dubIdx >= 0) {
+        setActiveEmbedIdx(dubIdx);
+        setActiveServer("gogo_embed");
+      }
+      applyAudioAndSubtitles(true);
+    } else {
+      if (!hasSub) {
+        showStatus("📝 Subtitles not available for this episode.", "warning");
+        return;
+      }
+
+      setIsDub(false);
+      try { localStorage.setItem("preferredLanguage", "sub"); } catch {}
+      showStatus("📝 Playing Japanese with English Subtitles", "success");
+
+      const subIdx = embedUrls.findIndex((e) => !e.isDub);
+      if (subIdx >= 0) {
+        setActiveEmbedIdx(subIdx);
+        setActiveServer("gogo_embed");
+      }
+      applyAudioAndSubtitles(false);
+    }
+  }, [hasDub, hasSub, isLoadingStream, embedUrls, applyAudioAndSubtitles, showStatus]);
 
   // Keyboard Shortcuts
   useEffect(() => {
@@ -418,6 +567,12 @@ export default function VideoPlayer({
       } else if (e.key === "ArrowLeft") {
         e.preventDefault();
         handleSeek(-10);
+      } else if (e.key === "d" || e.key === "D") {
+        e.preventDefault();
+        switchLanguage("dub");
+      } else if (e.key === "s" || e.key === "S") {
+        e.preventDefault();
+        switchLanguage("sub");
       } else if (e.shiftKey && (e.key === "N" || e.key === "n")) {
         e.preventDefault();
         goToNextEpisode();
@@ -426,29 +581,7 @@ export default function VideoPlayer({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [toggleFullscreen, goToNextEpisode, duration, isPlaying]);
-
-  // Language switch handler with auto-fallback notification
-  const handleSwitchLanguage = (toDub: boolean) => {
-    if (toDub) {
-      const hasDubServer = dubAvailable ?? embedUrls.some((e: any) => e.isDub === true);
-      if (!hasDubServer) {
-        showToast("Dub not available for this anime. Switching to Sub.");
-        setIsDub(false);
-        try { localStorage.setItem("preferredLanguage", "sub"); } catch {}
-        return;
-      }
-      setIsDub(true);
-      try { localStorage.setItem("preferredLanguage", "dub"); } catch {}
-      const dubIdx = embedUrls.findIndex((e: any) => e.isDub === true);
-      if (dubIdx >= 0) setActiveEmbedIdx(dubIdx);
-    } else {
-      setIsDub(false);
-      try { localStorage.setItem("preferredLanguage", "sub"); } catch {}
-      const subIdx = embedUrls.findIndex((e: any) => !e.isDub);
-      if (subIdx >= 0) setActiveEmbedIdx(subIdx);
-    }
-  };
+  }, [toggleFullscreen, goToNextEpisode, duration, isPlaying, switchLanguage]);
 
   // Format time mm:ss
   const formatTime = (seconds: number) => {
@@ -456,6 +589,8 @@ export default function VideoPlayer({
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
   };
+
+  const filteredEmbeds = embedUrls.filter((embed) => (isDub ? embed.isDub === true : !embed.isDub));
 
   return (
     <div className={styles.wrapper}>
@@ -467,21 +602,19 @@ export default function VideoPlayer({
           </span>
 
           {/* Real Working ReAnime Embed Servers (filtered strictly by active Sub/Dub) */}
-          {embedUrls
-            .filter((embed: any) => (isDub ? embed.isDub === true : !embed.isDub))
-            .map((embed: any) => {
-              const originalIdx = embedUrls.indexOf(embed);
-              return (
-                <button
-                  key={originalIdx}
-                  onClick={() => { setActiveServer("gogo_embed"); setActiveEmbedIdx(originalIdx); }}
-                  className={`${styles.serverPill} ${activeServer === "gogo_embed" && activeEmbedIdx === originalIdx ? styles.serverPillActive : ""}`}
-                  title={embed.label}
-                >
-                  {embed.label}
-                </button>
-              );
-            })}
+          {filteredEmbeds.map((embed) => {
+            const originalIdx = embedUrls.indexOf(embed);
+            return (
+              <button
+                key={originalIdx}
+                onClick={() => { setActiveServer("gogo_embed"); setActiveEmbedIdx(originalIdx); }}
+                className={`${styles.serverPill} ${activeServer === "gogo_embed" && activeEmbedIdx === originalIdx ? styles.serverPillActive : ""}`}
+                title={embed.label}
+              >
+                {embed.label}
+              </button>
+            );
+          })}
 
           {/* Direct HLS Player (Shown if available or requested) */}
           {streamSources.length > 0 && (
@@ -494,24 +627,43 @@ export default function VideoPlayer({
               Direct HLS
             </button>
           )}
+
+          {/* No sources fallback */}
+          {!isLoadingStream && filteredEmbeds.length === 0 && streamSources.length === 0 && (
+            <span className={styles.noServers}>No servers found</span>
+          )}
         </div>
 
         {/* Audio (Sub / Dub) & Controls */}
         <div className={styles.controlsRight}>
-          <div className={styles.audioGroup}>
+          {/* Language Toggle with Status Badges */}
+          <div className={styles.languageControls}>
             <button
-              onClick={() => handleSwitchLanguage(false)}
-              className={`${styles.audioBtn} ${!isDub ? styles.audioBtnActive : ""}`}
-              title="Japanese Audio with English Subtitles"
+              id="dub-btn"
+              onClick={() => switchLanguage("dub")}
+              disabled={!hasDub}
+              className={`${styles.langBtn} ${isDub ? styles.langBtnActive : ""}`}
+              title={hasDub ? "Play English Dub (D)" : "English Dub unavailable for this anime"}
             >
-              SUB
+              <span className={styles.langIcon}>🎤</span>
+              <span>Dub</span>
+              <span className={`${styles.langBadge} ${!hasDub ? styles.langBadgeUnavailable : ""}`}>
+                {hasDub ? "Available" : "Unavailable"}
+              </span>
             </button>
+
             <button
-              onClick={() => handleSwitchLanguage(true)}
-              className={`${styles.audioBtn} ${isDub ? styles.audioBtnActive : ""}`}
-              title="English Dubbed Audio"
+              id="sub-btn"
+              onClick={() => switchLanguage("sub")}
+              disabled={!hasSub}
+              className={`${styles.langBtn} ${!isDub ? styles.langBtnActive : ""}`}
+              title="Play Japanese with English Subtitles (S)"
             >
-              DUB
+              <span className={styles.langIcon}>📝</span>
+              <span>Sub</span>
+              <span className={`${styles.langBadge} ${!hasSub ? styles.langBadgeUnavailable : ""}`}>
+                {hasSub ? "Available" : "Unavailable"}
+              </span>
             </button>
           </div>
 
@@ -527,6 +679,42 @@ export default function VideoPlayer({
 
       {/* Main Video Screen Container */}
       <div className={styles.playerContainer} ref={containerRef}>
+        {/* Language Status Message */}
+        {statusBanner && (
+          <div
+            id="language-status"
+            className={`${styles.statusMessage} ${
+              statusBanner.type === "success"
+                ? styles.statusSuccess
+                : statusBanner.type === "warning"
+                ? styles.statusWarning
+                : styles.statusError
+            }`}
+          >
+            <span>{statusBanner.text}</span>
+          </div>
+        )}
+
+        {/* Fullscreen Top Header with Back / Exit Fullscreen */}
+        {isFullscreen && (
+          <div className={styles.fullscreenTopBar}>
+            <button
+              onClick={toggleFullscreen}
+              className={styles.fullscreenBackBtn}
+              aria-label="Exit Fullscreen"
+              title="Exit Fullscreen (Esc)"
+            >
+              <Minimize size={18} />
+              <span>Exit Fullscreen</span>
+            </button>
+            <div className={styles.fullscreenTitle}>
+              <span>{animeTitle}</span>
+              <span className={styles.fullscreenEpDot}>•</span>
+              <span>Episode {episodeNumber}</span>
+            </div>
+          </div>
+        )}
+
         {/* Floating Toast Notification */}
         {toastMessage && (
           <div className={styles.toastBanner}>
@@ -589,9 +777,12 @@ export default function VideoPlayer({
               onTimeUpdate={handleTimeUpdate}
               onEnded={handleVideoEnded}
               onPlay={() => { setIsPlaying(true); setIsBuffering(false); }}
+              onPlaying={() => { setIsPlaying(true); setIsBuffering(false); }}
               onPause={() => setIsPlaying(false)}
               onWaiting={() => setIsBuffering(true)}
               onCanPlay={() => setIsBuffering(false)}
+              onCanPlayThrough={() => setIsBuffering(false)}
+              onLoadedData={() => setIsBuffering(false)}
               onLoadStart={() => setIsBuffering(true)}
               playsInline
             />
@@ -666,7 +857,7 @@ export default function VideoPlayer({
             <input
               type="range"
               min={0}
-              max={duration || 100}
+              max={duration > 0 ? duration : 100}
               value={currentTime}
               onChange={(e) => {
                 const val = parseFloat(e.target.value);
@@ -677,7 +868,7 @@ export default function VideoPlayer({
             />
             <div 
               className={styles.scrubberProgress} 
-              style={{ width: `${(currentTime / (duration || 1)) * 100}%` }} 
+              style={{ width: `${duration > 0 ? Math.min(100, Math.max(0, (currentTime / duration) * 100)) : 0}%` }} 
             />
           </div>
 

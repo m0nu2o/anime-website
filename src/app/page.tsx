@@ -31,8 +31,8 @@ export default async function Home() {
   const spotlight = seasonalAnime[0] || trendingAnime[0];
   const spotlightScore = spotlight?.score 
     ? (spotlight.score > 10 ? (spotlight.score / 10).toFixed(1) : spotlight.score.toFixed(1)) 
-    : "8.9";
-  const spotlightTitle = spotlight?.title.english || spotlight?.title.romaji || "Spotlight Anime";
+    : null;
+  const spotlightTitle = spotlight?.title.english || spotlight?.title.romaji || spotlight?.title.native || "Featured Anime";
   const spotlightImg = spotlight?.images.largeCover || spotlight?.images.banner || spotlight?.images.cover;
 
   const leaderboard = trendingAnime.slice(0, 4);
@@ -76,10 +76,12 @@ export default async function Home() {
                 <div className={styles.spotlightContent}>
                   <div className={styles.spotlightBadges}>
                     <span className={styles.spotlightBadge}>Seasonal Spotlight</span>
-                    <span className={styles.spotlightScoreBadge}>
-                      <Star size={12} fill="#facc15" color="#facc15" />
-                      <span>{spotlightScore}</span>
-                    </span>
+                    {spotlightScore && (
+                      <span className={styles.spotlightScoreBadge}>
+                        <Star size={12} fill="#facc15" color="#facc15" />
+                        <span>{spotlightScore}</span>
+                      </span>
+                    )}
                   </div>
 
                   <h3 className={styles.spotlightTitle}>{spotlightTitle}</h3>
@@ -114,10 +116,10 @@ export default async function Home() {
 
                 <div className={styles.leaderboardList}>
                   {leaderboard.map((item, idx) => {
-                    const itemTitle = item.title.english || item.title.romaji || "Anime";
+                    const itemTitle = item.title.english || item.title.romaji || item.title.native || "Anime";
                     const itemScore = item.score 
                       ? (item.score > 10 ? (item.score / 10).toFixed(1) : item.score.toFixed(1)) 
-                      : "8.5";
+                      : null;
                     return (
                       <Link 
                         key={item.id} 
@@ -136,8 +138,12 @@ export default async function Home() {
                           <h4 className={styles.leaderboardItemTitle}>{itemTitle}</h4>
                           <div className={styles.leaderboardMeta}>
                             <span>{item.format || "TV"}</span>
-                            <span>•</span>
-                            <span className={styles.itemScore}>★ {itemScore}</span>
+                            {itemScore && (
+                              <>
+                                <span>•</span>
+                                <span className={styles.itemScore}>★ {itemScore}</span>
+                              </>
+                            )}
                           </div>
                         </div>
                         <div className={styles.itemPlayIcon}>

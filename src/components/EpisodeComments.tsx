@@ -108,14 +108,11 @@ export default function EpisodeComments({ animeId, episode }: EpisodeCommentsPro
     setComments((prev) =>
       prev.map((c) => (c.id === commentId ? { ...c, likes: nextLikes } : c))
     );
-
+    if (!user) return;
     try {
-      await supabase
-        .from("episode_comments")
-        .update({ likes: nextLikes })
-        .eq("id", commentId);
+      await supabase.rpc("increment_comment_likes", { row_id: commentId });
     } catch (err) {
-      console.warn("Failed to upvote comment:", err);
+      console.warn("Failed to like comment:", err);
     }
   };
 

@@ -53,7 +53,7 @@ export default function Footer() {
               </h4>
               <ul className={styles.linkList}>
                 <li><Link href="/simulators">Simulator Hub</Link></li>
-                <li><Link href="/simulators/sun">The Sun Simulator</Link></li>
+                <li><Link href="/simulators/blackhole">Black Hole Simulator</Link></li>
                 <li><Link href="/dashboard">User Dashboard</Link></li>
                 <li><Link href="/settings">Preferences</Link></li>
               </ul>

@@ -97,8 +97,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) return { error: error.message };
       closeAuthModal();
       return {};
-    } catch (err: any) {
-      return { error: err.message || "Sign in failed" };
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Sign in failed";
+      return { error: msg };
     }
   };
 
@@ -122,8 +123,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       closeAuthModal();
       return {};
-    } catch (err: any) {
-      return { error: err.message || "Sign up failed" };
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Sign up failed";
+      return { error: msg };
     }
   };
 

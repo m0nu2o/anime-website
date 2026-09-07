@@ -115,7 +115,7 @@ export async function updateWatchlistStatus(
   status: WatchlistStatus,
   progress?: number
 ): Promise<boolean> {
-  const updates: any = { status, updated_at: new Date().toISOString() };
+  const updates: Record<string, unknown> = { status, updated_at: new Date().toISOString() };
   if (progress !== undefined) updates.progress = progress;
 
   const { error } = await supabase
@@ -166,7 +166,7 @@ export async function isFavorite(userId: string, animeId: string): Promise<boole
 export async function toggleFavorite(userId: string, anime: Anime): Promise<boolean> {
   const exists = await isFavorite(userId, anime.id);
   if (exists) {
-    const { error } = await supabase
+    await supabase
       .from("favorites")
       .delete()
       .eq("user_id", userId)

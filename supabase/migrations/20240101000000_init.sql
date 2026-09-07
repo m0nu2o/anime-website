@@ -102,10 +102,10 @@ DROP POLICY IF EXISTS "Anime cache is viewable by everyone." ON public.anime_cac
 CREATE POLICY "Anime cache is viewable by everyone." ON public.anime_cache FOR SELECT USING (true);
 
 DROP POLICY IF EXISTS "Anime cache insertable by authenticated users." ON public.anime_cache;
-CREATE POLICY "Anime cache insertable by authenticated users." ON public.anime_cache FOR INSERT WITH CHECK (true);
+CREATE POLICY "Anime cache insertable by authenticated users." ON public.anime_cache FOR INSERT WITH CHECK (auth.role() = 'service_role');
 
 DROP POLICY IF EXISTS "Anime cache updateable by authenticated users." ON public.anime_cache;
-CREATE POLICY "Anime cache updateable by authenticated users." ON public.anime_cache FOR UPDATE USING (true);
+CREATE POLICY "Anime cache updateable by authenticated users." ON public.anime_cache FOR UPDATE USING (auth.role() = 'service_role');
 
 -- Watchlist Policies
 DROP POLICY IF EXISTS "Users can view own watchlist." ON public.watchlists;

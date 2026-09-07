@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import BackButton from "@/components/BackButton";
 import VideoPlayer from "@/components/VideoPlayer";
 import { getAnimeById, getAnimeEpisodes, getAnimeStreamingLinks, getAnimeRelations } from "@/lib/api";
+import { Episode } from "@/lib/api/types";
 import { ChevronLeft, ChevronRight, Play, ExternalLink, Calendar, Film, Layers } from "lucide-react";
 import styles from "./page.module.css";
 
@@ -42,6 +43,20 @@ export default async function WatchEpisodePage({
     getAnimeStreamingLinks(anime.id),
   ]);
 
+  // Dynamically detect current anime's true season label from title
+  const currentTitleLower = (anime.title.english || anime.title.romaji || anime.title.native || "").toLowerCase();
+  let currentSeasonLabel = "Season 1";
+  const seasonMatch = currentTitleLower.match(/season\s*(\d+)/i) || currentTitleLower.match(/(\d+)(?:nd|rd|th|st)\s*season/i);
+  if (seasonMatch) {
+    currentSeasonLabel = `Season ${seasonMatch[1]}`;
+  } else if (currentTitleLower.includes("final season")) {
+    currentSeasonLabel = "Final Season";
+  } else if (currentTitleLower.includes("part 3")) {
+    currentSeasonLabel = "Season 3";
+  } else if (currentTitleLower.includes("part 2")) {
+    currentSeasonLabel = "Season 2";
+  }
+
   const validRoles = ["prequel", "sequel", "parent", "side_story", "alternative_version"];
   const relatedSeasons = relations
     .filter(r => validRoles.includes(r.role?.toLowerCase()))
@@ -69,7 +84,7 @@ export default async function WatchEpisodePage({
     {
       id: anime.id,
       title: anime.title.english || anime.title.romaji || "Current Season",
-      shortLabel: "Season 1",
+      shortLabel: currentSeasonLabel,
       year: anime.year,
       isCurrent: true,
     },
@@ -81,17 +96,17 @@ export default async function WatchEpisodePage({
   });
 
   const currentEpNum = parseInt(resolved.episodeId, 10) || 1;
-  const currentEp = episodes.find((e) => e.number === currentEpNum) || {
+  const currentEp: Episode = episodes.find((e) => e.number === currentEpNum) || {
     id: String(currentEpNum),
     number: currentEpNum,
     seasonNumber: 1,
     title: `Episode ${currentEpNum}`,
-    synopsis: anime.description || "No synopsis available for this episode.",
-    length: anime.duration || 24,
+    synopsis: "",
+    airdate: "",
   };
 
   const title = anime.title.english || anime.title.romaji || anime.title.native || "Anime";
-  const totalEpisodes = episodes.length > 0 ? episodes.length : (anime.episodes || 12);
+  const totalEpisodes = episodes.length > 0 ? episodes.length : (anime.episodes || 1);
   const hasPrev = currentEpNum > 1;
   const hasNext = currentEpNum < totalEpisodes;
 
@@ -106,7 +121,7 @@ export default async function WatchEpisodePage({
           <span>/</span>
           <Link href={`/anime/${anime.id}`}>{title}</Link>
           <span>/</span>
-          <span className={styles.currentCrumb}>Season {currentEp.seasonNumber || 1} • Episode {currentEpNum}</span>
+          <span className={styles.currentCrumb}>{currentSeasonLabel} • Episode {currentEpNum}</span>
         </div>
 
         <div className={styles.layout}>
@@ -125,8 +140,8 @@ export default async function WatchEpisodePage({
             <div className={styles.episodeMeta}>
               <div className={styles.titleRow}>
                 <div>
-                  <span className={styles.epBadge}>Season {currentEp.seasonNumber || 1} • Episode {currentEpNum}</span>
-                  <h1 className={styles.epTitle}>Episode {currentEpNum}: {currentEp.title}</h1>
+                  <span className={styles.epBadge}>{currentSeasonLabel} • Episode {currentEpNum}</span>
+                  <h1 className={styles.epTitle}>Episode {currentEpNum}: {currentEp?.title || `Episode ${currentEpNum}`}</h1>
                 </div>
 
                 <div className={styles.navButtons}>
@@ -150,8 +165,8 @@ export default async function WatchEpisodePage({
               {/* Synopsis */}
               <div className={styles.synopsisCard}>
                 <h3>Episode Overview</h3>
-                <p>{currentEp.synopsis || "No detailed synopsis available for this episode."}</p>
-                {currentEp.airdate && (
+                <p>{currentEp?.synopsis || "No detailed synopsis available for this episode."}</p>
+                {currentEp?.airdate && (
                   <div className={styles.airdateInfo}>
                     <Calendar size={14} />
                     <span>Aired on {currentEp.airdate}</span>

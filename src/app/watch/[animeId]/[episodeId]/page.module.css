@@ -220,6 +220,28 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary, #f43f5e) rgba(0, 0, 0, 0.22);
+}
+
+.episodesList::-webkit-scrollbar {
+  width: 5px;
+}
+
+.episodesList::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 9999px;
+}
+
+.episodesList::-webkit-scrollbar-thumb {
+  background: var(--primary, #f43f5e);
+  opacity: 0.7;
+  border-radius: 9999px;
+  transition: all 0.2s ease;
+}
+
+.episodesList::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-hover, #e11d48);
 }
 
 .episodeItem {

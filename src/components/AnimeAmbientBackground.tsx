@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client";
 
 import React, { useRef, useMemo, useEffect, useState } from 'react';
@@ -9,11 +8,9 @@ import * as THREE from 'three';
 
 extend({ EffectComposer, RenderPass, UnrealBloomPass });
 
-declare global {
-  namespace JSX {
-    interface IntrinsicElements {
-      unrealBloomPass: any;
-    }
+declare module '@react-three/fiber' {
+  interface ThreeElements {
+    unrealBloomPass: unknown;
   }
 }
 
@@ -63,10 +60,17 @@ const ParticleSwarm = ({ quality, speedMult = 0.5, theme }: ParticleSwarmProps) 
     opacity: 0.95,
   }), []);
 
+  useEffect(() => {
+    return () => {
+      geometry.dispose();
+      material.dispose();
+    };
+  }, [geometry, material]);
+
   const timeRef = useRef(0);
 
   useFrame((_, delta) => {
-    if (!meshRef.current) return;
+    if (!meshRef.current || (typeof document !== "undefined" && document.hidden)) return;
     timeRef.current += Math.min(delta, 0.1) * speedMult;
     const time = timeRef.current;
 
@@ -130,9 +134,9 @@ const ParticleSwarm = ({ quality, speedMult = 0.5, theme }: ParticleSwarmProps) 
         const spiralZ = Math.sin(spiralAngle) * spiralRadius;
         const spiralY = Math.sin(time * 0.5 + i * 0.01) * expansion * 0.15;
         
-        let posX = surfaceX * (1 - coreWeight) + spiralX * coreWeight;
-        let posY = surfaceY * (1 - coreWeight) + spiralY * coreWeight;
-        let posZ = surfaceZ * (1 - coreWeight) + spiralZ * coreWeight;
+        const posX = surfaceX * (1 - coreWeight) + spiralX * coreWeight;
+        const posY = surfaceY * (1 - coreWeight) + spiralY * coreWeight;
+        const posZ = surfaceZ * (1 - coreWeight) + spiralZ * coreWeight;
         
         const rotAngle = time * 0.12;
         const cosR = Math.cos(rotAngle), sinR = Math.sin(rotAngle);
@@ -454,7 +458,7 @@ export default function AnimeAmbientBackground() {
       }} 
     >
       <Canvas 
-        eventSource={containerRef}
+        eventSource={containerRef as unknown as React.RefObject<HTMLElement>}
         eventPrefix="client"
         dpr={dpr} 
         camera={{ position: [0, 0, 115], fov: 50 }}

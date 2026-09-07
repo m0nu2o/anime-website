@@ -50,23 +50,34 @@ export default function SearchDialog() {
   }, [isOpen]);
 
   useEffect(() => {
+    let ignore = false;
+    
     const timer = setTimeout(async () => {
       if (query.trim().length >= 2) {
         setLoading(true);
         try {
           const data = await searchAnimeAction(query);
-          setResults(data || []);
+          if (!ignore) {
+            setResults(data || []);
+          }
         } catch (err) {
-          setResults([]);
+          if (!ignore) {
+            setResults([]);
+          }
         } finally {
-          setLoading(false);
+          if (!ignore) {
+            setLoading(false);
+          }
         }
       } else {
         setResults([]);
       }
     }, 300);
 
-    return () => clearTimeout(timer);
+    return () => {
+      ignore = true;
+      clearTimeout(timer);
+    };
   }, [query]);
 
   if (!isOpen) return null;
@@ -145,7 +156,7 @@ export default function SearchDialog() {
             </div>
           ) : (
             <div className={styles.emptyState}>
-              <p>No results found for "{query}"</p>
+              <p>No results found for &quot;{query}&quot;</p>
             </div>
           )}
         </div>

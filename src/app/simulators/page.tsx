@@ -23,7 +23,7 @@ export default function SimulatorsHubPage() {
           <div className={styles.badge}>
             <Sparkles size={14} /> NextGen Cosmic Observatory
           </div>
-          <h1 className={styles.title}>Cosmic Observatory & 3D Lab</h1>
+          <h1 className={styles.title}>Interactive 3D Simulators &amp; Cosmic Lab</h1>
           <p className={styles.subtitle}>
             Control the real-time celestial simulations that illuminate the background across the entire NextGen Anime platform.
           </p>
@@ -42,20 +42,6 @@ export default function SimulatorsHubPage() {
         <section className={styles.gridSection} style={{ marginTop: "40px" }}>
           <h2 className={styles.sectionHeading}>Dedicated Simulation Laboratories</h2>
           <div className={styles.grid}>
-            <SimulatorCard
-              title="The Sun: Solar Corona & Fusion Dynamics"
-              category="Astrophysics / Stellar Model"
-              description="A multi-layered interactive model of our central star featuring nuclear fusion core reactions, convective Bénard cells, dynamic sunspots, coronal loops, and outward solar wind flux."
-              stats={[
-                { label: "Particles", value: "20,000" },
-                { label: "Layers", value: "7 Zones" },
-                { label: "Post-FX", value: "UnrealBloom" },
-              ]}
-              href="/simulators/sun"
-              badge="Full Screen Lab"
-              isAvailable={true}
-            />
-
             <SimulatorCard
               title="Supermassive Black Hole: Accretion Disk"
               category="General Relativity / Gravitational Lensing"

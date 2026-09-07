@@ -20,7 +20,7 @@ import {
   CheckCircle2, 
   Calendar, 
   Compass, 
-  Sun, 
+  Orbit, 
   Shuffle, 
   Sparkles,
   ArrowRight
@@ -307,13 +307,13 @@ export default function DashboardPage() {
               </div>
             </Link>
 
-            <Link href="/simulators/sun" className={styles.quickCard}>
-              <div className={styles.quickIcon} style={{ color: "#f59e0b" }}>
-                <Sun size={22} />
+            <Link href="/simulators/blackhole" className={styles.quickCard}>
+              <div className={styles.quickIcon} style={{ color: "#a855f7" }}>
+                <Orbit size={22} />
               </div>
               <div>
-                <h4 className={styles.quickTitle}>Solar Corona Simulator</h4>
-                <p className={styles.quickDesc}>Interactive 3D particle physics simulation of the sun.</p>
+                <h4 className={styles.quickTitle}>Black Hole Simulator</h4>
+                <p className={styles.quickDesc}>Interactive 3D relativistic simulation of a Kerr black hole.</p>
               </div>
             </Link>
 

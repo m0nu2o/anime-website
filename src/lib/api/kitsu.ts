@@ -27,13 +27,53 @@ async function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutM
   }
 }
 
-function normalizeKitsuAnime(item: any): Anime {
+interface KitsuTitles {
+  en?: string | null;
+  en_us?: string | null;
+  en_jp?: string | null;
+  ja_jp?: string | null;
+}
+
+interface KitsuAnimeAttributes {
+  titles?: KitsuTitles | null;
+  canonicalTitle?: string | null;
+  abbreviatedTitles?: string[] | null;
+  startDate?: string | null;
+  averageRating?: string | null;
+  synopsis?: string | null;
+  description?: string | null;
+  posterImage?: {
+    original?: string | null;
+    large?: string | null;
+    medium?: string | null;
+  } | null;
+  coverImage?: {
+    original?: string | null;
+    large?: string | null;
+  } | null;
+  showType?: string | null;
+  subtype?: string | null;
+  status?: string | null;
+  episodeCount?: number | null;
+  episodeLength?: number | null;
+  popularityRank?: number | null;
+  ratingRank?: number | null;
+  youtubeVideoId?: string | null;
+}
+
+interface KitsuAnimeItem {
+  id: string | number;
+  type: string;
+  attributes?: KitsuAnimeAttributes | null;
+}
+
+function normalizeKitsuAnime(item: KitsuAnimeItem): Anime {
   const attrs = item.attributes || {};
   const titles = attrs.titles || {};
 
-  const englishTitle = titles.en || titles.en_us || attrs.canonicalTitle;
-  const romajiTitle = titles.en_jp || attrs.canonicalTitle;
-  const nativeTitle = titles.ja_jp;
+  const englishTitle = titles.en || titles.en_us || attrs.canonicalTitle || undefined;
+  const romajiTitle = titles.en_jp || attrs.canonicalTitle || undefined;
+  const nativeTitle = titles.ja_jp || undefined;
 
   let year: number | undefined;
   if (attrs.startDate) {
@@ -49,6 +89,7 @@ function normalizeKitsuAnime(item: any): Anime {
 
   return {
     id: `kitsu-${item.id}`,
+    provider: "kitsu",
     kitsuId: String(item.id),
     title: {
       english: englishTitle,
@@ -58,9 +99,9 @@ function normalizeKitsuAnime(item: any): Anime {
     },
     description: attrs.synopsis || attrs.description || "",
     images: {
-      cover: attrs.posterImage?.large || attrs.posterImage?.original || attrs.posterImage?.medium,
-      largeCover: attrs.posterImage?.original || attrs.posterImage?.large,
-      banner: attrs.coverImage?.original || attrs.coverImage?.large || (attrs.youtubeVideoId ? `https://img.youtube.com/vi/${attrs.youtubeVideoId}/maxresdefault.jpg` : undefined) || attrs.posterImage?.original,
+      cover: attrs.posterImage?.large || attrs.posterImage?.original || attrs.posterImage?.medium || undefined,
+      largeCover: attrs.posterImage?.original || attrs.posterImage?.large || undefined,
+      banner: attrs.coverImage?.original || attrs.coverImage?.large || (attrs.youtubeVideoId ? `https://img.youtube.com/vi/${attrs.youtubeVideoId}/maxresdefault.jpg` : undefined) || attrs.posterImage?.original || undefined,
     },
     type: attrs.showType || "ANIME",
     format: attrs.subtype ? attrs.subtype.toUpperCase() : "TV",
@@ -85,8 +126,9 @@ export async function fetchKitsuTrending(limit: number = 15): Promise<Anime[]> {
     const data = await res.json();
     if (!Array.isArray(data?.data)) return [];
     return data.data.map(normalizeKitsuAnime);
-  } catch (err: any) {
-    console.warn(`Kitsu trending fetch failed: ${err.message}`);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.warn(`Kitsu trending fetch failed: ${msg}`);
     return [];
   }
 }
@@ -99,8 +141,9 @@ export async function fetchKitsuPopular(limit: number = 15): Promise<Anime[]> {
     const data = await res.json();
     if (!Array.isArray(data?.data)) return [];
     return data.data.map(normalizeKitsuAnime);
-  } catch (err: any) {
-    console.warn(`Kitsu popular fetch failed: ${err.message}`);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.warn(`Kitsu popular fetch failed: ${msg}`);
     return [];
   }
 }
@@ -117,8 +160,9 @@ export async function fetchKitsuAnime(params: { search?: string; limit?: number;
     const data = await res.json();
     if (!Array.isArray(data?.data)) return [];
     return data.data.map(normalizeKitsuAnime);
-  } catch (err: any) {
-    console.warn(`Kitsu anime search failed: ${err.message}`);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.warn(`Kitsu anime search failed: ${msg}`);
     return [];
   }
 }
@@ -156,10 +200,29 @@ export async function fetchKitsuAnimeById(id: string): Promise<Anime | null> {
     }
 
     return anime;
-  } catch (err: any) {
-    console.warn(`Kitsu anime by ID failed (${id}): ${err.message}`);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.warn(`Kitsu anime by ID failed (${id}): ${msg}`);
     return null;
   }
+}
+
+interface KitsuEpisodeAttributes {
+  number?: number | null;
+  relativeNumber?: number | null;
+  seasonNumber?: number | null;
+  canonicalTitle?: string | null;
+  titles?: { en_us?: string | null; en_jp?: string | null } | null;
+  synopsis?: string | null;
+  description?: string | null;
+  thumbnail?: { original?: string | null; medium?: string | null } | null;
+  airdate?: string | null;
+  length?: number | null;
+}
+
+interface KitsuEpisodeItem {
+  id: string | number;
+  attributes?: KitsuEpisodeAttributes | null;
 }
 
 export async function fetchKitsuEpisodes(animeId: string, searchTitle?: string): Promise<import("./types").Episode[]> {
@@ -178,9 +241,9 @@ export async function fetchKitsuEpisodes(animeId: string, searchTitle?: string):
     }
     const url = `${KITSU_API_URL}/anime/${cleanId}/episodes?page[limit]=20&page[offset]=0&sort=number`;
     const res = await fetchWithTimeout(url);
-    if (!res.ok) return createFallbackEpisodes(animeId);
+    if (!res.ok) return [];
     const data = await res.json();
-    let episodesData = Array.isArray(data?.data) ? data.data : [];
+    let episodesData: KitsuEpisodeItem[] = Array.isArray(data?.data) ? data.data : [];
 
     // If 20 episodes returned, fetch page 2 to provide up to 40 episodes
     if (episodesData.length === 20) {
@@ -193,38 +256,26 @@ export async function fetchKitsuEpisodes(animeId: string, searchTitle?: string):
             episodesData = episodesData.concat(data2.data);
           }
         }
-      } catch (err) {}
+      } catch {}
     }
 
     if (episodesData.length === 0) {
-      return createFallbackEpisodes(animeId);
+      return [];
     }
 
-    return episodesData.map((ep: any, idx: number) => ({
+    return episodesData.map((ep, idx) => ({
       id: String(ep.id),
       number: ep.attributes?.number || ep.attributes?.relativeNumber || (idx + 1),
       seasonNumber: ep.attributes?.seasonNumber || 1,
       title: ep.attributes?.canonicalTitle || (ep.attributes?.titles?.en_us || ep.attributes?.titles?.en_jp) || `Episode ${ep.attributes?.number || (idx + 1)}`,
       synopsis: ep.attributes?.synopsis || ep.attributes?.description || "",
-      thumbnail: ep.attributes?.thumbnail?.original || ep.attributes?.thumbnail?.medium,
-      airdate: ep.attributes?.airdate,
-      length: ep.attributes?.length || 24,
+      thumbnail: ep.attributes?.thumbnail?.original || ep.attributes?.thumbnail?.medium || undefined,
+      airdate: ep.attributes?.airdate || undefined,
+      length: ep.attributes?.length ?? undefined,
     }));
-  } catch (err) {
-    return createFallbackEpisodes(animeId);
+  } catch {
+    return [];
   }
-}
-
-function createFallbackEpisodes(animeId: string): import("./types").Episode[] {
-  return Array.from({ length: 12 }, (_, i) => ({
-    id: `ep-${i + 1}`,
-    number: i + 1,
-    seasonNumber: 1,
-    title: `Episode ${i + 1}`,
-    synopsis: `Episode ${i + 1} streaming broadcast and player sync.`,
-    airdate: undefined,
-    length: 24,
-  }));
 }
 
 export async function fetchKitsuStreamingLinks(animeId: string): Promise<import("./types").StreamingLink[]> {
@@ -235,7 +286,7 @@ export async function fetchKitsuStreamingLinks(animeId: string): Promise<import(
     if (!res.ok) return [];
     const data = await res.json();
     if (!Array.isArray(data?.data)) return [];
-    return data.data.map((link: any) => {
+    return data.data.map((link: { id: string | number; attributes?: { url?: string } }) => {
       const u = link.attributes?.url || "";
       let serviceName = "Official Streaming";
       if (u.includes("crunchyroll")) serviceName = "Crunchyroll";
@@ -251,7 +302,7 @@ export async function fetchKitsuStreamingLinks(animeId: string): Promise<import(
         serviceName,
       };
     });
-  } catch (err) {
+  } catch {
     return [];
   }
 }
@@ -264,7 +315,17 @@ export async function fetchKitsuCharacters(animeId: string): Promise<import("./t
     if (!res.ok) return [];
     const data = await res.json();
     if (!Array.isArray(data?.included)) return [];
-    return data.included.map((char: any) => ({
+    return data.included.map((char: {
+      id: string | number;
+      attributes?: {
+        canonicalName?: string;
+        name?: string;
+        names?: { ja_jp?: string };
+        image?: { original?: string; medium?: string };
+        description?: string;
+        role?: string;
+      };
+    }) => ({
       id: String(char.id),
       name: char.attributes?.canonicalName || char.attributes?.name || "Unknown Character",
       nativeName: char.attributes?.names?.ja_jp,
@@ -272,7 +333,7 @@ export async function fetchKitsuCharacters(animeId: string): Promise<import("./t
       description: char.attributes?.description || "",
       role: char.attributes?.role || "supporting",
     }));
-  } catch (err) {
+  } catch {
     return [];
   }
 }
@@ -284,12 +345,18 @@ export async function fetchKitsuStaff(animeId: string): Promise<import("./types"
     const res = await fetchWithTimeout(url);
     if (!res.ok) return [];
     const data = await res.json();
-    const personsMap = new Map<string, any>();
+    const personsMap = new Map<string, { name?: string; image?: { original?: string; medium?: string } }>();
     if (Array.isArray(data?.included)) {
-      data.included.forEach((p: any) => personsMap.set(p.id, p.attributes));
+      data.included.forEach((p: { id: string; attributes?: { name?: string; image?: { original?: string; medium?: string } } }) => {
+        personsMap.set(p.id, p.attributes || {});
+      });
     }
     if (!Array.isArray(data?.data)) return [];
-    return data.data.map((item: any) => {
+    return data.data.map((item: {
+      id: string | number;
+      attributes?: { role?: string };
+      relationships?: { person?: { data?: { id?: string } } };
+    }) => {
       const personId = item.relationships?.person?.data?.id;
       const personAttr = personId ? personsMap.get(personId) : null;
       return {
@@ -299,7 +366,7 @@ export async function fetchKitsuStaff(animeId: string): Promise<import("./types"
         image: personAttr?.image?.original || personAttr?.image?.medium,
       };
     });
-  } catch (err) {
+  } catch {
     return [];
   }
 }
@@ -322,9 +389,27 @@ export async function fetchKitsuRelations(animeId: string, searchTitle?: string)
     const res = await fetchWithTimeout(url);
     if (!res.ok) return [];
     const data = await res.json();
-    const destMap = new Map<string, any>();
+    const destMap = new Map<string, {
+      id: string;
+      attributes?: {
+        canonicalTitle?: string;
+        posterImage?: { medium?: string; original?: string };
+        subtype?: string;
+        startDate?: string;
+        episodeCount?: string | number;
+      };
+    }>();
     if (Array.isArray(data?.included)) {
-      data.included.forEach((dest: any) => destMap.set(dest.id, dest));
+      data.included.forEach((dest: {
+        id: string;
+        attributes?: {
+          canonicalTitle?: string;
+          posterImage?: { medium?: string; original?: string };
+          subtype?: string;
+          startDate?: string;
+          episodeCount?: string | number;
+        };
+      }) => destMap.set(dest.id, dest));
     }
     if (!Array.isArray(data?.data)) return [];
     const relations: import("./types").AnimeRelation[] = [];
@@ -341,13 +426,13 @@ export async function fetchKitsuRelations(animeId: string, searchTitle?: string)
             image: dest.attributes?.posterImage?.medium || dest.attributes?.posterImage?.original,
             format: dest.attributes?.subtype ? dest.attributes.subtype.toUpperCase() : "TV",
             year: dest.attributes?.startDate ? parseInt(dest.attributes.startDate.split("-")[0], 10) : undefined,
-            episodes: dest.attributes?.episodeCount ? parseInt(dest.attributes.episodeCount, 10) : undefined,
+            episodes: dest.attributes?.episodeCount ? parseInt(String(dest.attributes.episodeCount), 10) : undefined,
           },
         });
       }
     }
     return relations;
-  } catch (err) {
+  } catch {
     return [];
   }
 }
@@ -389,9 +474,9 @@ export async function fetchKitsuSeasonal(season: string, year: number, limit: nu
 export async function fetchKitsuAiringSchedule(limit: number = 20): Promise<import("./types").AiringSchedule[]> {
   try {
     const safeLimit = Math.min(Math.max(limit, 1), 20);
-    let url = `${KITSU_API_URL}/anime?filter[status]=current&page[limit]=${safeLimit}&sort=-userCount`;
-    let res = await fetchWithTimeout(url);
-    let items: any[] = [];
+    const url = `${KITSU_API_URL}/anime?filter[status]=current&page[limit]=${safeLimit}&sort=-userCount`;
+    const res = await fetchWithTimeout(url);
+    let items: KitsuAnimeItem[] = [];
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data?.data) && data.data.length > 0) {
@@ -405,7 +490,7 @@ export async function fetchKitsuAiringSchedule(limit: number = 20): Promise<impo
       if (popRes.ok) {
         const popData = await popRes.json();
         if (Array.isArray(popData?.data)) {
-          const existingIds = new Set(items.map((it: any) => String(it.id)));
+          const existingIds = new Set(items.map((it: KitsuAnimeItem) => String(it.id)));
           for (const it of popData.data) {
             if (!existingIds.has(String(it.id))) {
               items.push(it);
@@ -416,21 +501,27 @@ export async function fetchKitsuAiringSchedule(limit: number = 20): Promise<impo
       }
     }
 
-    const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-    return items.map((item: any, idx: number) => {
+    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    return items.map((item: KitsuAnimeItem) => {
       const attrs = item.attributes || {};
-      const dayName = days[idx % 7];
+      let dayName = "Saturday";
+      if (attrs.startDate) {
+        const parsed = new Date(attrs.startDate);
+        if (!isNaN(parsed.getTime())) {
+          dayName = days[parsed.getDay()];
+        }
+      }
       return {
         id: String(item.id),
         animeId: `kitsu-${item.id}`,
         animeTitle: attrs.canonicalTitle || (attrs.titles?.en || attrs.titles?.en_us) || "Anime Release",
         animeImage: attrs.posterImage?.medium || attrs.posterImage?.original || "/placeholder-cover.svg",
-        episodeNumber: attrs.episodeCount ? Math.min(idx + 1, attrs.episodeCount) : (idx + 1),
+        episodeNumber: attrs.episodeCount || 1,
         airingAt: dayName,
-        timeString: `${17 + (idx % 6)}:${(idx % 2 === 0 ? "00" : "30")} JST`,
+        timeString: "Broadcast TBA",
       };
     });
-  } catch (err) {
+  } catch {
     return [];
   }
 }
@@ -451,7 +542,7 @@ export async function fetchKitsuCharacterById(id: string): Promise<import("./typ
       image: attrs.image?.original || attrs.image?.medium,
       description: attrs.description || "",
     };
-  } catch (err) {
+  } catch {
     return null;
   }
 }
@@ -472,7 +563,7 @@ export async function fetchKitsuPersonById(id: string): Promise<import("./types"
       image: attrs.image?.original || attrs.image?.medium,
       description: attrs.description || "",
     };
-  } catch (err) {
+  } catch {
     return null;
   }
 }
@@ -560,7 +651,7 @@ export async function fetchKitsuCharactersList(params: {
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data?.data) && data.data.length > 0) {
-        return data.data.map((item: any) => {
+        return data.data.map((item: { id: string | number; attributes?: { canonicalName?: string; name?: string; names?: { ja_jp?: string }; image?: { original?: string; medium?: string; large?: string }; description?: string } }) => {
           const attrs = item.attributes || {};
           return {
             id: String(item.id),
@@ -572,29 +663,8 @@ export async function fetchKitsuCharactersList(params: {
         });
       }
     }
-
-    // Fallback if empty and no specific search
-    if (!params.search?.trim()) {
-      const fallbackRes = await fetchWithTimeout(`${KITSU_API_URL}/characters?filter[name]=Naruto&page[limit]=12`);
-      if (fallbackRes.ok) {
-        const fbData = await fallbackRes.json();
-        if (Array.isArray(fbData?.data)) {
-          return fbData.data.map((item: any) => {
-            const attrs = item.attributes || {};
-            return {
-              id: String(item.id),
-              name: attrs.canonicalName || attrs.name || "Unknown Character",
-              nativeName: attrs.names?.ja_jp,
-              image: attrs.image?.original || attrs.image?.medium || attrs.image?.large,
-              description: attrs.description || "",
-            };
-          });
-        }
-      }
-    }
-
     return [];
-  } catch (err) {
+  } catch {
     return [];
   }
 }
@@ -608,9 +678,9 @@ export async function fetchKitsuCharacterAnime(characterId: string): Promise<Ani
     const data = await res.json();
     if (!Array.isArray(data?.included)) return [];
     return data.included
-      .filter((inc: any) => inc.type === "anime")
+      .filter((inc: KitsuAnimeItem) => inc.type === "anime")
       .map(normalizeKitsuAnime);
-  } catch (err) {
+  } catch {
     return [];
   }
 }
@@ -631,7 +701,7 @@ export async function fetchKitsuPeopleList(params: {
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data?.data) && data.data.length > 0) {
-        return data.data.map((item: any) => {
+        return data.data.map((item: { id: string | number; attributes?: { name?: string; image?: { original?: string; medium?: string }; description?: string } }) => {
           const attrs = item.attributes || {};
           return {
             id: String(item.id),
@@ -643,29 +713,8 @@ export async function fetchKitsuPeopleList(params: {
         });
       }
     }
-
-    // Fallback if empty and no specific search
-    if (!params.search?.trim()) {
-      const fallbackRes = await fetchWithTimeout(`${KITSU_API_URL}/people?filter[name]=Miyazaki&page[limit]=12`);
-      if (fallbackRes.ok) {
-        const fbData = await fallbackRes.json();
-        if (Array.isArray(fbData?.data)) {
-          return fbData.data.map((item: any) => {
-            const attrs = item.attributes || {};
-            return {
-              id: String(item.id),
-              name: attrs.name || "Hayao Miyazaki",
-              role: "Director / Studio Ghibli",
-              image: attrs.image?.original || attrs.image?.medium,
-              description: attrs.description || "",
-            };
-          });
-        }
-      }
-    }
-
     return [];
-  } catch (err) {
+  } catch {
     return [];
   }
 }
@@ -679,9 +728,9 @@ export async function fetchKitsuPersonAnime(personId: string): Promise<Anime[]> 
     const data = await res.json();
     if (!Array.isArray(data?.included)) return [];
     return data.included
-      .filter((inc: any) => inc.type === "anime")
+      .filter((inc: KitsuAnimeItem) => inc.type === "anime")
       .map(normalizeKitsuAnime);
-  } catch (err) {
+  } catch {
     return [];
   }
 }
@@ -698,36 +747,20 @@ export async function fetchKitsuStudiosList(params: {
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data?.data) && data.data.length > 0) {
-        return data.data.map((item: any) => {
+        return data.data.map((item: { id: string | number; attributes?: { name?: string } }) => {
           const attrs = item.attributes || {};
           return {
             id: String(item.id),
             name: attrs.name || "Animation Studio",
             role: "Animation Studio",
-            description: `Production studio credited with anime films and TV series.`,
+            description: "Production studio credited with anime films and TV series.",
           };
         });
       }
     }
-
-    // Fallback list of top animation studios
-    return [
-      { id: "1", name: "Studio Ghibli", role: "Animation Studio", description: "Legendary studio behind Spirited Away and Princess Mononoke." },
-      { id: "2", name: "MAPPA", role: "Animation Studio", description: "Powerhouse studio behind Jujutsu Kaisen and Chainsaw Man." },
-      { id: "3", name: "ufotable", role: "Animation Studio", description: "Acclaimed studio behind Demon Slayer and Fate series." },
-      { id: "4", name: "Wit Studio", role: "Animation Studio", description: "Studio behind Attack on Titan (S1-S3) and Spy x Family." },
-      { id: "5", name: "Bones", role: "Animation Studio", description: "Renowned studio behind Fullmetal Alchemist and My Hero Academia." },
-      { id: "6", name: "Madhouse", role: "Animation Studio", description: "Classic studio behind Hunter x Hunter, Death Note, and Frieren." },
-      { id: "7", name: "Kyoto Animation", role: "Animation Studio", description: "Award-winning studio behind Violet Evergarden and A Silent Voice." },
-      { id: "8", name: "Toei Animation", role: "Animation Studio", description: "Iconic studio behind One Piece, Dragon Ball, and Sailor Moon." }
-    ];
-  } catch (err) {
-    return [
-      { id: "1", name: "Studio Ghibli", role: "Animation Studio", description: "Legendary studio behind Spirited Away and Princess Mononoke." },
-      { id: "2", name: "MAPPA", role: "Animation Studio", description: "Powerhouse studio behind Jujutsu Kaisen and Chainsaw Man." },
-      { id: "3", name: "ufotable", role: "Animation Studio", description: "Acclaimed studio behind Demon Slayer and Fate series." },
-      { id: "4", name: "Wit Studio", role: "Animation Studio", description: "Studio behind Attack on Titan and Spy x Family." }
-    ];
+    return [];
+  } catch {
+    return [];
   }
 }
 
@@ -746,7 +779,7 @@ export async function fetchKitsuStudioById(id: string): Promise<import("./types"
       role: "Animation Studio",
       description: `Production studio credited across various anime productions.`,
     };
-  } catch (err) {
+  } catch {
     return null;
   }
 }
@@ -760,9 +793,9 @@ export async function fetchKitsuStudioAnime(studioId: string): Promise<Anime[]> 
     const data = await res.json();
     if (!Array.isArray(data?.included)) return [];
     return data.included
-      .filter((inc: any) => inc.type === "anime")
+      .filter((inc: KitsuAnimeItem) => inc.type === "anime")
       .map(normalizeKitsuAnime);
-  } catch (err) {
+  } catch {
     return [];
   }
 }

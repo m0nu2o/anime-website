@@ -133,12 +133,9 @@ export default function AnimeReviews({ animeId, animeTitle, defaultScore }: Anim
     setReviews((prev) =>
       prev.map((r) => (r.id === reviewId ? { ...r, helpful_count: next } : r))
     );
-
+    if (!user) return;
     try {
-      await supabase
-        .from("anime_reviews")
-        .update({ helpful_count: next })
-        .eq("id", reviewId);
+      await supabase.rpc("increment_review_helpful_count", { row_id: reviewId });
     } catch (err) {
       console.warn("Failed to upvote review:", err);
     }
@@ -159,12 +156,12 @@ export default function AnimeReviews({ animeId, animeTitle, defaultScore }: Anim
   // Metrics
   const avgRating = reviews.length > 0
     ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1)
-    : defaultScore ? (defaultScore / 10).toFixed(1) : "8.5";
+    : defaultScore ? (defaultScore > 10 ? (defaultScore / 10).toFixed(1) : defaultScore.toFixed(1)) : null;
 
   const recCount = reviews.filter((r) => r.is_recommended).length;
   const recPercent = reviews.length > 0
     ? Math.round((recCount / reviews.length) * 100)
-    : 92;
+    : null;
 
   const currentActiveRating = hoverRating || rating;
 
@@ -190,22 +187,28 @@ export default function AnimeReviews({ animeId, animeTitle, defaultScore }: Anim
       </div>
 
       {/* Ratings Overview Card */}
-      <div className={styles.statsRow}>
-        <div className={styles.bigScore}>
-          <span className={styles.scoreNumber}>{avgRating}</span>
-          <span className={styles.scoreMax}>/ 10</span>
-        </div>
+      {(avgRating || reviews.length > 0) && (
+        <div className={styles.statsRow}>
+          {avgRating && (
+            <div className={styles.bigScore}>
+              <span className={styles.scoreNumber}>{avgRating}</span>
+              <span className={styles.scoreMax}>/ 10</span>
+            </div>
+          )}
 
-        <div className={styles.statsMeta}>
-          <div className={styles.recPercentage}>
-            <CheckCircle2 size={16} style={{ display: "inline", marginRight: "4px" }} />
-            {recPercent}% of reviewers recommend this anime
-          </div>
-          <div className={styles.reviewCount}>
-            Based on {reviews.length} community review{reviews.length === 1 ? "" : "s"}
+          <div className={styles.statsMeta}>
+            {recPercent !== null && (
+              <div className={styles.recPercentage}>
+                <CheckCircle2 size={16} style={{ display: "inline", marginRight: "4px" }} />
+                {recPercent}% of reviewers recommend this anime
+              </div>
+            )}
+            <div className={styles.reviewCount}>
+              Based on {reviews.length} community review{reviews.length === 1 ? "" : "s"}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Review Submission Form */}
       {isWriting && (

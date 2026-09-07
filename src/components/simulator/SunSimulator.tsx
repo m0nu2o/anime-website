@@ -1,12 +1,18 @@
 "use client";
 
-import React, { useRef, useMemo } from "react";
+import React, { useRef, useMemo, useEffect } from "react";
 import { Canvas, useFrame, extend } from "@react-three/fiber";
 import { OrbitControls, Effects } from "@react-three/drei";
 import { UnrealBloomPass } from "three-stdlib";
 import * as THREE from "three";
 
 extend({ UnrealBloomPass });
+
+declare module '@react-three/fiber' {
+  interface ThreeElements {
+    unrealBloomPass: unknown;
+  }
+}
 
 export interface SunParams {
   radius: number; // 40 - 300
@@ -41,12 +47,17 @@ function ParticleSwarm({ params }: { params: SunParams }) {
 
   const positions = useMemo(() => {
     const pos: THREE.Vector3[] = [];
+    const pseudoRandom = (seed: number) => {
+      const x = Math.sin(seed * 12.9898) * 43758.5453;
+      return x - Math.floor(x);
+    };
+
     for (let i = 0; i < count; i++) {
       pos.push(
         new THREE.Vector3(
-          (Math.random() - 0.5) * 100,
-          (Math.random() - 0.5) * 100,
-          (Math.random() - 0.5) * 100
+          (pseudoRandom(i * 3 + 1) - 0.5) * 100,
+          (pseudoRandom(i * 3 + 2) - 0.5) * 100,
+          (pseudoRandom(i * 3 + 3) - 0.5) * 100
         )
       );
     }
@@ -55,6 +66,13 @@ function ParticleSwarm({ params }: { params: SunParams }) {
 
   const geometry = useMemo(() => new THREE.TetrahedronGeometry(0.24), []);
   const material = useMemo(() => new THREE.MeshBasicMaterial({ color: 0xffffff }), []);
+
+  useEffect(() => {
+    return () => {
+      geometry.dispose();
+      material.dispose();
+    };
+  }, [geometry, material]);
 
   useFrame((_, delta) => {
     if (!meshRef.current) return;
@@ -325,7 +343,6 @@ export default function SunSimulator({ params = DEFAULT_PARAMS }: { params?: Sun
         <ParticleSwarm params={params} />
         <OrbitControls autoRotate={!params.isPaused} autoRotateSpeed={0.5} enablePan={true} />
         <Effects disableGamma>
-          {/* @ts-ignore */}
           <unrealBloomPass threshold={0} strength={1.8} radius={0.4} />
         </Effects>
       </Canvas>

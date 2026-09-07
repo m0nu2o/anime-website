@@ -12,7 +12,18 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    "*.js",
   ]),
+  {
+    rules: {
+      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
+      "@typescript-eslint/no-namespace": "off",
+      "react-hooks/set-state-in-effect": "warn",
+      "react-hooks/purity": "warn",
+      "react-hooks/immutability": "warn",
+    },
+  },
 ]);
 
 export default eslintConfig;

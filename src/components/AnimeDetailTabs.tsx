@@ -274,7 +274,7 @@ export default function AnimeDetailTabs({
                   </div>
                   <div className={styles.detailRow}>
                     <span className={styles.detailLabel}>Episode Duration</span>
-                    <span className={styles.detailValue}>{anime.duration ? `${anime.duration} mins` : "24 mins"}</span>
+                    <span className={styles.detailValue}>{anime.duration ? `${anime.duration} mins` : "Unknown"}</span>
                   </div>
                   <div className={styles.detailRow}>
                     <span className={styles.detailLabel}>Status</span>
@@ -372,13 +372,13 @@ export default function AnimeDetailTabs({
                     onClick={() => handleSwitchLanguage("sub")}
                     className={`${styles.langBtn} ${preferredLanguage === "sub" ? styles.activeLang : ""}`}
                   >
-                    🇯🇵 SUB
+                    SUB
                   </button>
                   <button
                     onClick={() => handleSwitchLanguage("dub")}
                     className={`${styles.langBtn} ${preferredLanguage === "dub" ? styles.activeLang : ""}`}
                   >
-                    🎙️ DUB
+                    DUB
                   </button>
                 </div>
 

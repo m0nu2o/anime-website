@@ -141,17 +141,16 @@ test.describe('NextGen Anime Core Flows', () => {
     await expect(rollBtn).toBeVisible({ timeout: 20000 });
   });
 
-  test('3D Sun Simulator Route & Interactive Controls HUD', async ({ page }) => {
-    await page.goto('/simulators/sun');
+  test('3D Simulators Hub & Interactive Lab Catalog', async ({ page }) => {
+    await page.goto('/simulators');
     
-    // Check HUD title and controls
-    await expect(page.getByText('The Sun: Stellar Dynamics')).toBeVisible({ timeout: 20000 });
-    await expect(page.getByText('Fusion Rate')).toBeVisible();
-    await expect(page.getByText('Magnetic Activity')).toBeVisible();
+    // Check page header and catalog
+    await expect(page.getByText('Interactive 3D Simulators')).toBeVisible({ timeout: 20000 });
+    await expect(page.getByText('Supermassive Black Hole')).toBeVisible();
 
-    // Check that WebGL canvas rendered
-    const canvas = page.locator('canvas').first();
-    await expect(canvas).toBeVisible();
+    // Verify /simulators/sun redirect works cleanly to /simulators/blackhole
+    await page.goto('/simulators/sun');
+    await expect(page).toHaveURL(/.*simulators\/blackhole/);
   });
 
   test('3D Black Hole Simulator Route & Physics HUD', async ({ page }) => {

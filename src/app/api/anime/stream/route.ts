@@ -1,22 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-
-interface StreamSource {
-  url: string;
-  quality: string;
-  isM3U8: boolean;
-}
-
-interface StreamResponse {
-  success: boolean;
-  provider: string;
-  anilistId?: string;
-  dubAvailable: boolean;
-  subAvailable: boolean;
-  sources: StreamSource[];
-  subtitles?: { url: string; lang: string }[];
-  embedUrls: { label: string; url: string; serverType: string; isDub: boolean }[];
-  downloadUrl?: string;
-}
+import { StreamResponse, StreamSource } from "@/lib/api/types";
 
 /**
  * Fast resolution of AniList ID from Kitsu mapping, direct ID, or title search
@@ -31,11 +14,16 @@ async function resolveAnilistId(
     return String(directAnilistId).trim();
   }
 
-  // 1. If animeId has anilist- prefix or is a pure numeric ID
+  // 1. If animeId has anilist- prefix
   if (animeId && animeId.startsWith("anilist-")) {
     return animeId.replace("anilist-", "");
   }
+
+  // Naked numeric IDs should be warned and treated as AniList only if absolutely necessary,
+  // but preferably we don't assume. To be safe for legacy, if it's purely digits, assume AniList
+  // but log a warning.
   if (animeId && /^\d+$/.test(animeId)) {
+    console.warn(`[resolveAnilistId] WARNING: Assuming naked ID ${animeId} is AniList. Update caller.`);
     return animeId;
   }
 
@@ -50,17 +38,12 @@ async function resolveAnilistId(
       if (res.ok) {
         const data = await res.json();
         const aniMap = data?.data?.find(
-          (m: any) => m.attributes?.externalSite === "anilist/anime"
+          (m: { attributes?: { externalSite?: string; externalId?: string } }) => m.attributes?.externalSite === "anilist/anime"
         );
         if (aniMap?.attributes?.externalId) {
           return String(aniMap.attributes.externalId);
         }
-        const malMap = data?.data?.find(
-          (m: any) => m.attributes?.externalSite === "myanimelist/anime"
-        );
-        if (malMap?.attributes?.externalId) {
-          malId = String(malMap.attributes.externalId);
-        }
+        // DO NOT assign malMap to malId if we are returning anilistId
       }
     } catch {}
   }
@@ -86,7 +69,7 @@ async function resolveAnilistId(
           if (mapRes.ok) {
             const mapData = await mapRes.json();
             const aniMap = mapData?.data?.find(
-              (m: any) => m.attributes?.externalSite === "anilist/anime"
+              (m: { attributes?: { externalSite?: string; externalId?: string } }) => m.attributes?.externalSite === "anilist/anime"
             );
             if (aniMap?.attributes?.externalId) {
               return String(aniMap.attributes.externalId);
@@ -97,8 +80,8 @@ async function resolveAnilistId(
     } catch {}
   }
 
-  // 4. Fallback to MAL ID if available
-  return malId ? String(malId) : undefined;
+  // Do not fallback to malId. MAL ID is NOT an AniList ID.
+  return undefined;
 }
 
 interface ReanimeServerRaw {
@@ -140,18 +123,55 @@ async function fetchReanimeServers(
           ...servers.filter((s) => s.dataType !== preferredType),
         ];
 
-        return prioritized.map((s, idx) => ({
-          label: `ReAnime ${s.serverName || "HD-" + (idx + 1)} (${(s.dataType || "sub").toUpperCase()})`,
-          url: s.dataLink,
-          serverType: `reanime_${(s.serverName || "hd1").toLowerCase()}`,
-          isDub: s.dataType === "dub",
-        }));
+        return prioritized.map((s, idx) => {
+          const isDubServer = s.dataType === "dub";
+          const finalUrl = isDubServer
+            ? `${s.dataLink}${s.dataLink.includes("?") ? "&" : "?"}a=1`
+            : s.dataLink;
+
+          return {
+            label: `ReAnime ${s.serverName || "HD-" + (idx + 1)} (${(s.dataType || "sub").toUpperCase()})`,
+            url: finalUrl,
+            serverType: `reanime_${(s.serverName || "hd1").toLowerCase()}`,
+            isDub: isDubServer,
+          };
+        });
       }
     }
-  } catch (err) {
-    console.warn("ReAnime server fetch failed:", err);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.warn("ReAnime server fetch failed:", msg);
   }
   return [];
+}
+
+const dubCheckCache = new Map<string, boolean>();
+
+/**
+ * Fast cached check whether an anime actually has an English dub
+ */
+async function checkAnimeHasEnglishDub(malId?: string | number): Promise<boolean | null> {
+  if (!malId) return null;
+  const key = String(malId);
+  if (dubCheckCache.has(key)) return dubCheckCache.get(key)!;
+
+  try {
+    const res = await fetch(`https://api.jikan.moe/v4/anime/${malId}/characters`, {
+      headers: { "User-Agent": "Mozilla/5.0 NextGenAnime/1.0" },
+      signal: AbortSignal.timeout(2000),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data?.data) && data.data.length > 0) {
+        const hasEnglish = data.data.some((c: { voice_actors?: { language?: string }[] }) =>
+          c.voice_actors?.some((va) => va.language?.toLowerCase() === "english")
+        );
+        dubCheckCache.set(key, hasEnglish);
+        return hasEnglish;
+      }
+    }
+  } catch {}
+  return null;
 }
 
 export async function GET(request: NextRequest) {
@@ -170,28 +190,40 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  // 1. Resolve AniList ID
+  // 1. Resolve AniList ID with provider validation
   const anilistId = await resolveAnilistId(animeId, title, malId, directAnilistId);
+  const effectiveMalId = malId || (animeId?.startsWith("mal-") ? animeId.replace("mal-", "") : undefined);
 
-  // 2. Fetch ReAnime servers (all old broken servers completely removed)
+  // 2. Fetch ReAnime servers (HD-1 & HD-2 FlixCloud/MegaCloud)
   let embedUrls: { label: string; url: string; serverType: string; isDub: boolean }[] = [];
   if (anilistId) {
-    embedUrls = await fetchReanimeServers(anilistId, episode, isDub);
+    try {
+      embedUrls = await fetchReanimeServers(anilistId, episode, isDub);
+    } catch {}
+  }
+
+  // 3. Verify English Dub availability
+  const hasEnglishDub = await checkAnimeHasEnglishDub(effectiveMalId);
+  if (hasEnglishDub === false) {
+    // Verified no English dub exists for this anime: filter out dub servers
+    embedUrls = embedUrls.filter((e) => !e.isDub);
   }
 
   const dubAvailable = embedUrls.some((e) => e.isDub === true);
   const subAvailable = embedUrls.some((e) => e.isDub === false);
+  const hasPlayableSource = embedUrls.length > 0;
 
-  // 3. Construct response
+  // 3. Construct clean response
   const response: StreamResponse = {
-    success: true,
-    provider: embedUrls.length > 0 ? "ReAnime.to Cloud Engine (HD-1 & HD-2)" : "ReAnime Fallback",
+    success: hasPlayableSource,
+    provider: hasPlayableSource ? "ReAnime.to Cloud Engine (HD-1 & HD-2)" : "ReAnime Fallback",
     anilistId,
     dubAvailable,
     subAvailable,
     sources: [],
     embedUrls,
-    downloadUrl: `https://reanime.to/search?q=${encodeURIComponent(title)}`,
+    downloadUrl: title ? `https://reanime.to/search?q=${encodeURIComponent(title)}` : undefined,
+    error: hasPlayableSource ? undefined : "No active streaming sources found for this episode",
   };
 
   return NextResponse.json(response, {

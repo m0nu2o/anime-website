@@ -1,0 +1,214 @@
+.searchPage {
+  margin-top: 80px;
+  padding-bottom: 80px;
+  min-height: 80vh;
+}
+
+.header {
+  margin-bottom: 2rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(244, 63, 94, 0.12);
+  color: var(--accent, #f43f5e);
+  border: 1px solid rgba(244, 63, 94, 0.25);
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.title {
+  font-size: 2.2rem;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+  background: linear-gradient(135deg, #fff 40%, var(--text-muted, #94a3b8));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.subtitle {
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.95rem;
+  max-width: 540px;
+}
+
+.searchBarWrapper {
+  width: 100%;
+  max-width: 680px;
+  margin: 1.5rem auto 2rem;
+  position: relative;
+}
+
+.searchInputGroup {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  border-radius: 14px;
+  padding: 8px 16px;
+  transition: all 0.2s ease;
+}
+
+.searchInputGroup:focus-within {
+  border-color: var(--accent, #f43f5e);
+  box-shadow: 0 0 20px rgba(244, 63, 94, 0.2);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.searchIcon {
+  color: var(--text-muted, #94a3b8);
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.searchInput {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 1.05rem;
+  outline: none;
+  font-family: inherit;
+}
+
+.searchInput::placeholder {
+  color: var(--text-muted, #64748b);
+}
+
+.clearBtn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted, #94a3b8);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: color 0.15s;
+}
+
+.clearBtn:hover {
+  color: #fff;
+}
+
+.popularTags {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 1rem;
+}
+
+.popularLabel {
+  font-size: 0.8rem;
+  color: var(--text-muted, #94a3b8);
+  font-weight: 600;
+}
+
+.tagPill {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-muted, #cbd5e1);
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tagPill:hover {
+  background: rgba(244, 63, 94, 0.15);
+  border-color: rgba(244, 63, 94, 0.3);
+  color: #fff;
+}
+
+.statusBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-color, rgba(255, 255, 255, 0.07));
+}
+
+.resultCount {
+  font-size: 0.95rem;
+  color: var(--text-muted, #94a3b8);
+}
+
+.resultCount strong {
+  color: #fff;
+}
+
+.resultsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1.5rem;
+}
+
+@media (max-width: 640px) {
+  .resultsGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+}
+
+.emptyState {
+  text-align: center;
+  padding: 4rem 1rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  margin-top: 2rem;
+}
+
+.emptyIcon {
+  color: var(--text-muted, #64748b);
+  margin-bottom: 1rem;
+}
+
+.emptyTitle {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: #fff;
+}
+
+.emptyDesc {
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.9rem;
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+.skeletonGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1.5rem;
+}
+
+.skeletonCard {
+  aspect-ratio: 2/3;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.03) 25%, rgba(255, 255, 255, 0.08) 50%, rgba(255, 255, 255, 0.03) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 12px;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

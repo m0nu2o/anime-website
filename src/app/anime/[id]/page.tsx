@@ -147,11 +147,13 @@ export default async function AnimeDetailPage({ params }: { params: Promise<{ id
                 <span className={styles.metaChipValue}>{anime.format || anime.type || "TV Series"}</span>
               </div>
 
-              <div className={styles.metaChip} title="Duration per Episode">
-                <Clock size={14} />
-                <span className={styles.metaChipValue}>{anime.duration ? `${anime.duration}m` : "24m"}</span>
-                <span className={styles.metaChipLabel}>/ ep</span>
-              </div>
+              {anime.duration ? (
+                <div className={styles.metaChip} title="Duration per Episode">
+                  <Clock size={14} />
+                  <span className={styles.metaChipValue}>{anime.duration}m</span>
+                  <span className={styles.metaChipLabel}>/ ep</span>
+                </div>
+              ) : null}
 
               {anime.year && (
                 <div className={styles.metaChip} title="Release Season">
@@ -166,11 +168,6 @@ export default async function AnimeDetailPage({ params }: { params: Promise<{ id
                   <span className={styles.metaChipValue}>{studioName}</span>
                 </div>
               )}
-
-              <div className={styles.metaChip} title="Content Rating">
-                <ShieldAlert size={14} />
-                <span className={styles.metaChipValue}>PG-13</span>
-              </div>
             </div>
 
             {/* Genres */}

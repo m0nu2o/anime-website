@@ -110,21 +110,23 @@ export default function ScheduleViewer() {
         if (!titleKey || seenTitles.has(titleKey)) return;
         seenTitles.add(titleKey);
 
-        let formattedLocalTime = item.time || "18:00";
-        try {
-          const timeParts = (item.time || "18:00").split(":");
-          const jstHour = parseInt(timeParts[0] || "18", 10);
-          const jstMin = parseInt(timeParts[1] || "00", 10);
+        let formattedLocalTime = item.time || "TBA";
+        if (item.time) {
+          try {
+            const timeParts = item.time.split(":");
+            const jstHour = parseInt(timeParts[0], 10);
+            const jstMin = parseInt(timeParts[1], 10);
 
-          // Convert JST (UTC+9) to user's local clock
-          const nowDate = new Date();
-          const targetDate = new Date(nowDate);
-          // Set to JST time today, then adjust for timezone offset
-          const utcHour = (jstHour - 9 + 24) % 24;
-          targetDate.setUTCHours(utcHour, jstMin, 0, 0);
+            // Convert JST (UTC+9) to user's local clock
+            const nowDate = new Date();
+            const targetDate = new Date(nowDate);
+            // Set to JST time today, then adjust for timezone offset
+            const utcHour = (jstHour - 9 + 24) % 24;
+            targetDate.setUTCHours(utcHour, jstMin, 0, 0);
 
-          formattedLocalTime = targetDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-        } catch {}
+            formattedLocalTime = targetDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+          } catch {}
+        }
 
         const isToday = (item.day || dKey).toLowerCase() === todayName.toLowerCase();
 

@@ -65,7 +65,7 @@ export async function searchAnime(query: string, limit: number = 10): Promise<An
         anilistResults.forEach(cacheAnime);
         return anilistResults;
       }
-    } catch (err) {
+    } catch {
       recordProviderFailure("anilist");
       console.warn("AniList search failed, entering cooldown, falling back to Jikan");
     }
@@ -80,7 +80,7 @@ export async function searchAnime(query: string, limit: number = 10): Promise<An
         jikanResults.forEach(cacheAnime);
         return jikanResults;
       }
-    } catch (err) {
+    } catch {
       recordProviderFailure("jikan");
       console.warn("Jikan search failed, entering cooldown, falling back to Kitsu");
     }
@@ -93,7 +93,7 @@ export async function searchAnime(query: string, limit: number = 10): Promise<An
       kitsuResults.forEach(cacheAnime);
       return kitsuResults;
     }
-  } catch (err) {
+  } catch {
     console.warn("Kitsu search failed");
   }
 
@@ -113,7 +113,7 @@ export async function getTrendingAnime(limit: number = 15): Promise<Anime[]> {
         anilistResults.forEach(cacheAnime);
         return anilistResults;
       }
-    } catch (err) {
+    } catch {
       recordProviderFailure("anilist");
       console.warn("AniList trending failed, falling back to Jikan");
     }
@@ -128,7 +128,7 @@ export async function getTrendingAnime(limit: number = 15): Promise<Anime[]> {
         jikanResults.forEach(cacheAnime);
         return jikanResults;
       }
-    } catch (err) {
+    } catch {
       recordProviderFailure("jikan");
       console.warn("Jikan trending failed, falling back to Kitsu");
     }
@@ -141,7 +141,7 @@ export async function getTrendingAnime(limit: number = 15): Promise<Anime[]> {
       kitsuResults.forEach(cacheAnime);
       return kitsuResults;
     }
-  } catch (err) {
+  } catch {
     console.warn("Kitsu trending failed");
   }
 
@@ -161,7 +161,7 @@ export async function getPopularAnime(limit: number = 15): Promise<Anime[]> {
         anilistResults.forEach(cacheAnime);
         return anilistResults;
       }
-    } catch (err) {
+    } catch {
       recordProviderFailure("anilist");
       console.warn("AniList popular failed, falling back to Jikan");
     }
@@ -176,7 +176,7 @@ export async function getPopularAnime(limit: number = 15): Promise<Anime[]> {
         jikanResults.forEach(cacheAnime);
         return jikanResults;
       }
-    } catch (err) {
+    } catch {
       recordProviderFailure("jikan");
       console.warn("Jikan popular failed, falling back to Kitsu");
     }
@@ -189,7 +189,7 @@ export async function getPopularAnime(limit: number = 15): Promise<Anime[]> {
       kitsuResults.forEach(cacheAnime);
       return kitsuResults;
     }
-  } catch (err) {
+  } catch {
     console.warn("Kitsu popular failed");
   }
 
@@ -197,8 +197,8 @@ export async function getPopularAnime(limit: number = 15): Promise<Anime[]> {
 }
 
 /**
- * Fetch a single anime by unified ID (e.g. anilist-21, mal-21, kitsu-7442)
- * Includes in-memory cache lookup and cross-provider fallback.
+ * Fetch a single anime by unified provider-prefixed ID (e.g. anilist-21, mal-21, kitsu-7442)
+ * Strictly preserves provider identity without cross-provider ID collisions.
  */
 export async function getAnimeById(idStr: string): Promise<Anime | null> {
   if (!idStr) return null;
@@ -207,7 +207,7 @@ export async function getAnimeById(idStr: string): Promise<Anime | null> {
   const cached = getFromCache(idStr);
   if (cached) return cached;
 
-  // 1. AniList format
+  // 1. AniList format: strictly owned by AniList
   if (idStr.startsWith("anilist-")) {
     const id = parseInt(idStr.replace("anilist-", ""), 10);
     if (!isNaN(id)) {
@@ -219,35 +219,82 @@ export async function getAnimeById(idStr: string): Promise<Anime | null> {
             cacheAnime(anime);
             return anime;
           }
-        } catch (err) {
+        } catch {
           recordProviderFailure("anilist");
         }
       }
-      // If AniList fails or is in cooldown, fallback to MAL/Jikan or Kitsu
-      if (isProviderHealthy("jikan")) {
+
+      // If AniList fails or is rate-limited, ONLY fallback if a verified mapping exists
+      // Check cache for previously mapped MAL or Kitsu IDs
+      const mappedEntry = getFromCache(`anilist-${id}`);
+      if (mappedEntry?.malId && isProviderHealthy("jikan")) {
         try {
-          const jikanAnime = await fetchJikanAnimeById(id);
+          const jikanAnime = await fetchJikanAnimeById(mappedEntry.malId);
           if (jikanAnime) {
             recordProviderSuccess("jikan");
             cacheAnime(jikanAnime);
             return jikanAnime;
           }
-        } catch (err) {
+        } catch {
           recordProviderFailure("jikan");
         }
       }
+
+      if (mappedEntry?.kitsuId) {
+        try {
+          const kitsuAnime = await fetchKitsuAnimeById(mappedEntry.kitsuId);
+          if (kitsuAnime) {
+            cacheAnime(kitsuAnime);
+            return kitsuAnime;
+          }
+        } catch {}
+      }
+
+      // Direct fallback: resolve AniList ID via Kitsu external mapping
       try {
-        const kitsuAnime = await fetchKitsuAnimeById(String(id));
-        if (kitsuAnime) {
-          cacheAnime(kitsuAnime);
-          return kitsuAnime;
+        const mapRes = await fetch(
+          `https://kitsu.io/api/edge/mappings?filter[externalSite]=anilist/anime&filter[externalId]=${id}&include=item`,
+          {
+            headers: { "Accept": "application/vnd.api+json" },
+            signal: AbortSignal.timeout(4000),
+          }
+        );
+        if (mapRes.ok) {
+          const mapJson = await mapRes.json();
+          const kitsuId = mapJson.included?.[0]?.id;
+          if (kitsuId) {
+            const kitsuAnime = await fetchKitsuAnimeById(kitsuId);
+            if (kitsuAnime) {
+              kitsuAnime.id = idStr;
+              kitsuAnime.anilistId = id;
+              cacheAnime(kitsuAnime);
+              return kitsuAnime;
+            }
+          }
         }
-      } catch (err) {}
+      } catch {}
+
+      // If title is known from cached entry, try exact title resolution on Kitsu
+      const titleToFind = mappedEntry?.title?.english || mappedEntry?.title?.romaji;
+      if (titleToFind) {
+        try {
+          const searchResults = await fetchKitsuAnime({ search: titleToFind, limit: 1 });
+          if (searchResults.length > 0) {
+            const first = searchResults[0];
+            // Verify title similarity before accepting
+            const foundTitle = first.title.english || first.title.romaji || "";
+            if (foundTitle.toLowerCase().includes(titleToFind.toLowerCase().slice(0, 8))) {
+              cacheAnime(first);
+              return first;
+            }
+          }
+        } catch {}
+      }
     }
     return null;
   }
 
-  // 2. MAL / Jikan format
+  // 2. MAL / Jikan format: strictly owned by MyAnimeList
   if (idStr.startsWith("mal-")) {
     const id = parseInt(idStr.replace("mal-", ""), 10);
     if (!isNaN(id)) {
@@ -259,23 +306,27 @@ export async function getAnimeById(idStr: string): Promise<Anime | null> {
             cacheAnime(anime);
             return anime;
           }
-        } catch (err) {
+        } catch {
           recordProviderFailure("jikan");
         }
       }
-      // Fallback to Kitsu
-      try {
-        const kitsuAnime = await fetchKitsuAnimeById(String(id));
-        if (kitsuAnime) {
-          cacheAnime(kitsuAnime);
-          return kitsuAnime;
-        }
-      } catch (err) {}
+
+      // Fallback only if verified mapping exists
+      const mappedEntry = getFromCache(`mal-${id}`);
+      if (mappedEntry?.kitsuId) {
+        try {
+          const kitsuAnime = await fetchKitsuAnimeById(mappedEntry.kitsuId);
+          if (kitsuAnime) {
+            cacheAnime(kitsuAnime);
+            return kitsuAnime;
+          }
+        } catch {}
+      }
     }
     return null;
   }
 
-  // 3. Kitsu format
+  // 3. Kitsu format: strictly owned by Kitsu
   if (idStr.startsWith("kitsu-")) {
     const cleanId = idStr.replace("kitsu-", "");
     try {
@@ -285,25 +336,19 @@ export async function getAnimeById(idStr: string): Promise<Anime | null> {
         cacheAnime(anime);
         return anime;
       }
-    } catch (err) {
+    } catch {
       recordProviderFailure("kitsu");
     }
     return null;
   }
 
-  // 4. Fallback for raw numeric IDs
+  // 4. Deterministic resolution for legacy naked numeric IDs
   if (/^\d+$/.test(idStr)) {
-    // Try Kitsu first as it is currently most reliable
-    try {
-      const kitsuAnime = await fetchKitsuAnimeById(idStr);
-      if (kitsuAnime) {
-        recordProviderSuccess("kitsu");
-        cacheAnime(kitsuAnime);
-        return kitsuAnime;
-      }
-    } catch (err) {}
-
+    // Naked numeric IDs are deprecated. We assume they are AniList IDs 
+    // because that was the original database convention, but we will wrap it and process strictly as AniList.
     const numId = parseInt(idStr, 10);
+    console.warn(`[getAnimeById] WARNING: Received naked numeric ID ${idStr}. Defaulting to AniList resolver for legacy compatibility. Update caller to use prefixed IDs.`);
+    
     if (isProviderHealthy("anilist")) {
       try {
         const anilistAnime = await fetchAniListAnimeById(numId);
@@ -312,23 +357,11 @@ export async function getAnimeById(idStr: string): Promise<Anime | null> {
           cacheAnime(anilistAnime);
           return anilistAnime;
         }
-      } catch (err) {
+      } catch {
         recordProviderFailure("anilist");
       }
     }
-
-    if (isProviderHealthy("jikan")) {
-      try {
-        const jikanAnime = await fetchJikanAnimeById(numId);
-        if (jikanAnime) {
-          recordProviderSuccess("jikan");
-          cacheAnime(jikanAnime);
-          return jikanAnime;
-        }
-      } catch (err) {
-        recordProviderFailure("jikan");
-      }
-    }
+    return null;
   }
 
   return null;

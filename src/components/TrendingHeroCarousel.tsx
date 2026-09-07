@@ -85,11 +85,11 @@ export default function TrendingHeroCarousel({ animeList }: TrendingHeroCarousel
   if (!top10.length) return null;
 
   const currentAnime = top10[currentIndex];
-  const englishTitle = currentAnime.title.english || currentAnime.title.romaji || "Popular Anime";
+  const englishTitle = currentAnime.title.english || currentAnime.title.romaji || currentAnime.title.native || "Featured Anime";
   const romajiTitle = currentAnime.title.romaji && currentAnime.title.romaji !== englishTitle ? currentAnime.title.romaji : null;
   const score = currentAnime.score 
     ? (currentAnime.score > 10 ? (currentAnime.score / 10).toFixed(1) : currentAnime.score.toFixed(1)) 
-    : "8.8";
+    : null;
 
   // High-Resolution Image Pipeline
   const backdropImage = 
@@ -138,10 +138,12 @@ export default function TrendingHeroCarousel({ animeList }: TrendingHeroCarousel
               <Flame size={14} className={styles.flameIcon} />
               <span>Trending #{currentIndex + 1}</span>
             </span>
-            <span className={styles.scoreBadge}>
-              <Star size={13} fill="#f59e0b" color="#f59e0b" />
-              <span>{score}</span>
-            </span>
+            {score && (
+              <span className={styles.scoreBadge}>
+                <Star size={13} fill="#f59e0b" color="#f59e0b" />
+                <span>{score}</span>
+              </span>
+            )}
             <span className={styles.formatBadge}>
               <Tv size={12} />
               <span>{currentAnime.format || "TV"}</span>

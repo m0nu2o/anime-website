@@ -25,8 +25,18 @@ export default async function SeasonalPage({
   searchParams: Promise<{ season?: string; year?: string }>;
 }) {
   const params = await searchParams;
-  const currentYear = params.year ? parseInt(params.year, 10) : 2024;
-  const currentSeason = params.season ? params.season.toLowerCase() : "winter";
+  const now = new Date();
+  const getCalculatedSeason = (month: number) => {
+    if (month >= 0 && month <= 2) return "winter";
+    if (month >= 3 && month <= 5) return "spring";
+    if (month >= 6 && month <= 8) return "summer";
+    return "fall";
+  };
+  const defaultYear = now.getFullYear();
+  const defaultSeason = getCalculatedSeason(now.getMonth());
+
+  const currentYear = params.year ? parseInt(params.year, 10) : defaultYear;
+  const currentSeason = params.season ? params.season.toLowerCase() : defaultSeason;
 
   const animeList = await getSeasonalAnime(currentSeason, currentYear, 20);
 
@@ -89,10 +99,10 @@ export default async function SeasonalPage({
             <h3>No Anime Found For This Season</h3>
             <p>Schedules for this season have not yet been announced or verified.</p>
             <Link
-              href="/seasonal?season=winter&year=2024"
+              href="/discover"
               style={{ display: "inline-block", marginTop: "16px", padding: "10px 20px", background: "var(--primary, #6366f1)", color: "#fff", borderRadius: "8px", fontWeight: 600 }}
             >
-              Browse Winter 2024 Spotlight
+              Explore Anime Catalog
             </Link>
           </div>
         )}

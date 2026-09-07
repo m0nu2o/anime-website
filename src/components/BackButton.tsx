@@ -18,11 +18,16 @@ export default function BackButton({
 }: BackButtonProps) {
   const router = useRouter();
 
-  const handleBack = () => {
-    if (typeof window !== "undefined" && window.history.length > 1) {
+  const handleBack = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (fallbackUrl && fallbackUrl !== "/") {
+      router.push(fallbackUrl);
+      return;
+    }
+    if (typeof window !== "undefined" && document.referrer && document.referrer.startsWith(window.location.origin)) {
       router.back();
     } else {
-      router.push(fallbackUrl);
+      router.push(fallbackUrl || "/");
     }
   };
 

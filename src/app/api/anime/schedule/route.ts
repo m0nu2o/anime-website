@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
         episode: item.episodeNumber,
         isUpcoming: item.status === "upcoming",
         status: item.status || "airing_today",
-        time: (item.timeString || "18:00 JST").replace(" JST", "").trim(),
+        time: item.timeString ? item.timeString.replace(" JST", "").trim() : undefined,
         day: item.airingAt,
         score: item.score,
         studio: item.studio,
@@ -73,10 +73,11 @@ export async function GET(request: NextRequest) {
     }, {
       headers: { "Cache-Control": "public, s-maxage=21600, stale-while-revalidate=86400" },
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
+    console.error("Schedule API Error:", err);
     return NextResponse.json({
       success: false,
-      error: err.message,
+      error: err instanceof Error ? err.message : "Unknown error occurred",
     }, { status: 500 });
   }
 }

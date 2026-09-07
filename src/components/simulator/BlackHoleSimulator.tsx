@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useMemo, useState } from "react";
+import React, { useRef, useMemo, useEffect } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, Stars } from "@react-three/drei";
 import * as THREE from "three";
@@ -71,15 +71,20 @@ function AccretionDisk({
     // orbitalData: [radius, angle, speed, verticalOffset]
     const orb = new Float32Array(count * 4);
 
+    const pseudoRandom = (seed: number) => {
+      const x = Math.sin(seed * 12.9898) * 43758.5453;
+      return x - Math.floor(x);
+    };
+
     for (let i = 0; i < count; i++) {
       // Clustered towards inner edge (Keplerian density gradient)
-      const u = Math.random();
+      const u = pseudoRandom(i * 3 + 1);
       const r = innerRadius + Math.pow(u, 1.8) * (outerRadius - innerRadius);
-      const theta = Math.random() * Math.PI * 2;
+      const theta = pseudoRandom(i * 3 + 2) * Math.PI * 2;
       // Keplerian angular velocity: v ~ 1 / sqrt(r) * (1 + spin * 0.5)
       const speed = (2.2 / Math.sqrt(r)) * (1 + spin * 0.4);
       // Small vertical disk scale height
-      const zHeight = (Math.random() - 0.5) * 0.18 * (r / outerRadius);
+      const zHeight = (pseudoRandom(i * 3 + 3) - 0.5) * 0.18 * (r / outerRadius);
 
       const i3 = i * 3;
       pos[i3] = Math.cos(theta) * r;
@@ -115,6 +120,11 @@ function AccretionDisk({
     return [pos, col, orb];
   }, [count, innerRadius, outerRadius, spin]);
 
+  const orbitalDataRef = useRef<Float32Array>(orbitalData);
+  useEffect(() => {
+    orbitalDataRef.current = orbitalData;
+  }, [orbitalData]);
+
   useFrame((_, delta) => {
     if (isPaused || !pointsRef.current) return;
 
@@ -122,16 +132,17 @@ function AccretionDisk({
     const colAttr = pointsRef.current.geometry.attributes.color;
     const posArr = posAttr.array as Float32Array;
     const colArr = colAttr.array as Float32Array;
+    const orb = orbitalDataRef.current;
 
     for (let i = 0; i < count; i++) {
       const i4 = i * 4;
-      const r = orbitalData[i4];
-      const speed = orbitalData[i4 + 2];
-      const z = orbitalData[i4 + 3];
+      const r = orb[i4];
+      const speed = orb[i4 + 2];
+      const z = orb[i4 + 3];
 
       // Advance orbital angle
-      orbitalData[i4 + 1] += speed * delta;
-      const theta = orbitalData[i4 + 1];
+      orb[i4 + 1] += speed * delta;
+      const theta = orb[i4 + 1];
 
       const i3 = i * 3;
       posArr[i3] = Math.cos(theta) * r;

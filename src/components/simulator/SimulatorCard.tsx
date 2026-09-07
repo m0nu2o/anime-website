@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { Sparkles, ArrowRight, Activity, Cpu } from "lucide-react";
+import { Sparkles, ArrowRight } from "lucide-react";
 import styles from "./SimulatorCard.module.css";
 
 interface SimulatorCardProps {

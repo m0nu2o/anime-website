@@ -8,14 +8,16 @@ interface AiringCountdownProps {
   timeString?: string;
 }
 
-export default function AiringCountdown({ dayName, timeString = "18:00 JST" }: AiringCountdownProps) {
+export default function AiringCountdown({ dayName, timeString }: AiringCountdownProps) {
   const [timeLeft, setTimeLeft] = useState<{ hours: number; minutes: number; seconds: number } | null>(null);
 
   useEffect(() => {
     function calculateTime() {
+      if (!timeString || timeString.includes("TBA")) return;
+      
       // Parse JST time (e.g. "18:00 JST" or "09:30 JST")
       const timeMatch = timeString.match(/(\d{1,2}):(\d{2})/);
-      const jstHour = timeMatch ? parseInt(timeMatch[1], 10) : 18;
+      const jstHour = timeMatch ? parseInt(timeMatch[1], 10) : 0;
       const jstMin = timeMatch ? parseInt(timeMatch[2], 10) : 0;
 
       const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -27,7 +29,7 @@ export default function AiringCountdown({ dayName, timeString = "18:00 JST" }: A
       // JST is UTC+9
       const jstNow = new Date(utcNow + 3600000 * 9);
 
-      let targetDate = new Date(jstNow);
+      const targetDate = new Date(jstNow);
       targetDate.setHours(jstHour, jstMin, 0, 0);
 
       if (targetDayIndex !== -1) {
@@ -57,8 +59,17 @@ export default function AiringCountdown({ dayName, timeString = "18:00 JST" }: A
     return () => clearInterval(interval);
   }, [dayName, timeString]);
 
+  if (!timeString || timeString.includes("TBA")) {
+    return (
+      <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+        <Clock size={13} />
+        <span>Time TBA</span>
+      </span>
+    );
+  }
+
   if (!timeLeft) {
-    return <span>🟢 Broadcast Live Now</span>;
+    return <span>📡 Broadcast Live Now</span>;
   }
 
   const pad = (n: number) => (n < 10 ? `0${n}` : String(n));

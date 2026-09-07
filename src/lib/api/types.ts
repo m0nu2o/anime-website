@@ -76,8 +76,45 @@ export interface AiringSchedule {
   studio?: string;
 }
 
+export type AnimeProvider = "anilist" | "mal" | "kitsu";
+
+export interface AnimeIds {
+  id: string; // Unified prefixed ID: anilist-XXXX, mal-XXXX, kitsu-XXXX
+  provider: AnimeProvider;
+  anilistId?: number;
+  malId?: number;
+  kitsuId?: string;
+}
+
+export interface StreamSource {
+  url: string;
+  quality: string;
+  isM3U8: boolean;
+}
+
+export interface EmbedSource {
+  label: string;
+  url: string;
+  serverType: string;
+  isDub: boolean;
+}
+
+export interface StreamResponse {
+  success: boolean;
+  provider: string;
+  anilistId?: string;
+  dubAvailable: boolean;
+  subAvailable: boolean;
+  sources: StreamSource[];
+  subtitles?: { url: string; lang: string }[];
+  embedUrls: EmbedSource[];
+  downloadUrl?: string;
+  error?: string;
+}
+
 export interface Anime {
   id: string;
+  provider: AnimeProvider;
   anilistId?: number;
   malId?: number;
   kitsuId?: string;

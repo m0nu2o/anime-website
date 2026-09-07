@@ -40,15 +40,8 @@ export default function WatchPartyRoom() {
     {
       id: "1",
       sender: "System",
-      text: `Welcome to Watch Party room ${roomId}! Synchronized playback active.`,
+      text: `Welcome to Watch Party room ${roomId}. Share the room link to watch together with friends.`,
       timestamp: "Just now",
-    },
-    {
-      id: "2",
-      sender: "Eren",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100",
-      text: "Hyped for this episode! That opening animation is incredible.",
-      timestamp: "1m ago",
     },
   ]);
   const [inputText, setInputText] = useState("");

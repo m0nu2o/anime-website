@@ -24,7 +24,7 @@ export default function CalendarPage() {
           <span className={styles.badge}>
             <Sparkles size={13} /> Official Broadcast Calendar
           </span>
-          <h1 className={styles.title}>Live Airing Schedule</h1>
+          <h1 className={styles.title}>Release Calendar</h1>
           <p className={styles.subtitle}>
             Accurate broadcast schedules automatically converted from Japan Standard Time (JST) to your local timezone with live countdowns.
           </p>

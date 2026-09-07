@@ -19,20 +19,21 @@ export async function GET(req: NextRequest) {
       getAnimeById(animeId).catch(() => null),
     ]);
 
-    const totalEpisodes = episodes.length > 0 ? episodes.length : (anime?.episodes || 12);
+    const totalEpisodes = episodes.length > 0 ? episodes.length : (anime?.episodes ?? 0);
 
     return NextResponse.json({
       animeId,
       episodes,
       totalEpisodes,
-      dubAvailable: true,
-      subAvailable: true,
+      dubAvailable: false, // Must be determined by stream API
+      subAvailable: false, // Must be determined by stream API
       currentLanguage: language,
     });
-  } catch (error: any) {
-    console.error("Failed to fetch episodes:", error);
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error("Failed to fetch episodes:", msg);
     return NextResponse.json(
-      { error: "Failed to fetch episodes", details: error.message },
+      { error: "Failed to fetch episodes", details: msg },
       { status: 500 }
     );
   }

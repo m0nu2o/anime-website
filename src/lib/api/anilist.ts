@@ -66,9 +66,52 @@ async function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutM
   }
 }
 
+interface AniListMedia {
+  id: number;
+  idMal?: number | null;
+  title?: {
+    romaji?: string | null;
+    english?: string | null;
+    native?: string | null;
+  } | null;
+  description?: string | null;
+  coverImage?: {
+    extraLarge?: string | null;
+    large?: string | null;
+    color?: string | null;
+  } | null;
+  bannerImage?: string | null;
+  format?: string | null;
+  status?: string | null;
+  season?: string | null;
+  seasonYear?: number | null;
+  episodes?: number | null;
+  duration?: number | null;
+  averageScore?: number | null;
+  popularity?: number | null;
+  genres?: string[] | null;
+  tags?: { name: string }[] | null;
+  trailer?: { id?: string | null; site?: string | null } | null;
+}
+
+interface AniListAiringItem {
+  id: number;
+  airingAt: number;
+  timeUntilAiring: number;
+  episode: number;
+  media?: {
+    id: number;
+    title?: { romaji?: string | null; english?: string | null; native?: string | null } | null;
+    coverImage?: { large?: string | null; extraLarge?: string | null } | null;
+    genres?: string[] | null;
+    averageScore?: number | null;
+    studios?: { nodes?: { name: string }[] | null } | null;
+  } | null;
+}
+
 export async function fetchAniListAnime(params: { id?: number; search?: string; page?: number; perPage?: number; sort?: string[] }): Promise<Anime[]> {
   try {
-    const variables: Record<string, any> = {
+    const variables: Record<string, unknown> = {
       page: params.page || 1,
       perPage: params.perPage || 10,
     };
@@ -92,41 +135,43 @@ export async function fetchAniListAnime(params: { id?: number; search?: string; 
 
     const data = await response.json();
     
-    if (!data.data || !data.data.Page || !data.data.Page.media) {
+    if (!data?.data?.Page?.media || !Array.isArray(data.data.Page.media)) {
       return [];
     }
 
-    return data.data.Page.media.map((item: any) => ({
+    return (data.data.Page.media as AniListMedia[]).map((item) => ({
       id: `anilist-${item.id}`,
+      provider: "anilist" as const,
       anilistId: item.id,
-      malId: item.idMal,
+      malId: item.idMal ?? undefined,
       title: {
-        english: item.title?.english,
-        romaji: item.title?.romaji,
-        native: item.title?.native,
+        english: item.title?.english ?? undefined,
+        romaji: item.title?.romaji ?? undefined,
+        native: item.title?.native ?? undefined,
       },
-      description: item.description,
+      description: item.description ?? undefined,
       images: {
-        cover: item.coverImage?.large,
-        largeCover: item.coverImage?.extraLarge,
-        banner: item.bannerImage,
+        cover: item.coverImage?.large ?? undefined,
+        largeCover: item.coverImage?.extraLarge ?? undefined,
+        banner: item.bannerImage ?? undefined,
       },
       type: "ANIME",
-      format: item.format,
-      status: item.status,
-      season: item.season,
-      year: item.seasonYear,
-      episodes: item.episodes,
-      duration: item.duration,
-      score: item.averageScore,
-      popularity: item.popularity,
-      genres: item.genres,
-      tags: item.tags?.map((t: any) => t.name) || [],
-      youtubeVideoId: item.trailer?.site === "youtube" ? item.trailer?.id : undefined,
-      trailerUrl: item.trailer?.site === "youtube" ? `https://www.youtube.com/watch?v=${item.trailer?.id}` : undefined,
+      format: item.format ?? undefined,
+      status: item.status ?? undefined,
+      season: item.season ?? undefined,
+      year: item.seasonYear ?? undefined,
+      episodes: item.episodes ?? undefined,
+      duration: item.duration ?? undefined,
+      score: item.averageScore ?? undefined,
+      popularity: item.popularity ?? undefined,
+      genres: item.genres ?? [],
+      tags: item.tags?.map((t) => t.name) || [],
+      youtubeVideoId: item.trailer?.site === "youtube" ? (item.trailer?.id ?? undefined) : undefined,
+      trailerUrl: item.trailer?.site === "youtube" && item.trailer?.id ? `https://www.youtube.com/watch?v=${item.trailer.id}` : undefined,
     }));
-  } catch (error: any) {
-    console.warn(`AniList fetch failed: ${error.message}`);
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.warn(`AniList fetch failed: ${msg}`);
     return [];
   }
 }
@@ -186,7 +231,7 @@ export async function fetchAniListAiringSchedule(limit: number = 30): Promise<im
 
     const weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
-    return schedules.map((item: any) => {
+    return (schedules as AniListAiringItem[]).map((item) => {
       const airDate = new Date(item.airingAt * 1000);
       const dayName = weekdays[airDate.getDay()];
       const jstDate = new Intl.DateTimeFormat("en-US", {
@@ -196,7 +241,7 @@ export async function fetchAniListAiringSchedule(limit: number = 30): Promise<im
         hour12: false,
       }).format(airDate);
 
-      const title = item.media?.title?.english || item.media?.title?.romaji || "Anime Release";
+      const title = item.media?.title?.english || item.media?.title?.romaji || item.media?.title?.native || "Unknown Title";
       const studio = item.media?.studios?.nodes?.[0]?.name;
 
       return {
@@ -211,12 +256,13 @@ export async function fetchAniListAiringSchedule(limit: number = 30): Promise<im
         timeUntilAiring: item.timeUntilAiring,
         status: item.timeUntilAiring <= 0 ? "aired" : (item.timeUntilAiring <= 86400 ? "airing_today" : "upcoming"),
         genres: item.media?.genres || [],
-        score: item.media?.averageScore,
+        score: item.media?.averageScore ? item.media.averageScore : undefined,
         studio,
       };
     });
-  } catch (err: any) {
-    console.warn(`AniList schedule fetch failed: ${err.message}`);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.warn(`AniList schedule fetch failed: ${msg}`);
     return [];
   }
 }
