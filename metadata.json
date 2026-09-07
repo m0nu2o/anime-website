@@ -1,0 +1,6 @@
+{
+  "name": "NextGen Anime",
+  "description": "A premium, next-generation anime discovery, watching, and 3D simulation platform.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
