@@ -175,7 +175,9 @@
   display: flex;
   gap: 20px;
   overflow-x: auto;
-  padding-bottom: 16px;
+  padding-top: 12px;
+  padding-bottom: 20px;
+  margin-top: -6px;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
@@ -187,6 +189,7 @@
 .cardWrapper {
   flex: 0 0 200px;
   width: 200px;
+  height: 380px;
   display: flex;
   flex-direction: column;
 }

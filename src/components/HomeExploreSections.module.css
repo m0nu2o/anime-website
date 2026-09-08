@@ -54,7 +54,7 @@
 .sectionTitle {
   font-size: 1.4rem;
   font-weight: 800;
-  color: var(--text-primary, #ffffff);
+  color: #ffffff;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -74,25 +74,25 @@
   color: var(--text-secondary, #94a3b8);
   padding: 6px 14px;
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   text-decoration: none;
   transition: all 0.2s ease;
 }
 
 .headerAction:hover {
   color: #ffffff;
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
   transform: translateX(2px);
 }
 
 /* ============================================================
-   1. LATEST EPISODES GRID
+   1. LATEST EPISODES GRID (REAL AIRING RELEASES)
    ============================================================ */
 .episodesGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 18px;
 }
 
@@ -101,18 +101,19 @@
   flex-direction: column;
   gap: 10px;
   text-decoration: none;
-  background: rgba(18, 20, 29, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: #11131e;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
   overflow: hidden;
   padding: 8px;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
 }
 
 .episodeCard:hover {
-  transform: translateY(-4px);
-  border-color: rgba(255, 255, 255, 0.16);
-  box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.5);
+  transform: translateY(-3px);
+  border-color: rgba(255, 255, 255, 0.22);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.6), 0 0 16px rgba(99, 102, 241, 0.15);
 }
 
 .cardImageContainer {
@@ -121,7 +122,7 @@
   aspect-ratio: 16 / 10;
   border-radius: 8px;
   overflow: hidden;
-  background: #0f111a;
+  background: #0a0b12;
 }
 
 .cardImage {
@@ -138,7 +139,7 @@
 .cardOverlay {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(0, 0, 0, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -151,31 +152,25 @@
 }
 
 .playBadge {
-  width: 42px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   background: var(--primary, #6366f1);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
-  transform: scale(0.85);
-  transition: transform 0.2s ease;
-}
-
-.episodeCard:hover .playBadge {
-  transform: scale(1);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
 }
 
 .episodeTag {
   position: absolute;
   top: 8px;
   left: 8px;
-  background: rgba(0, 0, 0, 0.75);
+  background: rgba(10, 10, 18, 0.85);
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   color: #ffffff;
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   font-weight: 800;
   padding: 3px 8px;
   border-radius: 6px;
@@ -203,12 +198,12 @@
 }
 
 .subTag {
-  background: rgba(14, 165, 233, 0.85);
+  background: rgba(14, 165, 233, 0.9);
   color: #ffffff;
 }
 
 .dubTag {
-  background: rgba(168, 85, 247, 0.85);
+  background: rgba(168, 85, 247, 0.9);
   color: #ffffff;
 }
 
@@ -220,9 +215,9 @@
 }
 
 .cardTitle {
-  font-size: 0.88rem;
+  font-size: 0.9rem;
   font-weight: 700;
-  color: var(--text-primary, #ffffff);
+  color: #ffffff;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -238,12 +233,17 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.74rem;
+  font-size: 0.75rem;
   color: var(--text-secondary, #94a3b8);
 }
 
 .dot {
   opacity: 0.4;
+}
+
+.scoreText {
+  color: #facc15;
+  font-weight: 700;
 }
 
 /* ============================================================
@@ -261,8 +261,8 @@
   display: inline-flex;
   align-items: center;
   padding: 3px;
-  background: rgba(18, 20, 29, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #11131e;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 9999px;
   gap: 2px;
 }
@@ -286,7 +286,7 @@
 .tabActive {
   background: var(--primary, #6366f1);
   color: #ffffff !important;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
 }
 
 .leaderboardGrid {
@@ -300,16 +300,17 @@
   align-items: center;
   gap: 14px;
   padding: 10px 14px;
-  background: rgba(18, 20, 29, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: #11131e;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
   text-decoration: none;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
 }
 
 .leaderboardCard:hover {
-  background: rgba(25, 28, 42, 0.85);
-  border-color: rgba(255, 255, 255, 0.14);
+  background: #171a28;
+  border-color: rgba(255, 255, 255, 0.18);
   transform: translateY(-2px);
 }
 
@@ -324,7 +325,7 @@
   font-size: 1.1rem;
   font-weight: 900;
   letter-spacing: -0.02em;
-  color: rgba(255, 255, 255, 0.35);
+  color: rgba(255, 255, 255, 0.4);
   font-variant-numeric: tabular-nums;
 }
 
@@ -335,8 +336,8 @@
 }
 
 .rankBadge2 {
-  color: #94a3b8;
-  text-shadow: 0 0 10px rgba(148, 163, 184, 0.4);
+  color: #cbd5e1;
+  text-shadow: 0 0 10px rgba(203, 213, 225, 0.4);
   font-size: 1.2rem;
 }
 
@@ -347,8 +348,8 @@
 }
 
 .rankHighlight1 {
-  border-color: rgba(245, 158, 11, 0.25);
-  background: linear-gradient(90deg, rgba(245, 158, 11, 0.08) 0%, rgba(18, 20, 29, 0.6) 100%);
+  border-color: rgba(245, 158, 11, 0.3);
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.08) 0%, #11131e 100%);
 }
 
 .thumbWrapper {
@@ -357,7 +358,7 @@
   border-radius: 6px;
   overflow: hidden;
   flex-shrink: 0;
-  background: #0f111a;
+  background: #0a0b12;
 }
 
 .leaderboardThumb {
@@ -377,7 +378,7 @@
 .leaderboardTitleText {
   font-size: 0.88rem;
   font-weight: 700;
-  color: var(--text-primary, #ffffff);
+  color: #ffffff;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -393,10 +394,11 @@
 }
 
 .formatPill {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.08);
   padding: 2px 6px;
   border-radius: 4px;
   font-weight: 600;
+  color: #cbd5e1;
 }
 
 .scorePill {
@@ -419,12 +421,12 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 5px 10px;
+  padding: 5px 12px;
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--text-secondary, #94a3b8);
-  font-size: 0.72rem;
+  font-size: 0.74rem;
   font-weight: 600;
   transition: all 0.2s ease;
 }
@@ -436,7 +438,7 @@
 }
 
 /* ============================================================
-   3. QUICK GENRE EXPLORER
+   3. REAL API-LINKED GENRE EXPLORER
    ============================================================ */
 .genreChips {
   display: flex;
@@ -452,11 +454,11 @@
 }
 
 .genreChip {
-  background: rgba(18, 20, 29, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #11131e;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--text-secondary, #94a3b8);
-  padding: 7px 16px;
-  font-size: 0.8rem;
+  padding: 7px 18px;
+  font-size: 0.82rem;
   font-weight: 600;
   border-radius: 9999px;
   cursor: pointer;
@@ -465,21 +467,43 @@
 }
 
 .genreChip:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: #191c2b;
   color: #ffffff;
-  border-color: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .genreChipActive {
   background: var(--primary, #6366f1) !important;
   color: #ffffff !important;
   border-color: var(--primary, #6366f1) !important;
-  box-shadow: 0 2px 10px rgba(99, 102, 241, 0.35);
+  box-shadow: 0 2px 12px rgba(99, 102, 241, 0.4);
+}
+
+.genreLoadingState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 48px;
+  background: #11131e;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  color: var(--text-secondary, #94a3b8);
+  font-size: 0.9rem;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+  color: var(--primary);
+}
+
+@keyframes spin {
+  100% { transform: rotate(360deg); }
 }
 
 .genreResultsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 16px;
 }
 
@@ -488,26 +512,27 @@
   flex-direction: column;
   gap: 8px;
   text-decoration: none;
-  background: rgba(18, 20, 29, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 10px;
+  background: #11131e;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
   padding: 8px;
-  transition: all 0.25s ease;
+  transition: transform 0.25s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
 }
 
 .genreCard:hover {
-  transform: translateY(-4px);
-  border-color: rgba(255, 255, 255, 0.16);
-  box-shadow: 0 8px 20px -8px rgba(0, 0, 0, 0.6);
+  transform: translateY(-3px);
+  border-color: rgba(255, 255, 255, 0.22);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.6);
 }
 
 .genreCardImageWrap {
   position: relative;
   width: 100%;
   aspect-ratio: 3 / 4;
-  border-radius: 6px;
+  border-radius: 8px;
   overflow: hidden;
-  background: #0f111a;
+  background: #0a0b12;
 }
 
 .genreCardImage {
@@ -523,191 +548,60 @@
 
 .genreScoreBadge {
   position: absolute;
-  top: 6px;
-  right: 6px;
+  top: 8px;
+  right: 8px;
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  background: rgba(0, 0, 0, 0.75);
+  background: rgba(10, 10, 18, 0.85);
   backdrop-filter: blur(6px);
   color: #facc15;
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   font-weight: 800;
+  padding: 3px 7px;
+  border-radius: 6px;
+  border: 1px solid rgba(250, 204, 21, 0.3);
+}
+
+.genreFormatBadge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(10, 10, 18, 0.85);
+  backdrop-filter: blur(6px);
+  color: #ffffff;
+  font-size: 0.65rem;
+  font-weight: 700;
   padding: 2px 6px;
   border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.genreCardBody {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 2px 4px 4px;
 }
 
 .genreCardTitle {
-  font-size: 0.82rem;
+  font-size: 0.86rem;
   font-weight: 700;
-  color: var(--text-primary, #ffffff);
+  color: #ffffff;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   margin: 0;
+  transition: color 0.15s ease;
 }
 
 .genreCard:hover .genreCardTitle {
   color: var(--primary);
 }
 
-.genreCardTags {
-  display: flex;
-  gap: 4px;
-  flex-wrap: wrap;
-}
-
-.tagItem {
-  font-size: 0.64rem;
-  color: var(--text-muted, #64748b);
-  background: rgba(255, 255, 255, 0.04);
-  padding: 2px 5px;
-  border-radius: 3px;
-}
-
-.emptyGenreState {
-  grid-column: 1 / -1;
-  padding: 32px;
-  text-align: center;
-  color: var(--text-muted, #64748b);
-  background: rgba(18, 20, 29, 0.4);
-  border-radius: 10px;
-}
-
-/* ============================================================
-   4. WEEKLY BROADCAST RADAR PREVIEW
-   ============================================================ */
-.dayTabs {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 4px;
-  scrollbar-width: none;
-}
-
-.dayTabs::-webkit-scrollbar {
-  display: none;
-}
-
-.dayBtn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 8px 18px;
-  background: rgba(18, 20, 29, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 10px;
+.genreCardMeta {
+  font-size: 0.72rem;
   color: var(--text-secondary, #94a3b8);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  min-width: 68px;
-}
-
-.dayBtn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #ffffff;
-}
-
-.dayBtnActive {
-  background: rgba(56, 189, 248, 0.15) !important;
-  border-color: #38bdf8 !important;
-  color: #ffffff !important;
-  box-shadow: 0 0 14px rgba(56, 189, 248, 0.25);
-}
-
-.dayShort {
-  font-size: 0.85rem;
-  font-weight: 700;
-}
-
-.todayIndicator {
-  font-size: 0.6rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: #38bdf8;
-  letter-spacing: 0.04em;
-}
-
-.scheduleGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 12px;
-}
-
-.scheduleCard {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  background: rgba(18, 20, 29, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 10px;
-  text-decoration: none;
-  transition: all 0.2s ease;
-}
-
-.scheduleCard:hover {
-  background: rgba(25, 28, 42, 0.85);
-  border-color: rgba(255, 255, 255, 0.14);
-  transform: translateX(3px);
-}
-
-.scheduleThumb {
-  width: 44px;
-  height: 56px;
-  border-radius: 6px;
-  object-fit: cover;
-  flex-shrink: 0;
-  background: #0f111a;
-}
-
-.scheduleInfo {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  flex: 1;
-  min-width: 0;
-}
-
-.scheduleTimeBadge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.68rem;
-  font-weight: 700;
-  color: #38bdf8;
-  background: rgba(56, 189, 248, 0.1);
-  padding: 2px 6px;
-  border-radius: 4px;
-  width: fit-content;
-}
-
-.scheduleTitle {
-  font-size: 0.84rem;
-  font-weight: 700;
-  color: var(--text-primary, #ffffff);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin: 0;
-}
-
-.scheduleSub {
-  font-size: 0.7rem;
-  color: var(--text-secondary, #94a3b8);
-}
-
-.scheduleChevron {
-  color: rgba(255, 255, 255, 0.25);
-  flex-shrink: 0;
-  transition: transform 0.2s ease, color 0.2s ease;
-}
-
-.scheduleCard:hover .scheduleChevron {
-  color: #ffffff;
-  transform: translateX(2px);
 }
 
 /* Responsive adjustments */
@@ -726,10 +620,6 @@
   }
 
   .leaderboardGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .scheduleGrid {
     grid-template-columns: 1fr;
   }
 

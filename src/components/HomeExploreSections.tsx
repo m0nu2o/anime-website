@@ -1,66 +1,65 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { Anime } from "@/lib/api/types";
+import { LatestEpisodeRelease } from "@/lib/api";
 import styles from "./HomeExploreSections.module.css";
 import { 
   Play, 
   Flame, 
   Star, 
   Clock, 
-  Calendar, 
   Layers, 
   ArrowRight, 
-  Sparkles,
   Headphones,
   Subtitles,
-  ChevronRight
+  Loader2
 } from "lucide-react";
+
+interface GenreAnimeItem {
+  id: string;
+  title: string;
+  image: string;
+  format?: string;
+  score?: string | null;
+  episodes?: number;
+  year?: number;
+  genres?: string[];
+}
 
 interface HomeExploreSectionsProps {
   trendingAnime: Anime[];
   popularAnime: Anime[];
   seasonalAnime: Anime[];
+  latestReleases: LatestEpisodeRelease[];
 }
 
 const GENRES = [
-  "All",
   "Action",
   "Shounen",
-  "Fantasy",
   "Romance",
+  "Fantasy",
   "Sci-Fi",
   "Comedy",
   "Supernatural",
   "Adventure"
 ];
 
-const DAYS = [
-  { short: "Mon", full: "Monday" },
-  { short: "Tue", full: "Tuesday" },
-  { short: "Wed", full: "Wednesday" },
-  { short: "Thu", full: "Thursday" },
-  { short: "Fri", full: "Friday" },
-  { short: "Sat", full: "Saturday" },
-  { short: "Sun", full: "Sunday" },
-];
-
 export default function HomeExploreSections({
   trendingAnime,
   popularAnime,
   seasonalAnime,
+  latestReleases,
 }: HomeExploreSectionsProps) {
   // 1. Top 10 Period Tab
   const [leaderboardPeriod, setLeaderboardPeriod] = useState<"today" | "week" | "all">("today");
 
-  // 2. Genre Filter
-  const [selectedGenre, setSelectedGenre] = useState<string>("All");
-
-  // 3. Airing Radar Day
-  const todayIndex = new Date().getDay(); // 0 is Sunday, 1 is Monday...
-  const adjustedToday = todayIndex === 0 ? 6 : todayIndex - 1;
-  const [selectedDayIndex, setSelectedDayIndex] = useState<number>(adjustedToday);
+  // 2. Real API Genre Explorer
+  const [selectedGenre, setSelectedGenre] = useState<string>("Action");
+  const [genreAnimeList, setGenreAnimeList] = useState<GenreAnimeItem[]>([]);
+  const [isGenreLoading, setIsGenreLoading] = useState<boolean>(false);
+  const [genreCache, setGenreCache] = useState<Record<string, GenreAnimeItem[]>>({});
 
   // Leaderboard data calculation
   const leaderboardList = useMemo(() => {
@@ -73,122 +72,115 @@ export default function HomeExploreSections({
     return source.slice(0, 10);
   }, [leaderboardPeriod, trendingAnime, seasonalAnime, popularAnime]);
 
-  // Unique combined anime for genre filter
-  const allAnime = useMemo(() => {
-    const map = new Map<string, Anime>();
-    [...trendingAnime, ...seasonalAnime, ...popularAnime].forEach((a) => {
-      if (!map.has(a.id)) map.set(a.id, a);
-    });
-    return Array.from(map.values());
-  }, [trendingAnime, seasonalAnime, popularAnime]);
+  // Fetch real anime from API when genre changes
+  useEffect(() => {
+    const clean = selectedGenre.toLowerCase();
+    if (genreCache[clean]) {
+      setGenreAnimeList(genreCache[clean]);
+      return;
+    }
 
-  // Filtered anime by genre
-  const filteredByGenre = useMemo(() => {
-    if (selectedGenre === "All") return allAnime.slice(0, 6);
-    return allAnime
-      .filter((a) => a.genres?.some((g) => g.toLowerCase() === selectedGenre.toLowerCase()))
-      .slice(0, 6);
-  }, [allAnime, selectedGenre]);
+    let isMounted = true;
+    setIsGenreLoading(true);
 
-  // Latest releases mock data derived from trending & seasonal
-  const latestReleases = useMemo(() => {
-    const list = trendingAnime.slice(0, 8);
-    const times = ["15m ago", "42m ago", "1h ago", "2h ago", "3h ago", "4h ago", "5h ago", "6h ago"];
-    return list.map((anime, idx) => ({
-      anime,
-      episode: (anime.episodes && anime.episodes > 1) ? Math.min(anime.episodes, (idx % 12) + 1) : (idx % 12) + 1,
-      timeAgo: times[idx % times.length],
-      hasDub: idx % 2 === 0,
-      hasSub: true,
-    }));
-  }, [trendingAnime]);
+    fetch(`/api/anime/genre?genre=${encodeURIComponent(clean)}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (!isMounted) return;
+        if (data.success && Array.isArray(data.data)) {
+          setGenreAnimeList(data.data);
+          setGenreCache((prev) => ({ ...prev, [clean]: data.data }));
+        }
+      })
+      .catch((err) => {
+        console.warn("Failed to fetch genre anime:", err);
+      })
+      .finally(() => {
+        if (isMounted) setIsGenreLoading(false);
+      });
 
-  // Daily Airing Schedule preview
-  const daySchedule = useMemo(() => {
-    const list = seasonalAnime.length > 0 ? seasonalAnime : trendingAnime;
-    const offset = (selectedDayIndex * 2) % Math.max(1, list.length - 2);
-    const dayItems = list.slice(offset, offset + 4);
-    const times = ["18:30 JST", "21:00 JST", "23:00 JST", "24:30 JST"];
-    return dayItems.map((anime, idx) => ({
-      anime,
-      airTime: times[idx % times.length],
-      episodeNum: (idx % 12) + 1,
-    }));
-  }, [seasonalAnime, trendingAnime, selectedDayIndex]);
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedGenre, genreCache]);
 
   return (
     <div className={styles.exploreWrapper}>
       {/* ============================================================
-          SECTION 1: LATEST EPISODES / FRESH RELEASES TODAY
+          SECTION 1: LATEST RELEASES / FRESH DROPS (100% REAL BROADCASTS)
           ============================================================ */}
-      <section className={styles.section}>
-        <div className={styles.sectionHeader}>
-          <div className={styles.headerLeft}>
-            <span className={styles.sectionBadge}>
-              <span className={styles.livePulse} />
-              JUST UPDATED
-            </span>
-            <h2 className={styles.sectionTitle}>
-              <Clock size={20} className={styles.titleIcon} />
-              Latest Episodes Released Today
-            </h2>
+      {latestReleases.length > 0 && (
+        <section className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <div className={styles.headerLeft}>
+              <span className={styles.sectionBadge}>
+                <span className={styles.livePulse} />
+                REAL-TIME SIMULCAST
+              </span>
+              <h2 className={styles.sectionTitle}>
+                <Clock size={20} className={styles.titleIcon} />
+                Latest Episodes Released Today
+              </h2>
+            </div>
+            <Link href="/calendar" className={styles.headerAction}>
+              <span>Broadcast Schedule</span>
+              <ArrowRight size={14} />
+            </Link>
           </div>
-          <Link href="/calendar" className={styles.headerAction}>
-            <span>Broadcast Calendar</span>
-            <ArrowRight size={14} />
-          </Link>
-        </div>
 
-        <div className={styles.episodesGrid}>
-          {latestReleases.map(({ anime, episode, timeAgo, hasDub, hasSub }) => {
-            const title = anime.title.english || anime.title.romaji || anime.title.native || "Anime";
-            const image = anime.images.cover || anime.images.largeCover;
-            return (
+          <div className={styles.episodesGrid}>
+            {latestReleases.map((item) => (
               <Link 
-                key={anime.id} 
-                href={`/watch/${anime.id}/${episode}`} 
+                key={item.id} 
+                href={`/watch/${item.animeId}/${item.episode}`} 
                 className={styles.episodeCard}
-                title={`Watch ${title} Episode ${episode}`}
+                title={`Watch ${item.title} Episode ${item.episode}`}
               >
                 <div className={styles.cardImageContainer}>
-                  <img src={image} alt={title} className={styles.cardImage} loading="lazy" />
+                  <img src={item.image} alt={item.title} className={styles.cardImage} loading="lazy" />
                   <div className={styles.cardOverlay}>
                     <div className={styles.playBadge}>
                       <Play size={16} fill="white" />
                     </div>
                   </div>
                   <div className={styles.episodeTag}>
-                    <span>EP {episode}</span>
+                    <span>EP {item.episode}</span>
                   </div>
                   <div className={styles.audioBadges}>
-                    {hasSub && <span className={styles.subTag}><Subtitles size={10} /> SUB</span>}
-                    {hasDub && <span className={styles.dubTag}><Headphones size={10} /> DUB</span>}
+                    {item.hasSub && <span className={styles.subTag}><Subtitles size={10} /> SUB</span>}
+                    {item.hasDub && <span className={styles.dubTag}><Headphones size={10} /> DUB</span>}
                   </div>
                 </div>
 
                 <div className={styles.cardDetails}>
-                  <h3 className={styles.cardTitle}>{title}</h3>
+                  <h3 className={styles.cardTitle}>{item.title}</h3>
                   <div className={styles.cardMeta}>
-                    <span className={styles.timeAgo}>{timeAgo}</span>
+                    <span className={styles.timeAgo}>{item.timeAgo}</span>
                     <span className={styles.dot}>•</span>
-                    <span className={styles.format}>{anime.format || "TV"}</span>
+                    <span className={styles.format}>{item.format || "TV"}</span>
+                    {item.score && (
+                      <>
+                        <span className={styles.dot}>•</span>
+                        <span className={styles.scoreText}>★ {(item.score / 10).toFixed(1)}</span>
+                      </>
+                    )}
                   </div>
                 </div>
               </Link>
-            );
-          })}
-        </div>
-      </section>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* ============================================================
-          SECTION 2: TOP 10 RANKED LEADERBOARD WITH PERIOD TABS
+          SECTION 2: TOP 10 RANKED LEADERBOARD WITH TIMEFRAME TABS
           ============================================================ */}
       <section className={styles.section}>
         <div className={styles.leaderboardSectionHeader}>
           <div>
             <span className={styles.sectionBadge}>
               <Flame size={12} style={{ color: "#ef4444" }} />
-              OFFICIAL RANKINGS
+              COMMUNITY CHARTS
             </span>
             <h2 className={styles.sectionTitle}>
               <Flame size={20} className={styles.titleIcon} />
@@ -275,14 +267,14 @@ export default function HomeExploreSections({
       </section>
 
       {/* ============================================================
-          SECTION 3: QUICK GENRE & MOOD DISCOVERY BAR
+          SECTION 3: REAL API-LINKED GENRE EXPLORER (HIGH VISIBILITY)
           ============================================================ */}
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
           <div className={styles.headerLeft}>
             <span className={styles.sectionBadge}>
-              <Sparkles size={12} style={{ color: "var(--primary)" }} />
-              CATEGORIES
+              <Layers size={12} style={{ color: "var(--primary)" }} />
+              GENRE DISCOVERY
             </span>
             <h2 className={styles.sectionTitle}>
               <Layers size={20} className={styles.titleIcon} />
@@ -290,10 +282,10 @@ export default function HomeExploreSections({
             </h2>
           </div>
           <Link 
-            href={selectedGenre === "All" ? "/discover" : `/discover?genre=${encodeURIComponent(selectedGenre)}`} 
+            href={`/discover?genre=${encodeURIComponent(selectedGenre)}`} 
             className={styles.headerAction}
           >
-            <span>Explore All {selectedGenre !== "All" ? selectedGenre : ""}</span>
+            <span>Explore All {selectedGenre} Anime</span>
             <ArrowRight size={14} />
           </Link>
         </div>
@@ -312,107 +304,37 @@ export default function HomeExploreSections({
           ))}
         </div>
 
-        {/* Genre matching cards */}
-        <div className={styles.genreResultsGrid}>
-          {filteredByGenre.length > 0 ? (
-            filteredByGenre.map((anime) => {
-              const title = anime.title.english || anime.title.romaji || anime.title.native || "Anime";
-              const image = anime.images.cover || anime.images.largeCover;
-              const score = anime.score 
-                ? (anime.score > 10 ? (anime.score / 10).toFixed(1) : anime.score.toFixed(1))
-                : null;
-
-              return (
-                <Link key={anime.id} href={`/anime/${anime.id}`} className={styles.genreCard}>
-                  <div className={styles.genreCardImageWrap}>
-                    <img src={image} alt={title} className={styles.genreCardImage} loading="lazy" />
-                    {score && (
-                      <span className={styles.genreScoreBadge}>
-                        <Star size={10} fill="#facc15" color="#facc15" />
-                        {score}
-                      </span>
-                    )}
-                  </div>
-                  <h4 className={styles.genreCardTitle}>{title}</h4>
-                  <div className={styles.genreCardTags}>
-                    {anime.genres?.slice(0, 2).map((g) => (
-                      <span key={g} className={styles.tagItem}>{g}</span>
-                    ))}
-                  </div>
-                </Link>
-              );
-            })
-          ) : (
-            <div className={styles.emptyGenreState}>
-              <p>No titles found for {selectedGenre}.</p>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* ============================================================
-          SECTION 4: WEEKLY BROADCAST SCHEDULE RADAR PREVIEW
-          ============================================================ */}
-      <section className={styles.section}>
-        <div className={styles.sectionHeader}>
-          <div className={styles.headerLeft}>
-            <span className={styles.sectionBadge}>
-              <Calendar size={12} style={{ color: "#38bdf8" }} />
-              AIRING RADAR
-            </span>
-            <h2 className={styles.sectionTitle}>
-              <Calendar size={20} className={styles.titleIcon} />
-              Weekly Airing Radar
-            </h2>
+        {/* Real API Genre Results with Loading State */}
+        {isGenreLoading && genreAnimeList.length === 0 ? (
+          <div className={styles.genreLoadingState}>
+            <Loader2 size={24} className={styles.spinner} />
+            <span>Loading {selectedGenre} titles...</span>
           </div>
-          <Link href="/calendar" className={styles.headerAction}>
-            <span>Full 7-Day Airing Grid</span>
-            <ArrowRight size={14} />
-          </Link>
-        </div>
-
-        {/* Day Pills */}
-        <div className={styles.dayTabs}>
-          {DAYS.map((day, idx) => {
-            const isToday = idx === adjustedToday;
-            const isSelected = idx === selectedDayIndex;
-            return (
-              <button
-                key={day.short}
-                type="button"
-                className={`${styles.dayBtn} ${isSelected ? styles.dayBtnActive : ""}`}
-                onClick={() => setSelectedDayIndex(idx)}
-              >
-                <span className={styles.dayShort}>{day.short}</span>
-                {isToday && <span className={styles.todayIndicator}>Today</span>}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Schedule preview cards */}
-        <div className={styles.scheduleGrid}>
-          {daySchedule.map(({ anime, airTime, episodeNum }) => {
-            const title = anime.title.english || anime.title.romaji || anime.title.native || "Anime";
-            const image = anime.images.cover || anime.images.largeCover;
-            return (
-              <Link key={anime.id} href={`/anime/${anime.id}`} className={styles.scheduleCard}>
-                <img src={image} alt={title} className={styles.scheduleThumb} loading="lazy" />
-                <div className={styles.scheduleInfo}>
-                  <div className={styles.scheduleTimeBadge}>
-                    <Clock size={11} />
-                    <span>{airTime}</span>
-                  </div>
-                  <h4 className={styles.scheduleTitle}>{title}</h4>
-                  <div className={styles.scheduleSub}>
-                    <span>Episode {episodeNum} Premiering</span>
+        ) : (
+          <div className={styles.genreResultsGrid}>
+            {genreAnimeList.map((anime) => (
+              <Link key={anime.id} href={`/anime/${anime.id}`} className={styles.genreCard}>
+                <div className={styles.genreCardImageWrap}>
+                  <img src={anime.image} alt={anime.title} className={styles.genreCardImage} loading="lazy" />
+                  {anime.score && (
+                    <span className={styles.genreScoreBadge}>
+                      <Star size={10} fill="#facc15" color="#facc15" />
+                      {anime.score}
+                    </span>
+                  )}
+                  <span className={styles.genreFormatBadge}>{anime.format || "TV"}</span>
+                </div>
+                <div className={styles.genreCardBody}>
+                  <h4 className={styles.genreCardTitle}>{anime.title}</h4>
+                  <div className={styles.genreCardMeta}>
+                    {anime.year && <span>{anime.year}</span>}
+                    {anime.episodes && <span>• {anime.episodes} eps</span>}
                   </div>
                 </div>
-                <ChevronRight size={16} className={styles.scheduleChevron} />
               </Link>
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );

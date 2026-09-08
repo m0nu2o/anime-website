@@ -2,20 +2,21 @@ import Navbar from "@/components/Navbar";
 import AnimeCard from "@/components/AnimeCard";
 import ContinueWatchingRow from "@/components/ContinueWatchingRow";
 import TrendingHeroCarousel from "@/components/TrendingHeroCarousel";
-import { getTrendingAnime, getPopularAnime, getSeasonalAnime } from "@/lib/api";
+import { getTrendingAnime, getPopularAnime, getSeasonalAnime, getLatestAiringAnime } from "@/lib/api";
 import styles from "./page.module.css";
 import HomeExploreSections from "@/components/HomeExploreSections";
 import Link from "next/link";
 import { TrendingUp, Compass, Sparkles } from "lucide-react";
 
-export const revalidate = 3600; // Cache homepage for 1 hour
+export const revalidate = 1800; // Cache homepage for 30 minutes
 
 export default async function Home() {
   const currentYear = new Date().getFullYear();
-  const [trendingAnime, popularAnime, seasonalAnime] = await Promise.all([
+  const [trendingAnime, popularAnime, seasonalAnime, latestReleases] = await Promise.all([
     getTrendingAnime(15),
     getPopularAnime(15),
     getSeasonalAnime("winter", currentYear, 12).catch(() => []),
+    getLatestAiringAnime(8).catch(() => []),
   ]);
 
   return (
@@ -32,11 +33,12 @@ export default async function Home() {
         {/* Continue Watching for authenticated users */}
         <ContinueWatchingRow />
 
-        {/* Real Anime Sections: Latest Releases, Top 10 Leaderboard, Genre Discovery, Airing Radar */}
+        {/* Real Anime Sections: Latest Real Releases, Top 10 Leaderboard, Real API Genre Discovery */}
         <HomeExploreSections
           trendingAnime={trendingAnime}
           popularAnime={popularAnime}
           seasonalAnime={seasonalAnime}
+          latestReleases={latestReleases}
         />
 
         {/* Trending Now Carousel */}
