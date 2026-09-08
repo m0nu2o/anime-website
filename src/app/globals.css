@@ -8,7 +8,7 @@
   --site-brightness: 1;
 
   /* Layout */
-  --navbar-height: 92px;
+  --navbar-height: 48px;
   --content-max-width: 1400px;
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -191,7 +191,7 @@ button {
 
 @media (max-width: 768px) {
   :root {
-    --navbar-height: 76px;
+    --navbar-height: 48px;
   }
   .container {
     padding: 0 16px;

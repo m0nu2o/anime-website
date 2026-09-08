@@ -9,7 +9,7 @@
   left: 0;
   right: 0;
   width: 100%;
-  height: 58px;
+  height: 48px;
   z-index: 9000;
   display: flex;
   align-items: center;
@@ -79,22 +79,22 @@
 }
 
 .logoIcon {
-  width: 30px;
-  height: 30px;
-  border-radius: 9px;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
   background: linear-gradient(135deg, var(--primary, #f43f5e) 0%, var(--primary-hover, #e11d48) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   color: #fff;
   flex-shrink: 0;
-  box-shadow: 0 0 16px var(--primary-glow, rgba(244,63,94,0.5));
+  box-shadow: 0 0 12px var(--primary-glow, rgba(244,63,94,0.45));
   transition: box-shadow 0.3s ease, transform 0.2s ease;
 }
 
 .logo:hover .logoIcon {
-  transform: rotate(-6deg) scale(1.08);
-  box-shadow: 0 0 24px var(--primary-glow, rgba(244,63,94,0.7));
+  transform: rotate(-6deg) scale(1.06);
+  box-shadow: 0 0 20px var(--primary-glow, rgba(244,63,94,0.65));
 }
 
 .logoWordmark {
@@ -105,7 +105,7 @@
 }
 
 .logoMain {
-  font-size: 1.05rem;
+  font-size: 0.94rem;
   font-weight: 900;
   color: #ffffff;
   letter-spacing: -0.02em;
@@ -113,7 +113,7 @@
 }
 
 .logoAccent {
-  font-size: 1.05rem;
+  font-size: 0.94rem;
   font-weight: 900;
   color: var(--primary, #f43f5e);
   letter-spacing: -0.02em;
@@ -123,9 +123,9 @@
 /* ── Logo Divider ── */
 .logoDivider {
   width: 1px;
-  height: 20px;
+  height: 16px;
   background: rgba(255,255,255,0.1);
-  margin: 0 10px;
+  margin: 0 8px;
   flex-shrink: 0;
 }
 
@@ -134,9 +134,8 @@
 ═══════════════════════════════════════ */
 .desktopNav {
   display: flex;
-  display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   position: relative;
   flex-shrink: 1;
 }
@@ -146,7 +145,7 @@
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  height: 32px;
+  height: 27px;
   background: rgba(255, 255, 255, 0.12);
   border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 9999px;
@@ -161,11 +160,11 @@
   z-index: 1;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   color: rgba(255, 255, 255, 0.65);
-  font-size: 0.82rem;
+  font-size: 0.77rem;
   font-weight: 600;
-  padding: 6px 13px;
+  padding: 4px 10px;
   border-radius: 9999px;
   border: none;
   background: transparent;
@@ -203,15 +202,15 @@
 .searchPill {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
   background: rgba(255,255,255,0.05);
   border: 1px solid rgba(255,255,255,0.09);
-  padding: 6px 14px;
+  padding: 4px 11px;
   border-radius: 9999px;
   color: rgba(255,255,255,0.45);
   cursor: pointer;
   transition: all 0.2s ease;
-  font-size: 0.82rem;
+  font-size: 0.76rem;
   white-space: nowrap;
 }
 
@@ -222,15 +221,15 @@
 }
 
 .searchText {
-  font-size: 0.82rem;
+  font-size: 0.76rem;
 }
 
 .searchKbd {
   background: rgba(255,255,255,0.07);
   border: 1px solid rgba(255,255,255,0.12);
-  padding: 1px 7px;
-  border-radius: 5px;
-  font-size: 0.69rem;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 0.65rem;
   font-family: ui-monospace, monospace;
   color: rgba(255,255,255,0.4);
   letter-spacing: 0.02em;
@@ -240,9 +239,9 @@
    ACTION BUTTONS (icon-only)
 ═══════════════════════════════════════ */
 .actionBtn {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
   background: rgba(255,255,255,0.04);
   border: 1px solid rgba(255,255,255,0.07);
   color: rgba(255,255,255,0.5);
@@ -272,14 +271,14 @@
 .themeBtn {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 6px;
   background: rgba(255,255,255,0.05);
   border: 1px solid rgba(255,255,255,0.09);
-  padding: 6px 12px;
+  padding: 4px 10px;
   border-radius: 9999px;
   color: rgba(255,255,255,0.8);
   cursor: pointer;
-  font-size: 0.8rem;
+  font-size: 0.76rem;
   font-weight: 700;
   transition: all 0.2s ease;
   white-space: nowrap;
@@ -292,15 +291,15 @@
 }
 
 .themeDot {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   flex-shrink: 0;
   transition: box-shadow 0.3s;
 }
 
 .themeBtnLabel {
-  font-size: 0.8rem;
+  font-size: 0.76rem;
 }
 
 .chevron {
@@ -412,10 +411,10 @@
 .profileBtn {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   background: rgba(255,255,255,0.05);
   border: 1px solid rgba(255,255,255,0.09);
-  padding: 5px 10px 5px 5px;
+  padding: 3px 8px 3px 4px;
   border-radius: 9999px;
   color: #fff;
   cursor: pointer;
@@ -429,32 +428,32 @@
 }
 
 .avatar {
-  width: 26px;
-  height: 26px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid rgba(255,255,255,0.15);
+  border: 1.5px solid rgba(255,255,255,0.15);
 }
 
 .avatarFallback {
-  width: 26px;
-  height: 26px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--primary, #f43f5e), var(--primary-hover, #e11d48));
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 800;
   color: #fff;
-  border: 2px solid rgba(255,255,255,0.15);
+  border: 1.5px solid rgba(255,255,255,0.15);
   flex-shrink: 0;
 }
 
 .profileName {
-  font-size: 0.82rem;
+  font-size: 0.77rem;
   font-weight: 700;
-  max-width: 90px;
+  max-width: 85px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -613,16 +612,16 @@
 .signInBtn {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 7px 18px;
+  gap: 6px;
+  padding: 5px 14px;
   background: linear-gradient(135deg, var(--primary, #f43f5e) 0%, var(--primary-hover, #e11d48) 100%);
   color: #fff;
   border-radius: 9999px;
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   font-weight: 700;
   cursor: pointer;
   border: none;
-  box-shadow: 0 0 20px var(--primary-glow, rgba(244,63,94,0.4));
+  box-shadow: 0 0 16px var(--primary-glow, rgba(244,63,94,0.4));
   transition: all 0.2s ease;
   white-space: nowrap;
   flex-shrink: 0;
@@ -630,7 +629,7 @@
 
 .signInBtn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 0 28px var(--primary-glow, rgba(244,63,94,0.6));
+  box-shadow: 0 0 24px var(--primary-glow, rgba(244,63,94,0.6));
 }
 
 /* ═══════════════════════════════════════
@@ -639,14 +638,14 @@
 .hamburger {
   display: none;
   flex-direction: column;
-  gap: 5px;
-  width: 36px;
-  height: 36px;
+  gap: 4px;
+  width: 30px;
+  height: 30px;
   align-items: center;
   justify-content: center;
   background: rgba(255,255,255,0.04);
   border: 1px solid rgba(255,255,255,0.07);
-  border-radius: 10px;
+  border-radius: 8px;
   cursor: pointer;
   flex-shrink: 0;
   transition: background 0.2s;

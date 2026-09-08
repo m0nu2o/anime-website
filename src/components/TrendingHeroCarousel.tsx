@@ -4,7 +4,6 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { 
   Play, 
-  Pause,
   Info, 
   ChevronLeft, 
   ChevronRight, 
@@ -12,8 +11,7 @@ import {
   Flame, 
   Calendar, 
   Clock, 
-  Tv, 
-  Sparkles 
+  Tv 
 } from "lucide-react";
 import styles from "./TrendingHeroCarousel.module.css";
 import { Anime } from "@/lib/api/types";
@@ -49,16 +47,14 @@ export default function TrendingHeroCarousel({ animeList }: TrendingHeroCarousel
     goToSlide((currentIndex - 1 + total) % total);
   }, [currentIndex, total, goToSlide]);
 
-  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
-
-  // Auto-sweep every 5 seconds, pausing on hover
+  // Auto-advance anime slides every 5 seconds, pausing on hover
   useEffect(() => {
-    if (!isAutoPlaying || isHovered || total <= 1) return;
+    if (isHovered || total <= 1) return;
     const interval = setInterval(() => {
       nextSlide();
     }, 5000);
     return () => clearInterval(interval);
-  }, [isAutoPlaying, isHovered, total, nextSlide]);
+  }, [isHovered, total, nextSlide]);
 
   // Handle Touch Sweeping
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -233,56 +229,6 @@ export default function TrendingHeroCarousel({ animeList }: TrendingHeroCarousel
       >
         <ChevronRight size={18} />
       </button>
-
-      {/* Bottom Sweep Track: Top 10 Numbered Pills with Live Auto-Progress */}
-      <div className={styles.sweepTrack}>
-        <div className={styles.trackLabel}>
-          <Sparkles size={11} style={{ color: "var(--accent)" }} />
-          <span>TOP 10 TRENDING</span>
-          <button
-            onClick={() => setIsAutoPlaying(!isAutoPlaying)}
-            className={styles.autoPlayToggle}
-            title={isAutoPlaying ? "Pause Auto-Advance" : "Resume Auto-Advance"}
-            aria-label={isAutoPlaying ? "Pause Auto-Advance" : "Resume Auto-Advance"}
-            style={{
-              background: isAutoPlaying ? "rgba(34, 197, 94, 0.2)" : "rgba(255, 255, 255, 0.08)",
-              border: isAutoPlaying ? "1px solid rgba(34, 197, 94, 0.5)" : "1px solid rgba(255, 255, 255, 0.15)",
-              color: isAutoPlaying ? "#4ade80" : "var(--text-muted)",
-              borderRadius: "6px",
-              padding: "2px 6px",
-              cursor: "pointer",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "3px",
-              fontSize: "0.64rem",
-              fontWeight: 700,
-              marginLeft: "4px",
-              transition: "all 0.2s ease",
-            }}
-          >
-            {isAutoPlaying ? <Pause size={9} /> : <Play size={9} />}
-            <span>{isAutoPlaying ? "Auto" : "Paused"}</span>
-          </button>
-        </div>
-        <div className={styles.pillsList}>
-          {top10.map((anime, idx) => {
-            const isActive = idx === currentIndex;
-            return (
-              <button
-                key={anime.id}
-                onClick={() => goToSlide(idx)}
-                className={`${styles.pillBtn} ${isActive ? styles.activePillBtn : ""}`}
-                title={`#${idx + 1}: ${anime.title.english || anime.title.romaji}`}
-              >
-                <span className={styles.pillNumber}>#{idx + 1}</span>
-                {isActive && isAutoPlaying && !isHovered && (
-                  <div key={`prog-${currentIndex}`} className={styles.pillProgress} />
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </div>
     </section>
   );
 }

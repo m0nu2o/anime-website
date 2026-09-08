@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useEffect, useRef } from "react";
 import { THEME_CONFIGS } from "./ThemeSimulatorProvider";
@@ -32,13 +32,13 @@ export default function NavbarParticleStream({ theme = "blackhole" }: NavbarPart
 
     let animationId: number;
     let width = (canvas.width = (canvas.offsetWidth || window.innerWidth) * (window.devicePixelRatio || 1));
-    let height = (canvas.height = (canvas.offsetHeight || 52) * (window.devicePixelRatio || 1));
+    let height = (canvas.height = (canvas.offsetHeight || 42) * (window.devicePixelRatio || 1));
 
     const handleResize = () => {
       if (!canvas) return;
       const dpr = window.devicePixelRatio || 1;
       width = canvas.width = (canvas.parentElement?.clientWidth || window.innerWidth) * dpr;
-      height = canvas.height = (canvas.parentElement?.clientHeight || 56) * dpr;
+      height = canvas.height = (canvas.parentElement?.clientHeight || 48) * dpr;
     };
 
     window.addEventListener("resize", handleResize);

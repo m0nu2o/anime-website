@@ -1,13 +1,13 @@
 .heroSection {
   position: relative;
-  min-height: 48vh;
-  max-height: 500px;
+  min-height: 56vh;
+  max-height: 560px;
   width: 100%;
   display: flex;
   align-items: center;
   overflow: hidden;
-  padding-top: calc(var(--navbar-height, 58px) + 6px);
-  padding-bottom: 42px;
+  padding-top: calc(var(--navbar-height, 48px) + 12px);
+  padding-bottom: 24px;
   background: #06060a;
 }
 
@@ -86,10 +86,10 @@
 
 .contentCol {
   flex: 1;
-  max-width: 580px;
+  max-width: 620px;
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 8px;
 }
 
 /* Badges */
@@ -153,7 +153,7 @@
 
 /* Title & Subtitle */
 .title {
-  font-size: 1.85rem;
+  font-size: 2.2rem;
   font-weight: 800;
   line-height: 1.15;
   color: var(--text-main, #fff);
@@ -263,7 +263,7 @@
 
 .posterCard {
   position: relative;
-  width: 165px;
+  width: 195px;
   aspect-ratio: 2 / 3;
   border-radius: 14px;
   overflow: hidden;
@@ -362,89 +362,12 @@
   transform: translateY(-50%) scale(1.06);
 }
 
-/* Bottom Sweep Track */
-.sweepTrack {
-  position: absolute;
-  bottom: 8px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 20;
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 3px 12px;
-  background: rgba(10, 10, 16, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 9999px;
-}
-
-.trackLabel {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 0.62rem;
-  font-weight: 800;
-  color: var(--text-muted, #94a3b8);
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  padding-right: 6px;
-  border-right: 1px solid rgba(255, 255, 255, 0.12);
-}
-
-.pillsList {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.pillBtn {
-  position: relative;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 9999px;
-  padding: 2.5px 7px;
-  color: #cbd5e1;
-  font-size: 0.66rem;
-  font-weight: 700;
-  cursor: pointer;
-  overflow: hidden;
-  transition: all 0.2s ease;
-}
-
-.pillBtn:hover {
-  background: rgba(255, 255, 255, 0.18);
-  color: #fff;
-}
-
-.activePillBtn {
-  background: var(--primary, #f43f5e);
-  border-color: var(--primary, #f43f5e);
-  color: #fff;
-  box-shadow: 0 0 10px var(--primary-glow, rgba(244, 63, 94, 0.4));
-}
-
-.pillProgress {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  height: 2px;
-  background: #fff;
-  animation: sweepProgress 5s linear forwards;
-}
-
-@keyframes sweepProgress {
-  from { width: 0%; }
-  to { width: 100%; }
-}
-
 @media (max-width: 900px) {
   .heroSection {
     min-height: auto;
     max-height: none;
-    padding-top: calc(var(--navbar-height, 58px) + 12px);
-    padding-bottom: 50px;
+    padding-top: calc(var(--navbar-height, 48px) + 12px);
+    padding-bottom: 30px;
   }
   .heroContainer {
     flex-direction: column-reverse;
