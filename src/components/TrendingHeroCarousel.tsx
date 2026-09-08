@@ -49,14 +49,14 @@ export default function TrendingHeroCarousel({ animeList }: TrendingHeroCarousel
     goToSlide((currentIndex - 1 + total) % total);
   }, [currentIndex, total, goToSlide]);
 
-  const [isAutoPlaying, setIsAutoPlaying] = useState(false);
+  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
 
-  // Auto-sweep only if user enables it (prevents unwanted slide flipping every 6s)
+  // Auto-sweep every 5 seconds, pausing on hover
   useEffect(() => {
     if (!isAutoPlaying || isHovered || total <= 1) return;
     const interval = setInterval(() => {
       nextSlide();
-    }, 12000);
+    }, 5000);
     return () => clearInterval(interval);
   }, [isAutoPlaying, isHovered, total, nextSlide]);
 
@@ -179,18 +179,18 @@ export default function TrendingHeroCarousel({ animeList }: TrendingHeroCarousel
             dangerouslySetInnerHTML={{ 
               __html: (currentAnime.description || "Stream the newest episodes in ultra-high definition.")
                 .replace(/<[^>]+>/g, "")
-                .slice(0, 220) + (currentAnime.description && currentAnime.description.length > 220 ? "..." : "")
+                .slice(0, 150) + (currentAnime.description && currentAnime.description.length > 150 ? "..." : "")
             }}
           />
 
           {/* Action CTAs */}
           <div className={styles.actionRow}>
             <Link href={`/watch/${currentAnime.id}/1`} className={styles.primaryBtn}>
-              <Play size={18} fill="currentColor" />
+              <Play size={15} fill="currentColor" />
               <span>Watch Episode 1</span>
             </Link>
             <Link href={`/anime/${currentAnime.id}`} className={styles.secondaryBtn}>
-              <Info size={17} />
+              <Info size={14} />
               <span>More Details</span>
             </Link>
           </div>
@@ -207,7 +207,7 @@ export default function TrendingHeroCarousel({ animeList }: TrendingHeroCarousel
             />
             <div className={styles.posterOverlay}>
               <div className={styles.playCircle}>
-                <Play size={26} fill="#fff" color="#fff" style={{ marginLeft: "3px" }} />
+                <Play size={18} fill="#fff" color="#fff" style={{ marginLeft: "2px" }} />
               </div>
               <span className={styles.posterRank}>#{currentIndex + 1} Top Airing</span>
             </div>
@@ -219,47 +219,48 @@ export default function TrendingHeroCarousel({ animeList }: TrendingHeroCarousel
       <button 
         onClick={prevSlide}
         className={`${styles.navArrow} ${styles.navPrev}`}
-        title="Previous Trending Anime (Swipe Right)"
+        title="Previous Trending Anime"
         aria-label="Previous Slide"
       >
-        <ChevronLeft size={24} />
+        <ChevronLeft size={18} />
       </button>
 
       <button 
         onClick={nextSlide}
         className={`${styles.navArrow} ${styles.navNext}`}
-        title="Next Trending Anime (Swipe Left)"
+        title="Next Trending Anime"
         aria-label="Next Slide"
       >
-        <ChevronRight size={24} />
+        <ChevronRight size={18} />
       </button>
 
       {/* Bottom Sweep Track: Top 10 Numbered Pills with Live Auto-Progress */}
       <div className={styles.sweepTrack}>
         <div className={styles.trackLabel}>
-          <Sparkles size={13} style={{ color: "var(--accent)" }} />
+          <Sparkles size={11} style={{ color: "var(--accent)" }} />
           <span>TOP 10 TRENDING</span>
           <button
             onClick={() => setIsAutoPlaying(!isAutoPlaying)}
             className={styles.autoPlayToggle}
-            title={isAutoPlaying ? "Pause Auto-Advance" : "Enable Auto-Advance"}
-            aria-label={isAutoPlaying ? "Pause Auto-Advance" : "Enable Auto-Advance"}
+            title={isAutoPlaying ? "Pause Auto-Advance" : "Resume Auto-Advance"}
+            aria-label={isAutoPlaying ? "Pause Auto-Advance" : "Resume Auto-Advance"}
             style={{
-              background: isAutoPlaying ? "rgba(244, 63, 94, 0.2)" : "rgba(255, 255, 255, 0.08)",
-              border: isAutoPlaying ? "1px solid var(--primary)" : "1px solid rgba(255, 255, 255, 0.15)",
-              color: isAutoPlaying ? "var(--primary)" : "var(--text-muted)",
+              background: isAutoPlaying ? "rgba(34, 197, 94, 0.2)" : "rgba(255, 255, 255, 0.08)",
+              border: isAutoPlaying ? "1px solid rgba(34, 197, 94, 0.5)" : "1px solid rgba(255, 255, 255, 0.15)",
+              color: isAutoPlaying ? "#4ade80" : "var(--text-muted)",
               borderRadius: "6px",
               padding: "2px 6px",
               cursor: "pointer",
               display: "inline-flex",
               alignItems: "center",
-              gap: "4px",
-              fontSize: "0.68rem",
-              fontWeight: 600,
-              marginLeft: "6px",
+              gap: "3px",
+              fontSize: "0.64rem",
+              fontWeight: 700,
+              marginLeft: "4px",
+              transition: "all 0.2s ease",
             }}
           >
-            {isAutoPlaying ? <Pause size={10} /> : <Play size={10} />}
+            {isAutoPlaying ? <Pause size={9} /> : <Play size={9} />}
             <span>{isAutoPlaying ? "Auto" : "Paused"}</span>
           </button>
         </div>
@@ -274,7 +275,9 @@ export default function TrendingHeroCarousel({ animeList }: TrendingHeroCarousel
                 title={`#${idx + 1}: ${anime.title.english || anime.title.romaji}`}
               >
                 <span className={styles.pillNumber}>#{idx + 1}</span>
-                {isActive && <div className={styles.pillProgress} />}
+                {isActive && isAutoPlaying && !isHovered && (
+                  <div key={`prog-${currentIndex}`} className={styles.pillProgress} />
+                )}
               </button>
             );
           })}
