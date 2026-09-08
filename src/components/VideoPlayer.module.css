@@ -6,6 +6,8 @@
 }
 
 .serverBar {
+  position: relative;
+  z-index: 100;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -69,6 +71,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  position: relative;
+  z-index: 101;
 }
 
 /* Language Controls with Status Badges */
@@ -814,20 +818,23 @@
   cursor: not-allowed;
 }
 
-.statusDot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
+.audioIcon {
+  opacity: 0.85;
   flex-shrink: 0;
 }
 
-.dotAvailable {
+.dubDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
   background: #22c55e;
   box-shadow: 0 0 6px #22c55e;
+  margin-left: 2px;
 }
 
-.dotUnavailable {
-  background: #64748b;
+.downloadWrapper {
+  position: relative;
+  display: inline-flex;
 }
 
 .downloadBtn {
@@ -837,7 +844,7 @@
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.14);
   color: #e2e8f0;
-  padding: 6px 13px;
+  padding: 5px 12px;
   border-radius: 9999px;
   font-size: 0.76rem;
   font-weight: 700;
@@ -850,4 +857,172 @@
   color: #ffffff;
   border-color: rgba(255, 255, 255, 0.28);
   transform: translateY(-1px);
+}
+
+.downloadBtnActive {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #fff;
+}
+
+.downloadIcon {
+  color: var(--accent, #38bdf8);
+}
+
+.downloadChevron {
+  opacity: 0.6;
+  transition: transform 0.2s ease;
+}
+
+.chevronRotated {
+  transform: rotate(180deg);
+  opacity: 1;
+}
+
+/* Quality Selection Popover Menu */
+.qualityDropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 250px;
+  background: rgba(12, 12, 20, 0.96);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  padding: 8px;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.85), 0 0 20px rgba(0, 0, 0, 0.5);
+  z-index: 100;
+  animation: qualityIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes qualityIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.qualityHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 6px;
+}
+
+.qualityTitleWrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: #f8fafc;
+  letter-spacing: 0.02em;
+}
+
+.qualityHeaderIcon {
+  color: var(--accent, #38bdf8);
+}
+
+.qualityCloseBtn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.45);
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease;
+}
+
+.qualityCloseBtn:hover {
+  color: #fff;
+}
+
+.qualityList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.qualityOption {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: #e2e8f0;
+  cursor: pointer;
+  transition: all 0.16s ease;
+  text-align: left;
+  width: 100%;
+}
+
+.qualityOption:hover {
+  background: rgba(255, 255, 255, 0.10);
+  border-color: rgba(255, 255, 255, 0.18);
+  transform: translateX(2px);
+}
+
+.qualityBadge {
+  padding: 2px 7px;
+  border-radius: 5px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: #38bdf8;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+
+.qualityOption:first-child .qualityBadge {
+  background: rgba(244, 63, 94, 0.18);
+  border-color: rgba(244, 63, 94, 0.4);
+  color: #fb7185;
+}
+
+.qualityMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+
+.qualityLabel {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.2;
+}
+
+.qualitySize {
+  font-size: 0.66rem;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.qualityDownloadIcon {
+  color: rgba(255, 255, 255, 0.35);
+  flex-shrink: 0;
+  transition: color 0.16s ease;
+}
+
+.qualityOption:hover .qualityDownloadIcon {
+  color: #fff;
+}
+
+.qualityCheckedIcon {
+  color: #22c55e;
+  flex-shrink: 0;
 }

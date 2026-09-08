@@ -18,7 +18,13 @@ import {
   AlertCircle,
   Tv,
   Settings,
-  Sparkles
+  Sparkles,
+  Download,
+  ChevronDown,
+  Headphones,
+  Subtitles,
+  X,
+  Check
 } from "lucide-react";
 import styles from "./VideoPlayer.module.css";
 
@@ -47,6 +53,13 @@ interface CachedEpisodeData {
     embedUrls?: { label: string; url: string; serverType: string; isDub?: boolean }[];
   };
 }
+
+const QUALITY_OPTIONS = [
+  { quality: "1080p", label: "Full HD", size: "~380 MB", desc: "Studio master 1080p stream" },
+  { quality: "720p", label: "HD", size: "~220 MB", desc: "Crisp 720p high definition" },
+  { quality: "480p", label: "SD", size: "~130 MB", desc: "Standard definition" },
+  { quality: "360p", label: "Data Saver", size: "~75 MB", desc: "Mobile data friendly" },
+];
 
 export default function VideoPlayer({
   animeId = "",
@@ -107,6 +120,60 @@ export default function VideoPlayer({
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
+
+  // Download Quality Menu State
+  const [isDownloadOpen, setIsDownloadOpen] = useState(false);
+  const [downloadingQuality, setDownloadingQuality] = useState<string | null>(null);
+  const downloadMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close download menu on click outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (downloadMenuRef.current && !downloadMenuRef.current.contains(e.target as Node)) {
+        setIsDownloadOpen(false);
+      }
+    };
+    if (isDownloadOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isDownloadOpen]);
+
+  // Handle Download trigger
+  const handleDownloadQuality = (quality: string) => {
+    setIsDownloadOpen(false);
+    setDownloadingQuality(quality);
+    showStatus(`📥 Starting ${quality} download: Ep ${episodeNumber} (${isDub ? "DUB" : "SUB"})`, "success");
+
+    const safeTitle = (animeTitle || "Anime")
+      .replace(/[^a-zA-Z0-9_\- ]/g, "")
+      .trim()
+      .replace(/\s+/g, "_")
+      .slice(0, 32);
+    const fileName = `${safeTitle}_EP${episodeNumber}_${quality}_${isDub ? "DUB" : "SUB"}.mp4`;
+
+    const directSource = streamSources.find((s) => s.quality === quality) || streamSources[0];
+    const targetUrl = directSource?.url || (embedUrls[0] ? embedUrls[0].url : `/api/anime/download?title=${encodeURIComponent(cleanTitle)}&episode=${episodeNumber}&quality=${quality}&dub=${isDub}`);
+
+    try {
+      const a = document.createElement("a");
+      a.href = targetUrl;
+      a.download = fileName;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    } catch {
+      window.open(targetUrl, "_blank");
+    }
+
+    setTimeout(() => {
+      setDownloadingQuality(null);
+    }, 3500);
+  };
 
   // Primary title slug for embedding
   const cleanTitle = animeTitle.replace(/\([^)]*\)/g, "").trim();
@@ -636,35 +703,97 @@ export default function VideoPlayer({
 
         {/* Audio (Sub / Dub) & Controls */}
         <div className={styles.controlsRight}>
-          {/* Language Toggle with Status Badges */}
-          <div className={styles.languageControls}>
+          {/* Modern Segmented Audio Language Capsule (SUB / DUB) */}
+          <div className={styles.audioSegmentWrap} role="radiogroup" aria-label="Audio language selection">
             <button
-              id="dub-btn"
-              onClick={() => switchLanguage("dub")}
-              disabled={!hasDub}
-              className={`${styles.langBtn} ${isDub ? styles.langBtnActive : ""}`}
-              title={hasDub ? "Play English Dub (D)" : "English Dub unavailable for this anime"}
+              id="sub-btn"
+              type="button"
+              onClick={() => switchLanguage("sub")}
+              disabled={!hasSub}
+              className={`${styles.audioSegmentBtn} ${!isDub ? styles.audioSegmentActive : ""} ${!hasSub ? styles.audioSegmentDisabled : ""}`}
+              title={hasSub ? "Play Japanese with English Subtitles" : "Subtitles unavailable"}
+              aria-checked={!isDub}
+              role="radio"
             >
-              <span className={styles.langIcon}>🎤</span>
-              <span>Dub</span>
-              <span className={`${styles.langBadge} ${!hasDub ? styles.langBadgeUnavailable : ""}`}>
-                {hasDub ? "Available" : "Unavailable"}
-              </span>
+              <Subtitles size={13} className={styles.audioIcon} />
+              <span>SUB</span>
             </button>
 
             <button
-              id="sub-btn"
-              onClick={() => switchLanguage("sub")}
-              disabled={!hasSub}
-              className={`${styles.langBtn} ${!isDub ? styles.langBtnActive : ""}`}
-              title="Play Japanese with English Subtitles (S)"
+              id="dub-btn"
+              type="button"
+              onClick={() => switchLanguage("dub")}
+              disabled={!hasDub}
+              className={`${styles.audioSegmentBtn} ${isDub ? styles.audioSegmentActive : ""} ${!hasDub ? styles.audioSegmentDisabled : ""}`}
+              title={hasDub ? "Play English Dub" : "English Dub unavailable for this anime"}
+              aria-checked={isDub}
+              role="radio"
             >
-              <span className={styles.langIcon}>📝</span>
-              <span>Sub</span>
-              <span className={`${styles.langBadge} ${!hasSub ? styles.langBadgeUnavailable : ""}`}>
-                {hasSub ? "Available" : "Unavailable"}
-              </span>
+              <Headphones size={13} className={styles.audioIcon} />
+              <span>DUB</span>
+              {hasDub && <span className={styles.dubDot} title="English Dub Available" />}
             </button>
+          </div>
+
+          {/* Modern Download Button with Interactive Quality Selector */}
+          <div className={styles.downloadWrapper} ref={downloadMenuRef}>
+            <button
+              id="download-btn"
+              type="button"
+              onClick={() => setIsDownloadOpen((prev) => !prev)}
+              className={`${styles.downloadBtn} ${isDownloadOpen ? styles.downloadBtnActive : ""}`}
+              title="Download Episode"
+              aria-label="Download Episode with quality selection"
+              aria-haspopup="true"
+              aria-expanded={isDownloadOpen}
+            >
+              <Download size={13} className={styles.downloadIcon} />
+              <span>Download</span>
+              <ChevronDown size={11} className={`${styles.downloadChevron} ${isDownloadOpen ? styles.chevronRotated : ""}`} />
+            </button>
+
+            {/* Quality Selection Popover Menu */}
+            {isDownloadOpen && (
+              <div className={styles.qualityDropdown} role="menu" aria-label="Select download quality">
+                <div className={styles.qualityHeader}>
+                  <div className={styles.qualityTitleWrap}>
+                    <Download size={13} className={styles.qualityHeaderIcon} />
+                    <span className={styles.qualityHeaderTitle}>Download Ep {episodeNumber}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsDownloadOpen(false)}
+                    className={styles.qualityCloseBtn}
+                    aria-label="Close download menu"
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+
+                <div className={styles.qualityList}>
+                  {QUALITY_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.quality}
+                      type="button"
+                      onClick={() => handleDownloadQuality(opt.quality)}
+                      className={styles.qualityOption}
+                      role="menuitem"
+                    >
+                      <span className={styles.qualityBadge}>{opt.quality}</span>
+                      <div className={styles.qualityMeta}>
+                        <span className={styles.qualityLabel}>{opt.label}</span>
+                        <span className={styles.qualitySize}>{opt.size}</span>
+                      </div>
+                      {downloadingQuality === opt.quality ? (
+                        <Check size={13} className={styles.qualityCheckedIcon} />
+                      ) : (
+                        <Download size={12} className={styles.qualityDownloadIcon} />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <button
