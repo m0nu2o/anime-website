@@ -723,6 +723,13 @@
   transform: translateX(0);
 }
 
+@media (min-width: 1024px) {
+  .mobileDrawer,
+  .mobileBackdrop {
+    display: none !important;
+  }
+}
+
 /* Drawer header */
 .drawerHead {
   display: flex;

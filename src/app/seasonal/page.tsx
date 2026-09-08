@@ -88,6 +88,7 @@ export default async function SeasonalPage({
         </div>
 
         {/* Anime Grid */}
+        <h2 className="sr-only">Seasonal Anime Lineup</h2>
         {animeList.length > 0 ? (
           <div className={styles.grid}>
             {animeList.map((anime) => (
@@ -96,7 +97,7 @@ export default async function SeasonalPage({
           </div>
         ) : (
           <div className={styles.emptyState}>
-            <h3>No Anime Found For This Season</h3>
+            <h2>No Anime Found For This Season</h2>
             <p>Schedules for this season have not yet been announced or verified.</p>
             <Link
               href="/discover"

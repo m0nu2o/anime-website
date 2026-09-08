@@ -26,7 +26,14 @@ export default function AnimeCard({
   const [loading, setLoading] = useState(false);
   const [imgSrc, setImgSrc] = useState(anime.images.largeCover || anime.images.cover || "/placeholder-cover.svg");
 
-  const title = anime.title.english || anime.title.romaji || anime.title.native || "Unknown Title";
+  const rawTitle = anime.title.english || anime.title.romaji || anime.title.native || "Unknown Title";
+  // Convert long shouting all-caps titles to Title Case for better readability
+  const title = (rawTitle.length > 5 && rawTitle === rawTitle.toUpperCase() && !/[a-z]/.test(rawTitle))
+    ? rawTitle
+        .toLowerCase()
+        .replace(/(?:^|\s|\/|-)\S/g, (c) => c.toUpperCase())
+        .replace(/\b(In|The|Of|And|At|By|For|With|A|An|To)\b/gi, (w, _, offset) => offset === 0 ? w : w.toLowerCase())
+    : rawTitle;
   const score = anime.score ? (anime.score > 10 ? (anime.score / 10).toFixed(1) : anime.score.toFixed(1)) : null;
 
   const handleWatchlistClick = async (e: React.MouseEvent) => {
