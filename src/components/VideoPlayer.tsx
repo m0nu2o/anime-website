@@ -154,20 +154,18 @@ export default function VideoPlayer({
       .slice(0, 32);
     const fileName = `${safeTitle}_EP${episodeNumber}_${quality}_${isDub ? "DUB" : "SUB"}.mp4`;
 
-    const directSource = streamSources.find((s) => s.quality === quality) || streamSources[0];
-    const targetUrl = directSource?.url || (embedUrls[0] ? embedUrls[0].url : `/api/anime/download?title=${encodeURIComponent(cleanTitle)}&episode=${episodeNumber}&quality=${quality}&dub=${isDub}`);
+    const downloadApiUrl = `/api/anime/download?title=${encodeURIComponent(cleanTitle)}&episode=${episodeNumber}&quality=${quality}&dub=${isDub}`;
 
     try {
+      // Invisible trigger to initiate native browser download dialog without navigating
       const a = document.createElement("a");
-      a.href = targetUrl;
-      a.download = fileName;
-      a.target = "_blank";
-      a.rel = "noopener noreferrer";
+      a.href = downloadApiUrl;
+      a.setAttribute("download", fileName);
       document.body.appendChild(a);
       a.click();
       a.remove();
     } catch {
-      window.open(targetUrl, "_blank");
+      window.location.href = downloadApiUrl;
     }
 
     setTimeout(() => {

@@ -24,8 +24,8 @@ interface ThemeConfig {
 export const THEME_CONFIGS: Record<string, ThemeConfig> = {
   sun: {
     name: "sun",
-    label: "Solar Sun",
-    subLabel: "Solar Corona & Magnetic Loops",
+    label: "Solar Amber",
+    subLabel: "Warm Gold & Dark Caramel",
     icon: <Sun size={15} />,
     bgGradient: "radial-gradient(circle at 50% 15%, #2a1505 0%, #170902 60%, #0a0300 100%)",
     textColor: "#fffbeb",
@@ -39,8 +39,8 @@ export const THEME_CONFIGS: Record<string, ThemeConfig> = {
   },
   neural: {
     name: "neural",
-    label: "Neural Mind",
-    subLabel: "Architecture of Mind & Synapses",
+    label: "Tokyo Night",
+    subLabel: "Electric Cyan & Navy Dark",
     icon: <Cpu size={15} />,
     bgGradient: "radial-gradient(circle at 50% 15%, #081b29 0%, #040d18 60%, #02070d 100%)",
     textColor: "#f0fdf4",
@@ -54,8 +54,8 @@ export const THEME_CONFIGS: Record<string, ThemeConfig> = {
   },
   attractor: {
     name: "attractor",
-    label: "4D Attractor",
-    subLabel: "Hyperspace Dimensional Twist",
+    label: "Sakura Crimson",
+    subLabel: "Cherry Blossom & Ruby Glow",
     icon: <Sunset size={15} />,
     bgGradient: "radial-gradient(circle at 50% 20%, #2b0f2a 0%, #1a081f 60%, #0b020d 100%)",
     textColor: "#fff1f2",
@@ -69,8 +69,8 @@ export const THEME_CONFIGS: Record<string, ThemeConfig> = {
   },
   blackhole: {
     name: "blackhole",
-    label: "Black Hole",
-    subLabel: "Relativistic Accretion Horizon",
+    label: "Midnight Violet",
+    subLabel: "Deep OLED Violet & Obsidian",
     icon: <Orbit size={15} />,
     bgGradient: "radial-gradient(circle at 50% 15%, #130a24 0%, #07040f 60%, #020105 100%)",
     textColor: "#e2e8f0",
@@ -84,8 +84,8 @@ export const THEME_CONFIGS: Record<string, ThemeConfig> = {
   },
   neuro: {
     name: "neuro",
-    label: "Neuroplasticity",
-    subLabel: "Dual-Layer Cortical Pulsing",
+    label: "Emerald Aurora",
+    subLabel: "Mint Jade & Deep Forest Dark",
     icon: <Activity size={15} />,
     bgGradient: "radial-gradient(circle at 50% 20%, #06231b 0%, #031410 60%, #010806 100%)",
     textColor: "#ecfdf5",
@@ -99,8 +99,8 @@ export const THEME_CONFIGS: Record<string, ThemeConfig> = {
   },
   quantum: {
     name: "quantum",
-    label: "Quantum Steam",
-    subLabel: "Thermal Convection Swarm",
+    label: "Cyberpunk Neon",
+    subLabel: "High-Contrast Scarlet & Aqua",
     icon: <CloudRain size={15} />,
     bgGradient: "radial-gradient(circle at 50% 20%, #29080c 0%, #170407 60%, #0a0103 100%)",
     textColor: "#fef2f2",
