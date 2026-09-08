@@ -2,7 +2,7 @@
    NEXTGEN ANIME — WORLD-CLASS NAVBAR
    ===================================================== */
 
-/* ── Base Navbar Shell (Full width, translucent liquid glass across corners) ── */
+/* ── Base Navbar Shell (Full width, ultra-translucent 7% liquid glass across corners) ── */
 .navbar {
   position: fixed;
   top: 0;
@@ -13,24 +13,26 @@
   z-index: 9000;
   display: flex;
   align-items: center;
-  background: rgba(8, 8, 16, 0.35);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+  background: rgba(8, 8, 16, 0.07);
+  backdrop-filter: blur(14px) saturate(180%);
+  -webkit-backdrop-filter: blur(14px) saturate(180%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 4px 28px rgba(0, 0, 0, 0.35);
   transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .navbar.scrolled {
-  background: rgba(8, 8, 16, 0.78);
-  backdrop-filter: blur(24px) saturate(200%);
-  -webkit-backdrop-filter: blur(24px) saturate(200%);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.75);
+  background: rgba(8, 8, 16, 0.55);
+  backdrop-filter: blur(22px) saturate(200%);
+  -webkit-backdrop-filter: blur(22px) saturate(200%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: 0 8px 36px rgba(0, 0, 0, 0.65);
 }
 
 /* ── Inner Container (Corner to Corner) ── */
 .navInner {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: space-between;

@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import styles from "./Navbar.module.css";
 import SearchDialog from "./SearchDialog";
+import NavbarParticleStream from "./NavbarParticleStream";
 import { useAuth } from "@/lib/supabase/AuthContext";
 import { useThemeSimulator, THEME_CONFIGS } from "./ThemeSimulatorProvider";
 
@@ -128,6 +129,7 @@ export default function Navbar() {
     <>
       {/* ══════════════ MAIN NAVBAR ══════════════ */}
       <header className={`${styles.navbar} ${scrolled ? styles.scrolled : ""}`}>
+        <NavbarParticleStream theme={weather} />
         <div className={styles.navInner}>
 
           {/* LEFT — Logo + Nav Links */}
