@@ -10,11 +10,27 @@ import { AuthProvider } from "@/lib/supabase/AuthContext";
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700", "800", "900"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
   title: "NextGen Anime | Next-Generation Anime Platform",
-  description: "A premium, next-generation anime discovery, watching, and 3D simulation platform.",
+  description: "A premium, cinematic anime discovery, watching, and interactive 3D simulation platform.",
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+    ],
+    shortcut: "/icon.svg",
+    apple: "/icon.svg",
+  },
+  openGraph: {
+    title: "NextGen Anime | Next-Generation Anime Platform",
+    description: "A premium, cinematic anime discovery, watching, and interactive 3D simulation platform.",
+    siteName: "NextGen Anime",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
@@ -24,24 +40,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={inter.variable}>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link 
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700;800&family=Outfit:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@500;700;800&family=Space+Grotesk:wght@500;700&family=Syne:wght@600;700;800;900&display=swap" 
-          rel="stylesheet" 
-        />
-        {/* Preconnect to streaming servers for faster video loading */}
-        <link rel="preconnect" href="https://www.googleapis.com" />
-        <link rel="dns-prefetch" href="https://reanimehd.org" />
-        <link rel="dns-prefetch" href="https://reanime.net" />
-      </head>
+      <head />
       <body>
         <AuthProvider>
           <ThemeSimulatorProvider>
             <AnimeAmbientBackground />
             <div style={{ position: 'relative', zIndex: 1, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-              <div style={{ flex: 1 }}>
+              <div style={{ flex: 1, paddingTop: 'var(--navbar-height)' }}>
                 {children}
               </div>
               <Footer />

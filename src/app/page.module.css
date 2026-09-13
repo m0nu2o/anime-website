@@ -3,7 +3,7 @@
   min-height: 75vh;
   display: flex;
   align-items: flex-end;
-  padding-top: calc(var(--navbar-height) + 40px);
+  padding-top: 40px;
   padding-bottom: 60px;
   overflow: hidden;
 }
@@ -175,9 +175,9 @@
   display: flex;
   gap: 20px;
   overflow-x: auto;
-  padding-top: 12px;
-  padding-bottom: 20px;
-  margin-top: -6px;
+  padding-top: 8px;
+  padding-bottom: 24px;
+  margin-top: -4px;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
@@ -189,7 +189,6 @@
 .cardWrapper {
   flex: 0 0 200px;
   width: 200px;
-  height: 380px;
   display: flex;
   flex-direction: column;
 }

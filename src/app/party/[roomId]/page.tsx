@@ -1,20 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { Suspense, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import BackButton from "@/components/BackButton";
 import VideoPlayer from "@/components/VideoPlayer";
 import { useAuth } from "@/lib/supabase/AuthContext";
-import { 
-  Users, 
-  Send, 
-  Share2, 
-  Copy, 
-  Check, 
-  MessageCircle, 
-  Sparkles 
-} from "lucide-react";
+import { Users, Send, Share2, Check, MessageCircle } from "lucide-react";
 import styles from "./page.module.css";
 
 interface ChatMessage {
@@ -25,25 +17,42 @@ interface ChatMessage {
   timestamp: string;
 }
 
-export default function WatchPartyRoom() {
+function getInitials(name: string): string {
+  const initials = name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part.charAt(0))
+    .join("");
+  return (initials || "U").toUpperCase();
+}
+
+function WatchPartyContent() {
   const params = useParams();
   const searchParams = useSearchParams();
   const { user, profile } = useAuth();
 
-  const roomId = (params?.roomId as string) || "anime-room-1";
-  const animeTitle = searchParams.get("title") || "Attack on Titan";
-  const epNumber = parseInt(searchParams.get("ep") || "1", 10);
-  const animeId = searchParams.get("anime") || "kitsu-7442";
+  const rawRoomId = Array.isArray(params?.roomId) ? params.roomId[0] : params?.roomId;
+  const roomId = rawRoomId?.trim();
+  const title = searchParams.get("title")?.trim();
+  const epParam = searchParams.get("ep")?.trim();
+  const animeId = searchParams.get("anime")?.trim();
+  const epNumber = epParam ? Number(epParam) : NaN;
+  const isValid = Boolean(roomId && title && animeId && Number.isInteger(epNumber) && epNumber > 0);
 
   const [copied, setCopied] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: "1",
-      sender: "System",
-      text: `Welcome to Watch Party room ${roomId}. Share the room link to watch together with friends.`,
-      timestamp: "Just now",
-    },
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>(() =>
+    isValid
+      ? [
+          {
+            id: "1",
+            sender: "System",
+            text: `Welcome to Watch Party room ${roomId}. Share the room link to watch together with friends.`,
+            timestamp: "Just now",
+          },
+        ]
+      : []
+  );
   const [inputText, setInputText] = useState("");
 
   const handleCopyLink = () => {
@@ -56,13 +65,13 @@ export default function WatchPartyRoom() {
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputText.trim()) return;
+    if (!inputText.trim() || !isValid) return;
 
-    const senderName = profile?.username || user?.email?.split("@")[0] || "Anime Otaku";
+    const senderName = profile?.username || user?.email?.split("@")[0] || "Guest";
     const newMsg: ChatMessage = {
       id: String(Date.now()),
       sender: senderName,
-      avatar: profile?.avatar_url || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100",
+      avatar: profile?.avatar_url || undefined,
       text: inputText.trim(),
       timestamp: "Just now",
     };
@@ -70,6 +79,39 @@ export default function WatchPartyRoom() {
     setMessages((prev) => [...prev, newMsg]);
     setInputText("");
   };
+
+  if (!isValid) {
+    return (
+      <>
+        <Navbar />
+        <div className={styles.partyContainer}>
+          <BackButton label="Back to Home" fallbackUrl="/" />
+          <div className={styles.header}>
+            <div className={styles.titleArea}>
+              <span className={styles.liveBadge}>
+                <span className={styles.pulseDot} /> WATCH PARTY LIVE
+              </span>
+              <h1 className={styles.roomTitle}>Watch Party Unavailable</h1>
+            </div>
+          </div>
+          <div
+            style={{
+              marginTop: "24px",
+              padding: "24px",
+              borderRadius: "16px",
+              background: "rgba(255,255,255,0.03)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              color: "var(--text-muted)",
+            }}
+          >
+            <p style={{ margin: 0, fontSize: "0.95rem", lineHeight: 1.6 }}>
+              Watch party details are missing. A valid room link must include <strong>title</strong>, <strong>ep</strong>, and <strong>anime</strong> query parameters.
+            </p>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -83,7 +125,7 @@ export default function WatchPartyRoom() {
               <span className={styles.pulseDot} /> WATCH PARTY LIVE
             </span>
             <h1 className={styles.roomTitle}>
-              {animeTitle} — Episode {epNumber} (Room #{roomId})
+              {title} — Episode {epNumber} (Room #{roomId})
             </h1>
           </div>
 
@@ -99,7 +141,7 @@ export default function WatchPartyRoom() {
           <div className={styles.videoCol}>
             <VideoPlayer
               animeId={animeId}
-              animeTitle={animeTitle}
+              animeTitle={title}
               episodeNumber={epNumber}
             />
           </div>
@@ -120,11 +162,13 @@ export default function WatchPartyRoom() {
             <div className={styles.messagesList}>
               {messages.map((msg) => (
                 <div key={msg.id} className={styles.messageItem}>
-                  <img
-                    src={msg.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100"}
-                    alt={msg.sender}
-                    className={styles.msgAvatar}
-                  />
+                  {msg.avatar ? (
+                    <img src={msg.avatar} alt={msg.sender} className={styles.msgAvatar} />
+                  ) : (
+                    <div className={styles.msgAvatar} style={{ display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, color: "#fff", fontSize: "0.8rem" }}>
+                      {getInitials(msg.sender)}
+                    </div>
+                  )}
                   <div className={styles.msgBody}>
                     <div className={styles.msgAuthor}>{msg.sender}</div>
                     <div className={styles.msgText}>{msg.text}</div>
@@ -150,5 +194,26 @@ export default function WatchPartyRoom() {
         </div>
       </div>
     </>
+  );
+}
+
+function WatchPartyFallback() {
+  return (
+    <>
+      <Navbar />
+      <div className={styles.partyContainer}>
+        <div style={{ padding: "60px 20px", textAlign: "center", color: "var(--text-muted)" }}>
+          Loading watch party...
+        </div>
+      </div>
+    </>
+  );
+}
+
+export default function WatchPartyRoom() {
+  return (
+    <Suspense fallback={<WatchPartyFallback />}>
+      <WatchPartyContent />
+    </Suspense>
   );
 }

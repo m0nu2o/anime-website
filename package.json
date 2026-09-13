@@ -3,10 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --webpack -p 4000",
+    "dev": "next dev --webpack -p 3001",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "package:final": "node scripts/package-final.mjs",
+    "package:master": "node scripts/package-master.mjs",
+    "package:perfect": "node scripts/package-perfect.mjs",
+    "package:sync": "node scripts/package-sync-final.mjs",
+    "validate:master": "node scripts/validate-master.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.8",
@@ -27,6 +32,7 @@
     "@types/node": "^20.19.43",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "adm-zip": "^0.6.0",
     "eslint": "^9",
     "eslint-config-next": "16.3.4",
     "typescript": "^5"

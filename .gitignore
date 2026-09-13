@@ -43,3 +43,7 @@ next-env.d.ts
 
 # archives
 *.zip
+
+# test output
+/test-results/
+/playwright-report/

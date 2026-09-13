@@ -225,54 +225,259 @@ interface KitsuEpisodeItem {
   attributes?: KitsuEpisodeAttributes | null;
 }
 
-export async function fetchKitsuEpisodes(animeId: string, searchTitle?: string): Promise<import("./types").Episode[]> {
+function parseKitsuAirdate(value: string) {
+  const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
+  if (dateOnly) {
+    const year = Number(dateOnly[1]);
+    const month = Number(dateOnly[2]) - 1;
+    const day = Number(dateOnly[3]);
+    return { timestamp: Date.UTC(year, month, day, 12), hasExactTime: false };
+  }
+
+  const timestamp = Date.parse(value);
+  return Number.isNaN(timestamp)
+    ? { timestamp: Number.NaN, hasExactTime: false }
+    : { timestamp, hasExactTime: true };
+}
+
+function getJstBroadcastInfo(timestamp: number, hasExactTime: boolean) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Tokyo",
+    weekday: "long",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    ...(hasExactTime ? { hour: "2-digit", minute: "2-digit", hourCycle: "h23" as const } : {}),
+  }).formatToParts(new Date(timestamp));
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return {
+    dayName: values.weekday || "Unknown",
+    dateString: `${values.year}-${values.month}-${values.day}`,
+    timeString: hasExactTime ? `${values.hour}:${values.minute} JST` : "Broadcast TBA",
+  };
+}
+
+/**
+ * Resolves a non-Kitsu anime ID to its real Kitsu ID using official external mappings.
+ * Returns null when no verified mapping exists — never guesses.
+ */
+async function resolveKitsuIdFromMapping(animeId: string): Promise<string | null> {
+  try {
+    if (animeId.startsWith("mal-")) {
+      const malId = animeId.replace("mal-", "");
+      if (!/^\d+$/.test(malId)) return null;
+      const res = await fetchWithTimeout(
+        `${KITSU_API_URL}/mappings?filter[externalSite]=myanimelist/anime&filter[externalId]=${malId}&include=item`,
+        {},
+        4000
+      );
+      if (!res.ok) return null;
+      const json = await res.json();
+      const kitsuEntry = Array.isArray(json?.included)
+        ? json.included.find((inc: { type?: string }) => inc.type === "anime")
+        : null;
+      return kitsuEntry?.id ? String(kitsuEntry.id) : null;
+    }
+    if (animeId.startsWith("anilist-")) {
+      const anilistId = animeId.replace("anilist-", "");
+      if (!/^\d+$/.test(anilistId)) return null;
+      const res = await fetchWithTimeout(
+        `${KITSU_API_URL}/mappings?filter[externalSite]=anilist/anime&filter[externalId]=${anilistId}&include=item`,
+        {},
+        4000
+      );
+      if (!res.ok) return null;
+      const json = await res.json();
+      const kitsuEntry = Array.isArray(json?.included)
+        ? json.included.find((inc: { type?: string }) => inc.type === "anime")
+        : null;
+      return kitsuEntry?.id ? String(kitsuEntry.id) : null;
+    }
+  } catch {}
+  return null;
+}
+
+export async function fetchKitsuEpisodes(
+  animeId: string,
+  searchTitle?: string,
+  animeStatus?: string,
+  latestAiredEpisode?: number
+): Promise<import("./types").Episode[]> {
   try {
     let cleanId = animeId.replace("kitsu-", "");
-    if (!animeId.startsWith("kitsu-") && searchTitle) {
-      try {
-        const searchRes = await fetchWithTimeout(`${KITSU_API_URL}/anime?filter[text]=${encodeURIComponent(searchTitle)}&page[limit]=1`);
-        if (searchRes.ok) {
-          const sData = await searchRes.json();
-          if (sData?.data?.[0]?.id) {
-            cleanId = sData.data[0].id;
+    if (!animeId.startsWith("kitsu-")) {
+      const mappedId = await resolveKitsuIdFromMapping(animeId);
+      if (mappedId) {
+        cleanId = mappedId;
+      } else if (searchTitle) {
+        try {
+          const searchRes = await fetchWithTimeout(`${KITSU_API_URL}/anime?filter[text]=${encodeURIComponent(searchTitle)}&page[limit]=1`);
+          if (searchRes.ok) {
+            const sData = await searchRes.json();
+            const first = sData?.data?.[0];
+            const candidateTitles = [
+              first?.attributes?.canonicalTitle,
+              first?.attributes?.titles?.en,
+              first?.attributes?.titles?.en_us,
+              first?.attributes?.titles?.en_jp,
+            ].filter((t): t is string => typeof t === "string");
+            const cleanSearch = searchTitle.toLowerCase().trim();
+            const isMatch = candidateTitles.some((t) => {
+              const lower = t.toLowerCase().trim();
+              return lower === cleanSearch || lower.startsWith(cleanSearch) || cleanSearch.startsWith(lower);
+            });
+            if (first?.id && isMatch) {
+              cleanId = String(first.id);
+            } else {
+              return [];
+            }
           }
+        } catch {
+          return [];
         }
-      } catch {}
+      } else {
+        return [];
+      }
     }
-    const url = `${KITSU_API_URL}/anime/${cleanId}/episodes?page[limit]=20&page[offset]=0&sort=number`;
-    const res = await fetchWithTimeout(url);
-    if (!res.ok) return [];
-    const data = await res.json();
-    let episodesData: KitsuEpisodeItem[] = Array.isArray(data?.data) ? data.data : [];
 
-    // If 20 episodes returned, fetch page 2 to provide up to 40 episodes
-    if (episodesData.length === 20) {
-      try {
-        const url2 = `${KITSU_API_URL}/anime/${cleanId}/episodes?page[limit]=20&page[offset]=20&sort=number`;
-        const res2 = await fetchWithTimeout(url2);
-        if (res2.ok) {
-          const data2 = await res2.json();
-          if (Array.isArray(data2?.data)) {
-            episodesData = episodesData.concat(data2.data);
-          }
-        }
-      } catch {}
+    const episodesData: KitsuEpisodeItem[] = [];
+    let nextUrl: string | null = `${KITSU_API_URL}/anime/${encodeURIComponent(cleanId)}/episodes?page[limit]=20&sort=number`;
+    let requestCount = 0;
+
+    while (nextUrl && requestCount < 50) {
+      const res = await fetchWithTimeout(nextUrl);
+      if (!res.ok) break;
+      const data = await res.json();
+      const pageEpisodes = Array.isArray(data?.data) ? data.data : [];
+      episodesData.push(...pageEpisodes);
+      requestCount += 1;
+      const next = data?.links?.next;
+      nextUrl = typeof next === "string" ? next : null;
+      if (pageEpisodes.length === 0) break;
     }
 
     if (episodesData.length === 0) {
       return [];
     }
 
-    return episodesData.map((ep, idx) => ({
-      id: String(ep.id),
-      number: ep.attributes?.number || ep.attributes?.relativeNumber || (idx + 1),
-      seasonNumber: ep.attributes?.seasonNumber || 1,
-      title: ep.attributes?.canonicalTitle || (ep.attributes?.titles?.en_us || ep.attributes?.titles?.en_jp) || `Episode ${ep.attributes?.number || (idx + 1)}`,
-      synopsis: ep.attributes?.synopsis || ep.attributes?.description || "",
-      thumbnail: ep.attributes?.thumbnail?.original || ep.attributes?.thumbnail?.medium || undefined,
-      airdate: ep.attributes?.airdate || undefined,
-      length: ep.attributes?.length ?? undefined,
-    }));
+    const now = Date.now();
+    const isFinished = animeStatus
+      ? (animeStatus.toLowerCase().includes("finish") || animeStatus.toLowerCase().includes("complete"))
+      : false;
+
+    // 1. Find the highest episode number that has a confirmed past airdate
+    let maxReleasedEpNum = 0;
+    for (const ep of episodesData) {
+      const rawNumber = ep.attributes?.number ?? ep.attributes?.relativeNumber;
+      const number = typeof rawNumber === "number" && rawNumber > 0 ? rawNumber : null;
+      const airdateStr = ep.attributes?.airdate;
+      if (airdateStr && number) {
+        let ts = NaN;
+        if (/^\d{4}-\d{2}-\d{2}$/.test(airdateStr)) {
+          ts = Date.parse(`${airdateStr}T00:00:00+09:00`);
+        } else {
+          ts = Date.parse(airdateStr);
+        }
+        if (!isNaN(ts) && ts <= now && number > maxReleasedEpNum) {
+          maxReleasedEpNum = number;
+        }
+      }
+    }
+
+    // 2. If caller provided latestAiredEpisode from AniList nextAiringEpisode or anime metadata
+    if (typeof latestAiredEpisode === "number" && latestAiredEpisode > 0) {
+      if (latestAiredEpisode > maxReleasedEpNum) {
+        maxReleasedEpNum = latestAiredEpisode;
+      }
+    }
+
+    // 3. Fallback: if maxReleasedEpNum is still 0 and anime is not finished, query AniList nextAiringEpisode via mapping
+    if (maxReleasedEpNum === 0 && !isFinished) {
+      try {
+        let targetAniListId: number | null = null;
+        if (animeId.startsWith("anilist-")) {
+          const parsed = parseInt(animeId.replace("anilist-", ""), 10);
+          if (!isNaN(parsed)) targetAniListId = parsed;
+        } else {
+          const mapRes = await fetchWithTimeout(`${KITSU_API_URL}/anime/${cleanId}/mappings`, {}, 3000);
+          if (mapRes.ok) {
+            const mapJson = await mapRes.json();
+            if (Array.isArray(mapJson?.data)) {
+              const alMapping = mapJson.data.find(
+                (m: { attributes?: { externalSite?: string; externalId?: string } }) =>
+                  m.attributes?.externalSite === "anilist/anime"
+              );
+              if (alMapping?.attributes?.externalId) {
+                const parsed = parseInt(alMapping.attributes.externalId, 10);
+                if (!isNaN(parsed)) targetAniListId = parsed;
+              }
+            }
+          }
+        }
+
+        if (targetAniListId) {
+          const alRes = await fetchWithTimeout(
+            "https://graphql.anilist.co",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                query: `query ($id: Int) { Media(id: $id) { nextAiringEpisode { episode } } }`,
+                variables: { id: targetAniListId },
+              }),
+            },
+            3000
+          );
+          if (alRes.ok) {
+            const alJson = await alRes.json();
+            const nextEp = alJson?.data?.Media?.nextAiringEpisode?.episode;
+            if (typeof nextEp === "number" && nextEp > 1) {
+              maxReleasedEpNum = nextEp - 1;
+            }
+          }
+        }
+      } catch {}
+    }
+
+    return episodesData.map((ep) => {
+      const rawNumber = ep.attributes?.number ?? ep.attributes?.relativeNumber;
+      const number = typeof rawNumber === "number" && rawNumber > 0 ? rawNumber : null;
+      const airdateStr = ep.attributes?.airdate || undefined;
+      
+      let airdateTimestamp: number | undefined = undefined;
+      if (airdateStr) {
+        // Normalize: if date-only string (YYYY-MM-DD), interpret in Japan Standard Time (+09:00)
+        if (/^\d{4}-\d{2}-\d{2}$/.test(airdateStr)) {
+          const parsed = Date.parse(`${airdateStr}T00:00:00+09:00`);
+          if (!isNaN(parsed)) airdateTimestamp = parsed;
+        } else {
+          const parsed = Date.parse(airdateStr);
+          if (!isNaN(parsed)) airdateTimestamp = parsed;
+        }
+      }
+
+      let status: "released" | "upcoming" | "unknown" = "unknown";
+      if (typeof airdateTimestamp === "number" && !isNaN(airdateTimestamp)) {
+        status = airdateTimestamp <= now ? "released" : "upcoming";
+      } else if (isFinished) {
+        status = "released";
+      } else if (number !== null && maxReleasedEpNum > 0) {
+        status = number <= maxReleasedEpNum ? "released" : "upcoming";
+      }
+
+      return {
+        id: String(ep.id),
+        number,
+        seasonNumber: ep.attributes?.seasonNumber ?? null,
+        title: ep.attributes?.canonicalTitle || (ep.attributes?.titles?.en_us || ep.attributes?.titles?.en_jp) || (number ? `Episode ${number}` : ""),
+        synopsis: ep.attributes?.synopsis || ep.attributes?.description || "",
+        thumbnail: ep.attributes?.thumbnail?.original || ep.attributes?.thumbnail?.medium || undefined,
+        airdate: airdateStr,
+        airdateTimestamp,
+        status,
+        length: ep.attributes?.length ?? undefined,
+      };
+    });
   } catch {
     return [];
   }
@@ -374,16 +579,39 @@ export async function fetchKitsuStaff(animeId: string): Promise<import("./types"
 export async function fetchKitsuRelations(animeId: string, searchTitle?: string): Promise<import("./types").AnimeRelation[]> {
   try {
     let cleanId = animeId.replace("kitsu-", "");
-    if (!animeId.startsWith("kitsu-") && searchTitle) {
-      try {
-        const searchRes = await fetchWithTimeout(`${KITSU_API_URL}/anime?filter[text]=${encodeURIComponent(searchTitle)}&page[limit]=1`);
-        if (searchRes.ok) {
-          const sData = await searchRes.json();
-          if (sData?.data?.[0]?.id) {
-            cleanId = sData.data[0].id;
+    if (!animeId.startsWith("kitsu-")) {
+      const mappedId = await resolveKitsuIdFromMapping(animeId);
+      if (mappedId) {
+        cleanId = mappedId;
+      } else if (searchTitle) {
+        try {
+          const searchRes = await fetchWithTimeout(`${KITSU_API_URL}/anime?filter[text]=${encodeURIComponent(searchTitle)}&page[limit]=1`);
+          if (searchRes.ok) {
+            const sData = await searchRes.json();
+            const first = sData?.data?.[0];
+            const candidateTitles = [
+              first?.attributes?.canonicalTitle,
+              first?.attributes?.titles?.en,
+              first?.attributes?.titles?.en_us,
+              first?.attributes?.titles?.en_jp,
+            ].filter((t): t is string => typeof t === "string");
+            const cleanSearch = searchTitle.toLowerCase().trim();
+            const isMatch = candidateTitles.some((t) => {
+              const lower = t.toLowerCase().trim();
+              return lower === cleanSearch || lower.startsWith(cleanSearch) || cleanSearch.startsWith(lower);
+            });
+            if (first?.id && isMatch) {
+              cleanId = String(first.id);
+            } else {
+              return [];
+            }
           }
+        } catch {
+          return [];
         }
-      } catch {}
+      } else {
+        return [];
+      }
     }
     const url = `${KITSU_API_URL}/anime/${cleanId}/media-relationships?include=destination&page[limit]=16`;
     const res = await fetchWithTimeout(url);
@@ -449,79 +677,71 @@ export async function fetchKitsuSeasonal(season: string, year: number, limit: nu
         return data.data.map(normalizeKitsuAnime);
       }
     }
-
-    // Fallback: If future year (e.g. 2026/2027) has 0 results, query recent years for this season
-    const fallbackYears = [2024, 2023, 2022];
-    for (const fbYear of fallbackYears) {
-      if (fbYear === year) continue;
-      const fbUrl = `${KITSU_API_URL}/anime?filter[season]=${s}&filter[seasonYear]=${fbYear}&page[limit]=${safeLimit}&sort=-userCount`;
-      const fbRes = await fetchWithTimeout(fbUrl);
-      if (fbRes.ok) {
-        const fbData = await fbRes.json();
-        if (Array.isArray(fbData?.data) && fbData.data.length > 0) {
-          return fbData.data.map(normalizeKitsuAnime);
-        }
-      }
-    }
-
-    // Ultimate fallback: popular anime
-    return fetchKitsuPopular(safeLimit);
-  } catch (err) {
-    return fetchKitsuPopular(Math.min(limit, 20));
+    // No fabrication: if the requested season has no data, return empty and let the UI
+    // show "No seasonal data available". Never substitute other years or popular anime.
+    return [];
+  } catch {
+    return [];
   }
 }
 
 export async function fetchKitsuAiringSchedule(limit: number = 20): Promise<import("./types").AiringSchedule[]> {
   try {
     const safeLimit = Math.min(Math.max(limit, 1), 20);
-    const url = `${KITSU_API_URL}/anime?filter[status]=current&page[limit]=${safeLimit}&sort=-userCount`;
+    const url = `${KITSU_API_URL}/anime?filter[status]=current&filter[subtype]=TV&page[limit]=${safeLimit}&sort=-startDate`;
     const res = await fetchWithTimeout(url);
-    let items: KitsuAnimeItem[] = [];
-    if (res.ok) {
-      const data = await res.json();
-      if (Array.isArray(data?.data) && data.data.length > 0) {
-        items = data.data;
-      }
+    if (!res.ok) return [];
+
+    const data = await res.json();
+    const items: KitsuAnimeItem[] = Array.isArray(data?.data) ? data.data : [];
+    const now = Date.now();
+    const oldestAiringAt = now - 90 * 24 * 60 * 60 * 1000;
+
+    const episodeResponses = await Promise.allSettled(
+      items.map((item) => fetchWithTimeout(
+        `${KITSU_API_URL}/anime/${item.id}/episodes?page[limit]=1&sort=-number`,
+        {},
+        4000,
+      )),
+    );
+
+    const schedules: import("./types").AiringSchedule[] = [];
+    for (let index = 0; index < items.length; index += 1) {
+      const responseState = episodeResponses[index];
+      if (responseState.status !== "fulfilled" || !responseState.value.ok) continue;
+
+      const episodeData = await responseState.value.json();
+      const episode = Array.isArray(episodeData?.data) ? episodeData.data[0] : null;
+      const attrs = items[index].attributes || {};
+      const episodeAttrs = episode?.attributes;
+      const airdate = episodeAttrs?.airdate ? parseKitsuAirdate(episodeAttrs.airdate) : null;
+      const airdateMs = airdate?.timestamp ?? Number.NaN;
+
+      if (!episode || !airdate || Number.isNaN(airdateMs) || airdateMs < oldestAiringAt) continue;
+
+      const broadcastInfo = getJstBroadcastInfo(airdateMs, airdate.hasExactTime);
+
+      schedules.push({
+        id: String(episode.id),
+        animeId: `kitsu-${items[index].id}`,
+        animeTitle: attrs.canonicalTitle || (attrs.titles?.en || attrs.titles?.en_us || attrs.titles?.en_jp) || "Anime Release",
+        animeImage: attrs.posterImage?.medium || attrs.posterImage?.original || attrs.posterImage?.large || "/placeholder-cover.svg",
+        format: attrs.subtype?.toUpperCase(),
+        episodeNumber: typeof episodeAttrs.number === "number" && episodeAttrs.number > 0 ? episodeAttrs.number : (typeof episodeAttrs.relativeNumber === "number" && episodeAttrs.relativeNumber > 0 ? episodeAttrs.relativeNumber : null),
+        airingAt: broadcastInfo.dayName,
+        airingDate: broadcastInfo.dateString,
+        timeString: broadcastInfo.timeString,
+        hasExactTime: airdate.hasExactTime,
+        airingAtTimestamp: Math.floor(airdateMs / 1000),
+        timeUntilAiring: Math.floor((airdateMs - now) / 1000),
+        status: airdateMs <= now ? "aired" as const : (airdateMs <= now + 24 * 60 * 60 * 1000 ? "airing_today" as const : "upcoming" as const),
+      });
     }
 
-    // Ensure full weekly coverage across all 7 days by supplementing with popular anime if needed
-    if (items.length < 14) {
-      const popRes = await fetchWithTimeout(`${KITSU_API_URL}/anime?sort=-userCount&page[limit]=${safeLimit}`);
-      if (popRes.ok) {
-        const popData = await popRes.json();
-        if (Array.isArray(popData?.data)) {
-          const existingIds = new Set(items.map((it: KitsuAnimeItem) => String(it.id)));
-          for (const it of popData.data) {
-            if (!existingIds.has(String(it.id))) {
-              items.push(it);
-              if (items.length >= 20) break;
-            }
-          }
-        }
-      }
-    }
-
-    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-    return items.map((item: KitsuAnimeItem) => {
-      const attrs = item.attributes || {};
-      let dayName = "Saturday";
-      if (attrs.startDate) {
-        const parsed = new Date(attrs.startDate);
-        if (!isNaN(parsed.getTime())) {
-          dayName = days[parsed.getDay()];
-        }
-      }
-      return {
-        id: String(item.id),
-        animeId: `kitsu-${item.id}`,
-        animeTitle: attrs.canonicalTitle || (attrs.titles?.en || attrs.titles?.en_us) || "Anime Release",
-        animeImage: attrs.posterImage?.medium || attrs.posterImage?.original || "/placeholder-cover.svg",
-        episodeNumber: attrs.episodeCount || 1,
-        airingAt: dayName,
-        timeString: "Broadcast TBA",
-      };
-    });
-  } catch {
+    return schedules;
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.warn(`Kitsu airing schedule fetch failed: ${msg}`);
     return [];
   }
 }
@@ -578,10 +798,10 @@ export async function fetchKitsuAdvanced(params: {
   sort?: string;
   limit?: number;
   offset?: number;
-}): Promise<Anime[]> {
+}): Promise<{ anime: Anime[]; hasMore: boolean }> {
   try {
     const safeLimit = Math.min(Math.max(params.limit || 20, 1), 20);
-    const offset = params.offset || 0;
+    const offset = Math.max(params.offset || 0, 0);
     let url = `${KITSU_API_URL}/anime?page[limit]=${safeLimit}&page[offset]=${offset}`;
 
     if (params.search?.trim()) {
@@ -603,7 +823,6 @@ export async function fetchKitsuAdvanced(params: {
       url += `&filter[season]=${encodeURIComponent(params.season.toLowerCase())}`;
     }
 
-    // Sort mapping
     if (params.sort === "score") {
       url += `&sort=-averageRating`;
     } else if (params.sort === "popularity") {
@@ -620,18 +839,21 @@ export async function fetchKitsuAdvanced(params: {
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data?.data) && data.data.length > 0) {
-        return data.data.map(normalizeKitsuAnime);
+        return {
+          anime: data.data.map(normalizeKitsuAnime),
+          hasMore: Boolean(data?.links?.next),
+        };
       }
     }
 
-    // Fallback: If no results for default browse, return popular anime
     if (!params.search?.trim() && (!params.genre || params.genre === "all") && (!params.format || params.format === "all")) {
-      return fetchKitsuPopular(safeLimit);
+      const popular = await fetchKitsuPopular(safeLimit);
+      return { anime: popular, hasMore: false };
     }
 
-    return [];
-  } catch (err) {
-    return fetchKitsuPopular(20);
+    return { anime: [], hasMore: false };
+  } catch {
+    return { anime: [], hasMore: false };
   }
 }
 

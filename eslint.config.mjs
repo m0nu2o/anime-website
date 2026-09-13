@@ -13,6 +13,10 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
     "*.js",
+    ".kilo/**",
+    ".freebuff/**",
+    "test-results/**",
+    "playwright-report/**",
   ]),
   {
     rules: {

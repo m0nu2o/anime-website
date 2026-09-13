@@ -30,6 +30,7 @@ function SearchContent() {
   const [results, setResults] = useState<Anime[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(Boolean(initialQuery));
+  const [searchError, setSearchError] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
   const latestQueryRef = React.useRef("");
@@ -40,12 +41,14 @@ function SearchContent() {
       setResults([]);
       setLoading(false);
       setHasSearched(false);
+      setSearchError(null);
       return;
     }
 
     latestQueryRef.current = trimmed;
     setLoading(true);
     setHasSearched(true);
+    setSearchError(null);
 
     try {
       const data = await searchAnimeAction(trimmed);
@@ -55,6 +58,7 @@ function SearchContent() {
     } catch {
       if (latestQueryRef.current === trimmed) {
         setResults([]);
+        setSearchError("Search service is temporarily unavailable. Please try again later.");
       }
     } finally {
       if (latestQueryRef.current === trimmed) {
@@ -95,6 +99,7 @@ function SearchContent() {
     setQuery("");
     setResults([]);
     setHasSearched(false);
+    setSearchError(null);
     router.replace("/search", { scroll: false });
   };
 
@@ -188,8 +193,19 @@ function SearchContent() {
         </div>
       )}
 
+      {/* Error State when search service fails */}
+      {!loading && hasSearched && searchError && (
+        <div className={styles.emptyState}>
+          <AlertCircle size={36} className={styles.emptyIcon} style={{ color: "#ef4444" }} />
+          <h2 className={styles.emptyTitle}>Search Unavailable</h2>
+          <p className={styles.emptyDesc}>
+            {searchError}
+          </p>
+        </div>
+      )}
+
       {/* Empty State when searched but nothing found */}
-      {!loading && hasSearched && results.length === 0 && query.trim().length >= 2 && (
+      {!loading && hasSearched && !searchError && results.length === 0 && query.trim().length >= 2 && (
         <div className={styles.emptyState}>
           <AlertCircle size={36} className={styles.emptyIcon} />
           <h2 className={styles.emptyTitle}>No anime found</h2>

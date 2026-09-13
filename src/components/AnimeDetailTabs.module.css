@@ -693,3 +693,43 @@
   }
 }
 
+/* Locked / Upcoming Episode Styles */
+.epCardLocked {
+  opacity: 0.62;
+  cursor: not-allowed;
+  border-style: dashed;
+}
+
+.epCardLocked:hover {
+  transform: none;
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: none;
+}
+
+.epThumbLocked {
+  filter: grayscale(0.6) contrast(0.85);
+}
+
+.epLockedOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(8, 9, 13, 0.65);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--text-muted);
+}
+
+.lockedPill {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+}
+

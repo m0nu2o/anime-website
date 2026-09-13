@@ -17,7 +17,8 @@ import {
   Info,
   Layers,
   Sparkles,
-  Search
+  Search,
+  Lock
 } from "lucide-react";
 import AnimeRelationsGraph from "./AnimeRelationsGraph";
 import AnimeReviews from "./AnimeReviews";
@@ -67,7 +68,7 @@ export default function AnimeDetailTabs({
       title: title,
       shortLabel: "Season 1",
       year: anime.year,
-      episodes: episodes.length > 0 ? episodes.length : anime.episodes,
+      episodes: anime.episodes,
       isCurrent: true,
     };
 
@@ -161,17 +162,23 @@ export default function AnimeDetailTabs({
 
   const activeSeason = seasons.find(s => s.id === activeSeasonId) || seasons[0];
   const currentSeasonEpisodes = seasonEpisodesMap[activeSeasonId] || (activeSeasonId === anime.id ? episodes : []);
-  const displayedTotalEpisodes = currentSeasonEpisodes.length > 0 
-    ? currentSeasonEpisodes.length 
-    : (activeSeason?.episodes || (anime.episodes || 0));
+  const declaredTotalEpisodes = activeSeason?.episodes || (activeSeasonId === anime.id ? anime.episodes || null : null);
+  const releasedEpisodeCount = currentSeasonEpisodes.filter((e) => e.status === "released").length;
+
+  const effectiveEpisodeList = currentSeasonEpisodes;
 
   // Filter episodes by search
-  const filteredEpisodes = currentSeasonEpisodes.filter((ep) => 
-    String(ep.number).includes(episodeSearch) || 
+  const filteredEpisodes = effectiveEpisodeList.filter((ep) =>
+    String(ep.number ?? "").includes(episodeSearch) ||
     ep.title?.toLowerCase().includes(episodeSearch.toLowerCase())
   );
 
-  const totalEpisodes = displayedTotalEpisodes;
+  const totalEpisodes = declaredTotalEpisodes;
+  const firstReleasedEpisode = effectiveEpisodeList.find((ep) => typeof ep.number === "number" && ep.status !== "upcoming");
+  const playableEpisodes = filteredEpisodes.filter(
+    (ep): ep is (typeof filteredEpisodes)[number] & { number: number } =>
+      typeof ep.number === "number"
+  );
 
   return (
     <div className={styles.container}>
@@ -191,7 +198,13 @@ export default function AnimeDetailTabs({
         >
           <Film size={15} />
           <span>Episodes</span>
-          <span className={styles.tabBadge}>{totalEpisodes}</span>
+          <span className={styles.tabBadge}>
+            {totalEpisodes && totalEpisodes > 0
+              ? totalEpisodes
+              : releasedEpisodeCount > 0
+              ? releasedEpisodeCount
+              : "—"}
+          </span>
         </button>
 
         <button
@@ -233,10 +246,9 @@ export default function AnimeDetailTabs({
               <div className={styles.card}>
                 <h3 className={styles.cardTitle}>Synopsis</h3>
                 {anime.description ? (
-                  <div
-                    className={styles.synopsisText}
-                    dangerouslySetInnerHTML={{ __html: anime.description }}
-                  />
+                  <div className={styles.synopsisText}>
+                    {anime.description.replace(/<[^>]+>/g, "")}
+                  </div>
                 ) : (
                   <p className={styles.mutedText}>No detailed synopsis provided for this anime.</p>
                 )}
@@ -270,15 +282,21 @@ export default function AnimeDetailTabs({
                   </div>
                   <div className={styles.detailRow}>
                     <span className={styles.detailLabel}>Episodes</span>
-                    <span className={styles.detailValue}>{totalEpisodes > 0 ? totalEpisodes : "Ongoing"}</span>
+                    <span className={styles.detailValue}>
+                      {totalEpisodes && totalEpisodes > 0
+                        ? totalEpisodes
+                        : releasedEpisodeCount > 0
+                        ? `${releasedEpisodeCount} released`
+                        : "Unavailable"}
+                    </span>
                   </div>
                   <div className={styles.detailRow}>
                     <span className={styles.detailLabel}>Episode Duration</span>
-                    <span className={styles.detailValue}>{anime.duration ? `${anime.duration} mins` : "Unknown"}</span>
+                    <span className={styles.detailValue}>{anime.duration ? `${anime.duration} mins` : "Unavailable"}</span>
                   </div>
                   <div className={styles.detailRow}>
                     <span className={styles.detailLabel}>Status</span>
-                    <span className={styles.detailValue}>{anime.status || "Finished Airing"}</span>
+                    <span className={styles.detailValue}>{anime.status || "Unavailable"}</span>
                   </div>
                   {anime.season && (
                     <div className={styles.detailRow}>
@@ -298,10 +316,16 @@ export default function AnimeDetailTabs({
               {/* Quick Jump to Stream */}
               <div className={`${styles.card} ${styles.streamCtaCard}`}>
                 <h4>Ready to Stream?</h4>
-                <p>Start Episode 1 now with multi-server playback and subtitle options.</p>
-                <Link href={`/watch/${anime.id}/1`} className={styles.startWatchingBtn}>
-                  <Play size={16} fill="#fff" /> Watch Episode 1
-                </Link>
+                {firstReleasedEpisode ? (
+                  <>
+                    <p>Start Episode {firstReleasedEpisode.number} now with multi-server playback and subtitle options.</p>
+                    <Link href={`/watch/${anime.id}/${firstReleasedEpisode.number}`} className={styles.startWatchingBtn}>
+                      <Play size={16} fill="#fff" /> Watch Episode {firstReleasedEpisode.number}
+                    </Link>
+                  </>
+                ) : (
+                  <p>Episodes are not yet available from verified provider records.</p>
+                )}
               </div>
             </div>
           </div>
@@ -383,7 +407,9 @@ export default function AnimeDetailTabs({
                 </div>
 
                 <span className={styles.epCountLabel}>
-                  Showing {filteredEpisodes.length} of {totalEpisodes} Episodes
+                  {totalEpisodes && totalEpisodes > 0
+                    ? `Showing ${filteredEpisodes.length} of ${totalEpisodes} Episodes`
+                    : `Showing ${filteredEpisodes.length} Episode${filteredEpisodes.length === 1 ? "" : "s"}`}
                 </span>
               </div>
             </div>
@@ -397,31 +423,63 @@ export default function AnimeDetailTabs({
               </div>
             ) : filteredEpisodes.length > 0 ? (
               <div className={styles.episodesGrid}>
-                {filteredEpisodes.map((ep) => (
-                  <Link
-                    key={ep.id}
-                    href={`/watch/${activeSeasonId}/${ep.number}`}
-                    className={styles.epCard}
-                  >
-                    <div className={styles.epThumbWrap}>
-                      <img
-                        src={ep.thumbnail || coverUrl}
-                        alt={ep.title}
-                        className={styles.epThumb}
-                      />
-                      <div className={styles.epOverlay}>
-                        <Play size={22} fill="#fff" />
+                {filteredEpisodes.map((ep) => {
+                  const isUpcoming = ep.status === "upcoming";
+                  if (isUpcoming) {
+                    return (
+                      <div
+                        key={ep.id}
+                        className={`${styles.epCard} ${styles.epCardLocked}`}
+                        title={`Episode ${ep.number ?? "—"} is upcoming and not yet released.`}
+                      >
+                        <div className={styles.epThumbWrap}>
+                          <img
+                            src={ep.thumbnail || coverUrl}
+                            alt={ep.title || "Episode"}
+                            className={`${styles.epThumb} ${styles.epThumbLocked}`}
+                          />
+                          <div className={styles.epLockedOverlay}>
+                            <Lock size={20} />
+                            <span className={styles.lockedPill}>Upcoming</span>
+                          </div>
+                          <span className={styles.epNumPill}>EP {ep.number ?? "—"}</span>
+                        </div>
+                        <div className={styles.epDetails}>
+                          <h4 className={styles.epCardTitle}>{ep.title}</h4>
+                          <span className={styles.epAirdate}>
+                            {ep.airdate ? `Scheduled: ${ep.airdate}` : "Airdate TBA"}
+                          </span>
+                        </div>
                       </div>
-                      <span className={styles.epNumPill}>EP {ep.number}</span>
-                      <span className={styles.epLangBadge}>{preferredLanguage.toUpperCase()}</span>
-                    </div>
-                    <div className={styles.epDetails}>
-                      <h4 className={styles.epCardTitle}>{ep.title}</h4>
-                      {ep.airdate && <span className={styles.epAirdate}>{ep.airdate}</span>}
-                      {ep.length && <span className={styles.epDuration}>{ep.length} mins</span>}
-                    </div>
-                  </Link>
-                ))}
+                    );
+                  }
+
+                  return (
+                    <Link
+                      key={ep.id}
+                      href={`/watch/${activeSeasonId}/${ep.number}`}
+                      className={styles.epCard}
+                    >
+                      <div className={styles.epThumbWrap}>
+                        <img
+                          src={ep.thumbnail || coverUrl}
+                          alt={ep.title || "Episode"}
+                          className={styles.epThumb}
+                        />
+                        <div className={styles.epOverlay}>
+                          <Play size={22} fill="#fff" />
+                        </div>
+                        <span className={styles.epNumPill}>EP {ep.number ?? "—"}</span>
+                        <span className={styles.epLangBadge}>{preferredLanguage.toUpperCase()}</span>
+                      </div>
+                      <div className={styles.epDetails}>
+                        <h4 className={styles.epCardTitle}>{ep.title}</h4>
+                        {ep.airdate && <span className={styles.epAirdate}>{ep.airdate}</span>}
+                        {ep.length && <span className={styles.epDuration}>{ep.length} mins</span>}
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
             ) : (
               <div className={styles.emptyCard}>

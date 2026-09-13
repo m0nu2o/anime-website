@@ -9,7 +9,6 @@ import {
   ThumbsDown, 
   Edit3, 
   Trash2, 
-  Sparkles,
   Award,
   CheckCircle2
 } from "lucide-react";
@@ -49,6 +48,16 @@ const RATING_DESCRIPTIONS: Record<number, string> = {
   1: "Appalling",
 };
 
+function getInitials(name: string): string {
+  const initials = name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part.charAt(0))
+    .join("");
+  return (initials || "U").toUpperCase();
+}
+
 export default function AnimeReviews({ animeId, animeTitle, defaultScore }: AnimeReviewsProps) {
   const { user, profile, openAuthModal } = useAuth();
   const [reviews, setReviews] = useState<ReviewItem[]>([]);
@@ -62,6 +71,16 @@ export default function AnimeReviews({ animeId, animeTitle, defaultScore }: Anim
   const [content, setContent] = useState("");
   const [isRecommended, setIsRecommended] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [votedReviews, setVotedReviews] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("votedReviews");
+      if (stored) {
+        setVotedReviews(new Set(JSON.parse(stored)));
+      }
+    } catch {}
+  }, []);
 
   useEffect(() => {
     async function loadReviews() {
@@ -91,8 +110,8 @@ export default function AnimeReviews({ animeId, animeTitle, defaultScore }: Anim
     if (!user || !title.trim() || !content.trim()) return;
 
     setSubmitting(true);
-    const authorName = profile?.username || user.email?.split("@")[0] || "Anime Otaku";
-    const authorAvatar = profile?.avatar_url || "";
+    const authorName = profile?.username || user.email?.split("@")[0] || "User";
+    const authorAvatar = profile?.avatar_url || undefined;
 
     try {
       const { data, error } = await supabase
@@ -129,6 +148,15 @@ export default function AnimeReviews({ animeId, animeTitle, defaultScore }: Anim
   };
 
   const handleHelpful = async (reviewId: string, currentHelpful: number) => {
+    if (votedReviews.has(reviewId)) return; // Prevent duplicate vote
+
+    const nextVoted = new Set(votedReviews);
+    nextVoted.add(reviewId);
+    setVotedReviews(nextVoted);
+    try {
+      localStorage.setItem("votedReviews", JSON.stringify(Array.from(nextVoted)));
+    } catch {}
+
     const next = currentHelpful + 1;
     setReviews((prev) =>
       prev.map((r) => (r.id === reviewId ? { ...r, helpful_count: next } : r))
@@ -330,11 +358,13 @@ export default function AnimeReviews({ animeId, animeTitle, defaultScore }: Anim
               <div key={review.id} className={styles.reviewCard}>
                 <div className={styles.cardHeader}>
                   <div className={styles.userCol}>
-                    <img
-                      src={review.avatar_url || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80"}
-                      alt={review.username}
-                      className={styles.avatar}
-                    />
+                    {review.avatar_url ? (
+                      <img src={review.avatar_url} alt={review.username} className={styles.avatar} />
+                    ) : (
+                      <div className={styles.avatar} style={{ display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, color: "#fff", fontSize: "0.85rem" }}>
+                        {getInitials(review.username)}
+                      </div>
+                    )}
                     <div>
                       <div className={styles.authorName}>{review.username}</div>
                       <div className={styles.reviewDate}>
@@ -367,12 +397,20 @@ export default function AnimeReviews({ animeId, animeTitle, defaultScore }: Anim
                 <p className={styles.reviewText}>{review.content}</p>
 
                 <div className={styles.reviewActions}>
-                  <button
-                    onClick={() => handleHelpful(review.id, review.helpful_count)}
-                    className={styles.helpfulBtn}
-                  >
-                    <ThumbsUp size={13} /> Helpful ({review.helpful_count})
-                  </button>
+                  {(() => {
+                    const hasVoted = votedReviews.has(review.id);
+                    return (
+                      <button
+                        onClick={() => handleHelpful(review.id, review.helpful_count)}
+                        className={`${styles.helpfulBtn} ${hasVoted ? styles.helpfulBtnActive : ""}`}
+                        disabled={hasVoted}
+                        title={hasVoted ? "You found this review helpful" : "Mark review as helpful"}
+                        style={hasVoted ? { borderColor: "rgba(168, 85, 247, 0.5)", color: "#a855f7" } : undefined}
+                      >
+                        <ThumbsUp size={13} fill={hasVoted ? "currentColor" : "none"} /> Helpful ({review.helpful_count})
+                      </button>
+                    );
+                  })()}
 
                   {isAuthor && (
                     <button

@@ -361,9 +361,9 @@ export default function AnimeAmbientBackground() {
   const [theme, setTheme] = useState<string>("blackhole");
 
   useEffect(() => {
-    const savedFx = localStorage.getItem("nextgen_fx_mode") as any;
+    const savedFx = localStorage.getItem("nextgen_fx_mode");
     if (savedFx && ["vibrant", "ambient", "stealth", "off"].includes(savedFx)) {
-      setFxMode(savedFx);
+      setFxMode(savedFx as "vibrant" | "ambient" | "stealth" | "off");
     }
     // Also read saved theme for correct particle colors on mount
     const savedTheme = localStorage.getItem("theme_state");
@@ -371,19 +371,22 @@ export default function AnimeAmbientBackground() {
       setTheme(savedTheme);
     }
 
-    const handleFxChange = (e: CustomEvent) => {
-      if (e.detail?.mode) setFxMode(e.detail.mode);
+    const handleFxChange = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.mode) setFxMode(detail.mode);
     };
-    const handleThemeChange = (e: CustomEvent) => {
-      if (e.detail?.theme) setTheme(e.detail.theme);
+    const handleThemeChange = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.theme) setTheme(detail.theme);
     };
-    const handleIntensityChange = (e: CustomEvent) => {
-      if (typeof e.detail?.intensity === "number") setCustomOpacity(e.detail.intensity);
+    const handleIntensityChange = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (typeof detail?.intensity === "number") setCustomOpacity(detail.intensity);
     };
 
-    window.addEventListener("nextgen-fx-change" as any, handleFxChange);
-    window.addEventListener("nextgen-theme-change" as any, handleThemeChange);
-    window.addEventListener("nextgen-intensity-change" as any, handleIntensityChange);
+    window.addEventListener("nextgen-fx-change", handleFxChange);
+    window.addEventListener("nextgen-theme-change", handleThemeChange);
+    window.addEventListener("nextgen-intensity-change", handleIntensityChange);
 
     const handleResize = () => {
       const width = window.innerWidth;
@@ -406,9 +409,9 @@ export default function AnimeAmbientBackground() {
     document.addEventListener("visibilitychange", handleVisibilityChange);
     
     return () => {
-      window.removeEventListener("nextgen-fx-change" as any, handleFxChange);
-      window.removeEventListener("nextgen-theme-change" as any, handleThemeChange);
-      window.removeEventListener("nextgen-intensity-change" as any, handleIntensityChange);
+      window.removeEventListener("nextgen-fx-change", handleFxChange);
+      window.removeEventListener("nextgen-theme-change", handleThemeChange);
+      window.removeEventListener("nextgen-intensity-change", handleIntensityChange);
       window.removeEventListener('resize', handleResize);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };

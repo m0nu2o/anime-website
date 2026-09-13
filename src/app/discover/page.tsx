@@ -12,9 +12,41 @@ export const metadata = {
   description: "Filter and browse thousands of anime titles by genre, format, release year, and popularity.",
 };
 
-const GENRES = ["All", "Action", "Adventure", "Comedy", "Drama", "Fantasy", "Mystery", "Romance", "Sci-Fi", "Super Power", "Thriller"];
+const GENRES = [
+  "All",
+  "Action",
+  "Adventure",
+  "Comedy",
+  "Drama",
+  "Fantasy",
+  "Horror",
+  "Mystery",
+  "Romance",
+  "Sci-Fi",
+  "Slice of Life",
+  "Sports",
+  "Supernatural",
+  "Suspense",
+  "Isekai",
+  "Shounen",
+  "Shoujo",
+  "Seinen",
+  "Josei",
+  "Mecha",
+  "Music",
+  "Psychological",
+  "Martial Arts",
+  "Super Power"
+];
 const FORMATS = ["All", "TV", "Movie", "OVA", "ONA", "Special"];
 const STATUSES = ["All", "current", "finished", "upcoming"];
+const SCORES = [
+  { label: "All Scores", value: "all" },
+  { label: "9+ Masterpiece", value: "9" },
+  { label: "8+ Great", value: "8" },
+  { label: "7+ Good", value: "7" },
+  { label: "6+ Decent", value: "6" },
+];
 const SORTS = [
   { label: "Most Popular", value: "popularity" },
   { label: "Highest Rated", value: "score" },
@@ -30,6 +62,7 @@ export default async function DiscoverPage({
     genre?: string;
     format?: string;
     status?: string;
+    score?: string;
     sort?: string;
     year?: string;
     page?: string;
@@ -40,14 +73,16 @@ export default async function DiscoverPage({
   const currentGenre = params.genre || "all";
   const currentFormat = params.format || "all";
   const currentStatus = params.status || "all";
+  const currentScore = params.score || "all";
   const currentSort = params.sort || "popularity";
   const currentYear = params.year ? parseInt(params.year, 10) : undefined;
-  const currentPage = params.page ? parseInt(params.page, 10) : 1;
+  const parsedPage = parseInt(params.page || "1", 10);
+  const currentPage = Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;
 
   const limit = 20;
   const offset = (currentPage - 1) * limit;
 
-  const animeList = await discoverAnime({
+  const discoverResult = await discoverAnime({
     search: currentSearch,
     genre: currentGenre !== "all" ? currentGenre : undefined,
     format: currentFormat !== "all" ? currentFormat : undefined,
@@ -57,6 +92,14 @@ export default async function DiscoverPage({
     limit,
     offset,
   });
+  let animeList = discoverResult.anime;
+  const hasMore = discoverResult.hasMore;
+
+
+  if (currentScore !== "all") {
+    const minScore = parseFloat(currentScore) * 10;
+    animeList = animeList.filter((a) => (a.score || 0) >= minScore);
+  }
 
   return (
     <>
@@ -107,6 +150,13 @@ export default async function DiscoverPage({
               ))}
             </select>
 
+            {/* Score */}
+            <select name="score" defaultValue={currentScore} className={styles.filterSelect}>
+              {SCORES.map((sc) => (
+                <option key={sc.value} value={sc.value}>Score: {sc.label}</option>
+              ))}
+            </select>
+
             {/* Sort */}
             <select name="sort" defaultValue={currentSort} className={styles.filterSelect}>
               {SORTS.map((s) => (
@@ -122,8 +172,8 @@ export default async function DiscoverPage({
 
         {/* Results Metadata */}
         <div className={styles.resultsMetaRow}>
-          <span className={styles.resultCount}>Showing {animeList.length} titles</span>
-          {(currentGenre !== "all" || currentFormat !== "all" || currentStatus !== "all" || currentSearch) && (
+          <span className={styles.resultCount}>Showing {animeList.length} titles (Page {currentPage})</span>
+          {(currentGenre !== "all" || currentFormat !== "all" || currentStatus !== "all" || currentScore !== "all" || currentSearch) && (
             <Link href="/discover" className={styles.resetFiltersBtn}>
               <RefreshCw size={14} /> Reset Filters
             </Link>
@@ -149,21 +199,22 @@ export default async function DiscoverPage({
         <div className={styles.paginationRow}>
           {currentPage > 1 && (
             <Link
-              href={`/discover?page=${currentPage - 1}&genre=${currentGenre}&format=${currentFormat}&status=${currentStatus}&sort=${currentSort}&q=${currentSearch}`}
+              href={`/discover?page=${currentPage - 1}&genre=${currentGenre}&format=${currentFormat}&status=${currentStatus}&score=${currentScore}&sort=${currentSort}&q=${currentSearch}`}
               className={styles.pageBtn}
             >
-              ? Previous Page
+              ← Previous Page
             </Link>
           )}
           <span className={styles.pageNumber}>Page {currentPage}</span>
-          {animeList.length >= limit && (
+          {hasMore && (
             <Link
-              href={`/discover?page=${currentPage + 1}&genre=${currentGenre}&format=${currentFormat}&status=${currentStatus}&sort=${currentSort}&q=${currentSearch}`}
+              href={`/discover?page=${currentPage + 1}&genre=${encodeURIComponent(currentGenre)}&format=${encodeURIComponent(currentFormat)}&status=${encodeURIComponent(currentStatus)}&score=${encodeURIComponent(currentScore)}&sort=${encodeURIComponent(currentSort)}&q=${encodeURIComponent(currentSearch)}${currentYear ? `&year=${currentYear}` : ""}`}
               className={styles.pageBtn}
             >
-              Next Page ?
+              Next Page →
             </Link>
           )}
+
         </div>
       </div>
     </>

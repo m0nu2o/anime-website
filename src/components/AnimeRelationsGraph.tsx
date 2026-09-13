@@ -60,7 +60,7 @@ export default function AnimeRelationsGraph({ relations, currentAnimeTitle }: Pr
               </h4>
               <div className={styles.meta}>
                 {rel.anime.format && <span>{rel.anime.format}</span>}
-                {rel.anime.year && <span>� {rel.anime.year}</span>}
+                {rel.anime.year && <span>• {rel.anime.year}</span>}
               </div>
             </div>
             <div className={styles.arrowIcon}>

@@ -26,6 +26,7 @@ import {
 import styles from "./Navbar.module.css";
 import SearchDialog from "./SearchDialog";
 import NavbarParticleStream from "./NavbarParticleStream";
+import BrandLogo from "./BrandLogo";
 import { useAuth } from "@/lib/supabase/AuthContext";
 import { useThemeSimulator, THEME_CONFIGS } from "./ThemeSimulatorProvider";
 
@@ -36,17 +37,6 @@ const NAV_LINKS = [
   { href: "/calendar", label: "Calendar", icon: Calendar },
   { href: "/watchlist", label: "Watchlist", icon: Bookmark },
   { href: "/favorites", label: "Favorites", icon: Heart },
-];
-
-const POPULAR_ANIME = [
-  "anilist-21",
-  "anilist-16498",
-  "anilist-113415",
-  "anilist-101922",
-  "anilist-1535",
-  "anilist-11061",
-  "anilist-154587",
-  "anilist-99147",
 ];
 
 export default function Navbar() {
@@ -116,7 +106,7 @@ export default function Navbar() {
   }, []);
 
   const handleSurpriseMe = useCallback(() => {
-    router.push(`/anime/${POPULAR_ANIME[Math.floor(Math.random() * POPULAR_ANIME.length)]}`);
+    router.push("/random");
   }, [router]);
 
   const closeMobile = () => setIsMobileMenuOpen(false);
@@ -135,18 +125,12 @@ export default function Navbar() {
           {/* LEFT — Logo + Nav Links */}
           <div className={styles.leftSection}>
             <Link href="/" className={styles.logo} onClick={closeMobile} aria-label="NextGen Anime — Home">
-              <div className={styles.logoIcon}>
-                <Sparkles size={14} strokeWidth={2.5} />
-              </div>
-              <div className={styles.logoWordmark}>
-                <span className={styles.logoMain}>NEXTGEN</span>
-                <span className={styles.logoAccent}>ANIME</span>
-              </div>
+              <BrandLogo size="md" />
             </Link>
 
             <div className={styles.logoDivider} aria-hidden="true" />
 
-            <nav className={styles.desktopNav} aria-label="Main navigation" ref={navRef}>
+            <nav className={styles.desktopNav} aria-label="Desktop Navigation" ref={navRef}>
               {/* Gliding pill indicator */}
               <span
                 className={styles.navIndicator}
@@ -175,7 +159,7 @@ export default function Navbar() {
           <div className={styles.rightSection}>
 
             {/* Search pill */}
-            <button className={styles.searchPill} onClick={handleOpenSearch} aria-label="Search anime (Ctrl+K)">
+            <button className={styles.searchPill} onClick={handleOpenSearch} aria-label="Search (Ctrl+K)">
               <Search size={13} strokeWidth={2.5} />
               <span className={styles.searchText}>Search...</span>
               <kbd className={styles.searchKbd}>⌘K</kbd>
@@ -377,10 +361,14 @@ export default function Navbar() {
                 key={link.href}
                 href={link.href}
                 className={`${styles.drawerLink} ${active ? styles.drawerLinkActive : ""}`}
-                onClick={closeMobile}
+                onClick={(e) => {
+                  e.preventDefault();
+                  closeMobile();
+                  router.push(link.href);
+                }}
               >
                 <Icon size={16} />
-                <span>{link.label}</span>
+                <span>{link.label === "Discover" ? "Discover Anime" : link.label === "Calendar" ? "Release Calendar" : link.label}</span>
                 {active && <span className={styles.drawerActivePip} aria-hidden="true" />}
               </Link>
             );

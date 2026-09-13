@@ -14,19 +14,30 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const [episodes, anime] = await Promise.all([
-      getAnimeEpisodes(animeId),
-      getAnimeById(animeId).catch(() => null),
-    ]);
+    const anime = await getAnimeById(animeId).catch(() => null);
+    const episodes = await getAnimeEpisodes(animeId, anime?.title?.english || anime?.title?.romaji, anime);
 
-    const totalEpisodes = episodes.length > 0 ? episodes.length : (anime?.episodes ?? 0);
+    const declaredTotalEpisodes =
+      typeof anime?.episodes === "number" && anime.episodes > 0 ? anime.episodes : null;
+
+    // Real provider episodes only. Never fabricate synthetic episodes.
+    const effectiveEpisodes = episodes;
+
+    const releasedList = effectiveEpisodes.filter((e) => e.status === "released");
+    const upcomingList = effectiveEpisodes.filter((e) => e.status === "upcoming");
+    const releasedCount = releasedList.length;
+    const upcomingCount = upcomingList.length > 0 
+      ? upcomingList.length 
+      : (declaredTotalEpisodes !== null && declaredTotalEpisodes > releasedCount ? declaredTotalEpisodes - releasedCount : 0);
 
     return NextResponse.json({
       animeId,
-      episodes,
-      totalEpisodes,
-      dubAvailable: false, // Must be determined by stream API
-      subAvailable: false, // Must be determined by stream API
+      episodes: effectiveEpisodes,
+      declaredTotalEpisodes,
+      releasedEpisodes: releasedCount,
+      upcomingEpisodes: upcomingCount > 0 ? upcomingCount : null,
+      dubAvailable: null,
+      subAvailable: null,
       currentLanguage: language,
     });
   } catch (error: unknown) {

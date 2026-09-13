@@ -4,11 +4,12 @@ import { notFound } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import BackButton from "@/components/BackButton";
 import VideoPlayer from "@/components/VideoPlayer";
-import { getAnimeById, getAnimeEpisodes, getAnimeStreamingLinks, getAnimeRelations } from "@/lib/api";
-import { Episode } from "@/lib/api/types";
-import { ChevronLeft, ChevronRight, Play, ExternalLink, Calendar, Film, Layers } from "lucide-react";
+import AnimeCard from "@/components/AnimeCard";
+import { getAnimeById, getAnimeEpisodes, getAnimeRelations, getAnimeRecommendations } from "@/lib/api";
+import { ChevronLeft, ChevronRight, Play, Calendar, Film, Lock, GitBranch, Sparkles } from "lucide-react";
 import styles from "./page.module.css";
-
+import WatchlistStatusSelect from "@/components/WatchlistStatusSelect";
+import FavoriteButton from "@/components/FavoriteButton";
 import EpisodeComments from "@/components/EpisodeComments";
 
 export async function generateMetadata({
@@ -37,135 +38,287 @@ export default async function WatchEpisodePage({
     notFound();
   }
 
-  const [episodes, relations, streamingLinks] = await Promise.all([
-    getAnimeEpisodes(anime.id),
+  const [episodes, relations, recommendations] = await Promise.all([
+    getAnimeEpisodes(anime.id, anime.title.english || anime.title.romaji, anime),
     getAnimeRelations(anime.id),
-    getAnimeStreamingLinks(anime.id),
+    getAnimeRecommendations(anime.id, 6),
   ]);
 
-  // Dynamically detect current anime's true season label from title
-  const currentTitleLower = (anime.title.english || anime.title.romaji || anime.title.native || "").toLowerCase();
-  let currentSeasonLabel = "Season 1";
-  const seasonMatch = currentTitleLower.match(/season\s*(\d+)/i) || currentTitleLower.match(/(\d+)(?:nd|rd|th|st)\s*season/i);
-  if (seasonMatch) {
-    currentSeasonLabel = `Season ${seasonMatch[1]}`;
-  } else if (currentTitleLower.includes("final season")) {
-    currentSeasonLabel = "Final Season";
-  } else if (currentTitleLower.includes("part 3")) {
-    currentSeasonLabel = "Season 3";
-  } else if (currentTitleLower.includes("part 2")) {
-    currentSeasonLabel = "Season 2";
+  const now = Date.now();
+  const isFinished = anime.status?.toLowerCase().includes("finish") || anime.status?.toLowerCase().includes("complete");
+  const latestFromAiring = anime.nextAiringEpisode?.episode ? anime.nextAiringEpisode.episode - 1 : undefined;
+
+  // Filter released episodes strictly
+  const releasedEpisodes = episodes
+    .filter((ep) => {
+      if (ep.number === null || ep.number === undefined) return false;
+      if (ep.status === "released") return true;
+      if (ep.status === "upcoming") return false;
+      if (ep.airdateTimestamp) return ep.airdateTimestamp <= now;
+      if (typeof latestFromAiring === "number" && ep.number <= latestFromAiring) return true;
+      return isFinished;
+    })
+    .sort((a, b) => (a.number ?? 0) - (b.number ?? 0));
+
+  const declaredTotal = typeof anime.episodes === "number" && anime.episodes > 0 ? anime.episodes : null;
+  const parsedEp = parseInt(resolved.episodeId, 10);
+  const currentEpNum = Number.isFinite(parsedEp) && parsedEp > 0 ? parsedEp : 1;
+
+  const latestReleasedEp = releasedEpisodes.length > 0 ? releasedEpisodes[releasedEpisodes.length - 1] : null;
+  const latestReleasedNumber = latestReleasedEp?.number || latestFromAiring || (isFinished && declaredTotal ? declaredTotal : 1);
+
+  const currentEp = episodes.find((e) => e.number === currentEpNum);
+  // Unreleased guard: cannot play episodes past latest released number for an ongoing show
+  const isCurrentEpisodeUpcoming = currentEp?.status === "upcoming" || (!isFinished && currentEp?.status !== "released" && currentEpNum > latestReleasedNumber);
+
+  function parseSeasonAndPart(rawTitle: string, role?: string, year?: number) {
+    const t = rawTitle.trim();
+    let seasonNumber = 1;
+    let seasonLabel = "Season 1";
+
+    if (/\bfinal\s+season\b/i.test(t)) {
+      seasonLabel = "Final Season";
+      seasonNumber = 90;
+    } else {
+      const sMatch = t.match(/\bseason\s*(\d+)\b/i)
+        || t.match(/\b(\d+)(?:st|nd|rd|th)\s+season\b/i)
+        || t.match(/\bS(\d+)\b/);
+      if (sMatch) {
+        seasonNumber = parseInt(sMatch[1], 10);
+        seasonLabel = `Season ${seasonNumber}`;
+      } else if (role === "sequel") {
+        seasonNumber = 2;
+        seasonLabel = "Season 2";
+      } else if (role === "prequel") {
+        seasonNumber = 0;
+        seasonLabel = "Prequel";
+      } else if (/\bmovie\b/i.test(t)) {
+        seasonLabel = "Movie";
+        seasonNumber = 95;
+      } else if (/\bova\b/i.test(t)) {
+        seasonLabel = "OVA";
+        seasonNumber = 96;
+      }
+    }
+
+    let partNumber: number | null = null;
+    let partLabel: string | null = null;
+    const pMatch = t.match(/\bpart\s*(\d+)\b/i)
+      || t.match(/\bcour\s*(\d+)\b/i)
+      || t.match(/\bpart\s*([ivx]+)\b/i);
+
+    if (pMatch) {
+      const val = pMatch[1];
+      if (/^[ivx]+$/i.test(val)) {
+        const romanMap: Record<string, number> = { i: 1, ii: 2, iii: 3, iv: 4, v: 5 };
+        partNumber = romanMap[val.toLowerCase()] || 1;
+      } else {
+        partNumber = parseInt(val, 10);
+      }
+      partLabel = `Part ${partNumber}`;
+    } else if (/\bthe\s+final\s+chapters\b/i.test(t)) {
+      partNumber = 3;
+      partLabel = "Final Chapters";
+    }
+
+    return { seasonLabel, seasonNumber, partLabel, partNumber, year };
   }
 
+  const currentTitleRaw = anime.title.english || anime.title.romaji || anime.title.native || "Anime";
+  const currentSeasonInfo = parseSeasonAndPart(currentTitleRaw, undefined, anime.year);
+  const currentSeasonLabel = currentSeasonInfo.seasonLabel;
+  const currentPartLabel = currentSeasonInfo.partLabel;
+
   const validRoles = ["prequel", "sequel", "parent", "side_story", "alternative_version"];
-  const relatedSeasons = relations
-    .filter(r => validRoles.includes(r.role?.toLowerCase()))
-    .map((r, idx) => {
-      let shortLabel = `Season ${idx + 2}`;
-      const lower = r.anime.title.toLowerCase();
-      if (lower.includes("season 2") || lower.includes("2nd season")) shortLabel = "Season 2";
-      else if (lower.includes("season 3") || lower.includes("3rd season")) shortLabel = "Season 3";
-      else if (lower.includes("season 4") || lower.includes("final season") || lower.includes("4th season")) shortLabel = "Final Season";
-      else if (r.role === "prequel") shortLabel = "Prequel";
-      else if (r.role === "sequel") shortLabel = `Season ${idx + 2}`;
-      else if (r.role === "side_story") shortLabel = "Side Story";
-      else if (r.anime.format === "MOVIE") shortLabel = "Movie";
-
-      return {
-        id: r.anime.id,
-        title: r.anime.title,
-        shortLabel,
-        year: r.anime.year,
-        isCurrent: false,
-      };
-    });
-
-  const seasons = [
+  const franchiseEntries = [
     {
       id: anime.id,
-      title: anime.title.english || anime.title.romaji || "Current Season",
-      shortLabel: currentSeasonLabel,
-      year: anime.year,
+      title: currentTitleRaw,
+      ...currentSeasonInfo,
       isCurrent: true,
     },
-    ...relatedSeasons
-  ].sort((a, b) => {
+    ...relations
+      .filter(r => validRoles.includes(r.role?.toLowerCase()))
+      .map(r => {
+        const parsed = parseSeasonAndPart(r.anime.title, r.role, r.anime.year);
+        return {
+          id: r.anime.id,
+          title: r.anime.title,
+          ...parsed,
+          isCurrent: false,
+        };
+      })
+  ];
+
+  interface SeasonGroup {
+    seasonLabel: string;
+    seasonNumber: number;
+    year?: number;
+    parts: typeof franchiseEntries;
+  }
+
+  const seasonMap = new Map<string, SeasonGroup>();
+  for (const entry of franchiseEntries) {
+    const existing = seasonMap.get(entry.seasonLabel);
+    if (!existing) {
+      seasonMap.set(entry.seasonLabel, {
+        seasonLabel: entry.seasonLabel,
+        seasonNumber: entry.seasonNumber,
+        year: entry.year,
+        parts: [entry],
+      });
+    } else {
+      if (!existing.parts.some(p => p.id === entry.id)) {
+        existing.parts.push(entry);
+      }
+      if (!existing.year && entry.year) existing.year = entry.year;
+    }
+  }
+
+  for (const group of seasonMap.values()) {
+    group.parts.sort((a, b) => {
+      if (a.partNumber && b.partNumber) return a.partNumber - b.partNumber;
+      if (a.year && b.year) return a.year - b.year;
+      return 0;
+    });
+  }
+
+  const seasonsList = Array.from(seasonMap.values()).sort((a, b) => {
+    if (a.seasonNumber !== b.seasonNumber) return a.seasonNumber - b.seasonNumber;
     if (a.year && b.year) return a.year - b.year;
-    if (a.isCurrent) return -1;
-    return 1;
+    return 0;
   });
 
-  const currentEpNum = parseInt(resolved.episodeId, 10) || 1;
-  const currentEp: Episode = episodes.find((e) => e.number === currentEpNum) || {
-    id: String(currentEpNum),
-    number: currentEpNum,
-    seasonNumber: 1,
-    title: `Episode ${currentEpNum}`,
-    synopsis: "",
-    airdate: "",
-  };
+  const activeSeasonGroup = seasonsList.find(s => s.parts.some(p => p.id === anime.id)) || seasonsList[0];
+  const hasMultiplePartsInActiveSeason = Boolean(
+    activeSeasonGroup && activeSeasonGroup.parts.length > 1 && activeSeasonGroup.parts.some(p => Boolean(p.partLabel))
+  );
 
+  const currentEpIndex = currentEp ? releasedEpisodes.findIndex((e) => e.number === currentEpNum) : -1;
   const title = anime.title.english || anime.title.romaji || anime.title.native || "Anime";
-  const totalEpisodes = episodes.length > 0 ? episodes.length : (anime.episodes || 1);
-  const hasPrev = currentEpNum > 1;
-  const hasNext = currentEpNum < totalEpisodes;
+  const totalEpisodes = releasedEpisodes.length > 0 ? releasedEpisodes.length : (declaredTotal || 1);
+
+  const prevEpNumber = currentEpIndex > 0
+    ? releasedEpisodes[currentEpIndex - 1].number
+    : (currentEpIndex === -1 && currentEpNum > 1 && currentEpNum - 1 <= latestReleasedNumber ? currentEpNum - 1 : null);
+
+  const nextEpNumber = (currentEpIndex >= 0 && currentEpIndex < releasedEpisodes.length - 1)
+    ? releasedEpisodes[currentEpIndex + 1].number
+    : null;
+
+  const hasPrev = prevEpNumber !== null && prevEpNumber > 0;
+  const hasNext = nextEpNumber !== null && nextEpNumber > 0;
+
+  // Real episode list to display in selector
+  const displayEpisodeList = episodes;
 
   return (
     <>
       <Navbar />
       <div className={`container ${styles.watchPage}`}>
         <BackButton label={`Back to ${title}`} fallbackUrl={`/anime/${anime.id}`} />
+
         {/* Breadcrumb */}
         <div className={styles.breadcrumb}>
           <Link href="/">Home</Link>
           <span>/</span>
           <Link href={`/anime/${anime.id}`}>{title}</Link>
           <span>/</span>
-          <span className={styles.currentCrumb}>{currentSeasonLabel} • Episode {currentEpNum}</span>
+          <span className={styles.currentCrumb}>{currentSeasonLabel}{currentPartLabel ? ` • ${currentPartLabel}` : ""} • Episode {currentEpNum ?? "—"}</span>
         </div>
 
-        <div className={styles.layout}>
-          {/* Main Video & Details */}
-          <div className={styles.mainCol}>
-            <VideoPlayer
-              animeId={anime.id}
-              animeTitle={title}
-              episodeNumber={currentEpNum}
-              totalEpisodes={totalEpisodes}
-              youtubeVideoId={anime.youtubeVideoId}
-              malId={anime.malId}
-              anilistId={anime.anilistId}
-            />
+        {/* ================= ROW 1: PLAYER & EPISODES SIDEBAR ================= */}
+        <div className={styles.dualGrid}>
+          {/* Main Column: Video Player or Unreleased Notice & Metadata */}
+          <div className={styles.playerCol}>
+            {isCurrentEpisodeUpcoming ? (
+              <div className={styles.unreleasedBanner}>
+                <div className={styles.unreleasedCard}>
+                  <div className={styles.unreleasedIconWrap}>
+                    <Lock size={36} className={styles.unreleasedIcon} />
+                  </div>
+                  <h2>Episode {currentEpNum} Not Yet Released</h2>
+                  <p>
+                    This episode has not aired yet.
+                    {currentEp?.airdate ? ` Scheduled broadcast: ${currentEp.airdate}.` : ""}
+                    {" "}The latest released episode is Episode {latestReleasedNumber}.
+                  </p>
+                  <div className={styles.unreleasedCtaRow}>
+                    <Link href={`/watch/${anime.id}/${latestReleasedNumber}`} className={styles.unreleasedPrimaryBtn}>
+                      <Play size={16} fill="#fff" /> Watch Episode {latestReleasedNumber}
+                    </Link>
+                    <Link href={`/anime/${anime.id}`} className={styles.unreleasedSecondaryBtn}>
+                      Back to Anime Overview
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <VideoPlayer
+                animeId={anime.id}
+                animeTitle={title}
+                episodeNumber={currentEpNum ?? 1}
+                totalEpisodes={totalEpisodes}
+                nextEpisodeNumber={nextEpNumber}
+                youtubeVideoId={anime.youtubeVideoId}
+                malId={anime.malId}
+                anilistId={anime.anilistId}
+              />
+            )}
 
+            {/* Episode Meta Bar */}
             <div className={styles.episodeMeta}>
               <div className={styles.titleRow}>
                 <div>
-                  <span className={styles.epBadge}>{currentSeasonLabel} • Episode {currentEpNum}</span>
-                  <h1 className={styles.epTitle}>Episode {currentEpNum}: {currentEp?.title || `Episode ${currentEpNum}`}</h1>
+                  <span className={styles.epBadge}>{currentSeasonLabel}{currentPartLabel ? ` • ${currentPartLabel}` : ""} • Episode {currentEpNum ?? "—"}</span>
+                  <h1 className={styles.epTitle}>
+                    Episode {currentEpNum ?? "—"}{currentEp?.title ? `: ${currentEp.title}` : ""}
+                  </h1>
                 </div>
 
                 <div className={styles.navButtons}>
-                  <Link
-                    href={`/watch/${anime.id}/${currentEpNum - 1}`}
-                    className={`${styles.navBtn} ${!hasPrev ? styles.disabledNav : ""}`}
-                    aria-disabled={!hasPrev}
-                  >
-                    <ChevronLeft size={18} /> Prev
-                  </Link>
-                  <Link
-                    href={`/watch/${anime.id}/${currentEpNum + 1}`}
-                    className={`${styles.navBtn} ${!hasNext ? styles.disabledNav : ""}`}
-                    aria-disabled={!hasNext}
-                  >
-                    Next <ChevronRight size={18} />
-                  </Link>
+                  <WatchlistStatusSelect anime={anime} compact />
+                  <FavoriteButton anime={anime} variant="compact" />
+                  {hasPrev ? (
+                    <Link
+                      href={`/watch/${anime.id}/${prevEpNumber}`}
+                      className={styles.navBtn}
+                    >
+                      <ChevronLeft size={18} /> Prev
+                    </Link>
+                  ) : (
+                    <span
+                      className={`${styles.navBtn} ${styles.disabledNav}`}
+                      aria-disabled="true"
+                    >
+                      <ChevronLeft size={18} /> Prev
+                    </span>
+                  )}
+                  {hasNext ? (
+                    <Link
+                      href={`/watch/${anime.id}/${nextEpNumber}`}
+                      className={styles.navBtn}
+                    >
+                      Next <ChevronRight size={18} />
+                    </Link>
+                  ) : (
+                    <span
+                      className={`${styles.navBtn} ${styles.disabledNav}`}
+                      aria-disabled="true"
+                    >
+                      Next <ChevronRight size={18} />
+                    </span>
+                  )}
                 </div>
               </div>
 
-              {/* Synopsis */}
+              {/* Episode Synopsis */}
               <div className={styles.synopsisCard}>
                 <h3>Episode Overview</h3>
-                <p>{currentEp?.synopsis || "No detailed synopsis available for this episode."}</p>
+                <p>
+                  {currentEp?.synopsis ||
+                    `Streaming Episode ${currentEpNum} of ${title}. High-definition servers and multi-audio tracks are available.`}
+                </p>
                 {currentEp?.airdate && (
                   <div className={styles.airdateInfo}>
                     <Calendar size={14} />
@@ -174,96 +327,158 @@ export default async function WatchEpisodePage({
                 )}
               </div>
             </div>
-
-            {/* Episode Discussion Comments */}
-            <EpisodeComments animeId={anime.id} episode={currentEpNum} />
           </div>
 
-          {/* Sidebar: Episode Selector */}
-          <aside className={styles.sidebar}>
+          {/* Right Column: Episode Selector & Franchise Season Switcher */}
+          <aside className={styles.episodesSidebar}>
             <div className={styles.sidebarHeader}>
-              <div className={styles.sidebarTitle}>
-                <Film size={18} />
-                <span>Episodes ({totalEpisodes})</span>
+              <div className={styles.sidebarTitleWrap}>
+                <Film size={18} className={styles.accentRose} />
+                <h3>Episodes ({displayEpisodeList.length > 0 ? displayEpisodeList.length : totalEpisodes})</h3>
               </div>
-
-              {seasons.length > 1 && (
-                <div className={styles.seasonSelector}>
-                  <div className={styles.seasonSelectPills}>
-                    {seasons.map((s) => {
-                      const isCur = s.id === anime.id;
-                      return (
-                        <Link
-                          key={s.id}
-                          href={`/watch/${s.id}/1`}
-                          className={`${styles.seasonPill} ${isCur ? styles.activeSeasonPill : ""}`}
-                          title={`${s.shortLabel}: ${s.title}`}
-                        >
-                          {s.shortLabel}
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
+              <span className={styles.epCountNote}>
+                {releasedEpisodes.length} Released
+                {declaredTotal && declaredTotal > releasedEpisodes.length
+                  ? ` • ${declaredTotal - releasedEpisodes.length} Upcoming`
+                  : ""}
+              </span>
             </div>
 
-            <div className={styles.episodesList}>
-              {episodes.length > 0 ? (
-                episodes.map((ep) => {
-                  const isActive = ep.number === currentEpNum;
+            {seasonsList.length > 1 && (
+              <div className={styles.seasonSelectPills}>
+                {seasonsList.map((s) => {
+                  const isCurSeason = s.parts.some(p => p.id === anime.id);
+                  const targetEntry = isCurSeason
+                    ? (s.parts.find(p => p.id === anime.id) || s.parts[0])
+                    : s.parts[0];
+                  return (
+                    <Link
+                      key={s.seasonLabel}
+                      href={`/watch/${targetEntry.id}/1`}
+                      className={`${styles.seasonPill} ${isCurSeason ? styles.activeSeasonPill : ""}`}
+                      title={s.seasonLabel}
+                    >
+                      {s.seasonLabel}
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+
+            {hasMultiplePartsInActiveSeason && activeSeasonGroup && (
+              <div className={styles.partSelectPills}>
+                <span className={styles.partGroupLabel}>Part / Cour:</span>
+                {activeSeasonGroup.parts.map((p) => {
+                  const isCurPart = p.id === anime.id;
+                  return (
+                    <Link
+                      key={p.id}
+                      href={`/watch/${p.id}/1`}
+                      className={`${styles.partPill} ${isCurPart ? styles.activePartPill : ""}`}
+                      title={p.title}
+                    >
+                      {p.partLabel || p.title}
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+
+            {displayEpisodeList.length > 0 ? (
+              <div className={styles.episodesSidebarList}>
+                {displayEpisodeList.map((ep) => {
+                  const epNum = ep.number ?? 1;
+                  const isCur = epNum === currentEpNum;
+                  const isEpUpcoming = ep.status === "upcoming" || (!isFinished && ep.status !== "released" && epNum > latestReleasedNumber);
+
+                  if (isEpUpcoming) {
+                    return (
+                      <div
+                        key={ep.id}
+                        className={`${styles.epCardSmall} ${styles.epCardSmallLocked}`}
+                        title={`Episode ${epNum} is upcoming and not yet released.`}
+                      >
+                        <div className={styles.epThumbSmallWrap}>
+                          <img
+                            src={ep.thumbnail || anime.images.cover || "/placeholder-cover.svg"}
+                            alt={ep.title || `Episode ${epNum}`}
+                            className={styles.epThumbSmall}
+                          />
+                          <div className={styles.lockedSmallOverlay}>
+                            <Lock size={14} />
+                          </div>
+                        </div>
+                        <div className={styles.epSmallInfo}>
+                          <span className={styles.epSmallNum}>EP {epNum}</span>
+                          <span className={styles.epSmallStatus}>Upcoming</span>
+                        </div>
+                      </div>
+                    );
+                  }
+
                   return (
                     <Link
                       key={ep.id}
-                      href={`/watch/${anime.id}/${ep.number}`}
-                      className={`${styles.episodeItem} ${isActive ? styles.activeEpisode : ""}`}
+                      href={`/watch/${anime.id}/${epNum}`}
+                      className={`${styles.epCardSmall} ${isCur ? styles.activeEpCardSmall : ""}`}
                     >
-                      <div className={styles.epThumbWrapper}>
+                      <div className={styles.epThumbSmallWrap}>
                         <img
                           src={ep.thumbnail || anime.images.cover || "/placeholder-cover.svg"}
-                          alt={ep.title}
-                          className={styles.epThumb}
+                          alt={ep.title || `Episode ${epNum}`}
+                          className={styles.epThumbSmall}
                         />
-                        <div className={styles.epThumbOverlay}>
-                          <Play size={16} fill="#fff" />
-                        </div>
+                        {isCur && (
+                          <div className={styles.playingSmallOverlay}>
+                            <Play size={14} fill="#fff" />
+                          </div>
+                        )}
                       </div>
-                      <div className={styles.epInfo}>
-                        <div className={styles.epTop}>
-                          <span className={styles.epNumText}>EP {ep.number}</span>
-                        </div>
-                        <h4 className={styles.epItemTitle}>{ep.title}</h4>
+                      <div className={styles.epSmallInfo}>
+                        <span className={styles.epSmallNum}>EP {epNum}</span>
+                        <span className={styles.epSmallTitle}>{ep.title || `Episode ${epNum}`}</span>
                       </div>
                     </Link>
                   );
-                })
+                })}
+              </div>
+            ) : (
+              <div className={styles.emptySidebarNotice}>
+                No episodes indexed for this title yet.
+              </div>
+            )}
+          </aside>
+        </div>
+
+        {/* ================= ROW 2: COMMENTS | RECOMMENDED ANIME ================= */}
+        <div className={`${styles.dualGrid} ${styles.rowTwo}`}>
+          {/* Main Column: Episode Comments */}
+          <div className={styles.commentsCol}>
+            <EpisodeComments animeId={anime.id} episode={currentEpNum ?? 1} />
+          </div>
+
+          {/* Right Column: Recommended Anime */}
+          <aside className={styles.recommendedSidebar}>
+            <div className={styles.sidebarHeader}>
+              <div className={styles.sidebarTitleWrap}>
+                <Sparkles size={18} className={styles.accentRose} />
+                <h3>Recommended Anime</h3>
+              </div>
+            </div>
+
+            <div className={styles.sidebarCardsList}>
+              {recommendations.length > 0 ? (
+                recommendations.slice(0, 6).map((rec) => (
+                  <AnimeCard
+                    key={rec.id}
+                    anime={rec}
+                    variant="horizontal"
+                  />
+                ))
               ) : (
-                Array.from({ length: totalEpisodes }).map((_, idx) => {
-                  const epNum = idx + 1;
-                  const isActive = epNum === currentEpNum;
-                  return (
-                    <Link
-                      key={epNum}
-                      href={`/watch/${anime.id}/${epNum}`}
-                      className={`${styles.episodeItem} ${isActive ? styles.activeEpisode : ""}`}
-                    >
-                      <div className={styles.epThumbWrapper}>
-                        <img
-                          src={anime.images.cover || "/placeholder-cover.svg"}
-                          alt={`Episode ${epNum}`}
-                          className={styles.epThumb}
-                        />
-                        <div className={styles.epThumbOverlay}>
-                          <Play size={16} fill="#fff" />
-                        </div>
-                      </div>
-                      <div className={styles.epInfo}>
-                        <span className={styles.epNumText}>Episode {epNum}</span>
-                        <h4 className={styles.epItemTitle}>Episode {epNum}</h4>
-                      </div>
-                    </Link>
-                  );
-                })
+                <div className={styles.emptySidebarNotice}>
+                  Recommendations are being calculated for this anime.
+                </div>
               )}
             </div>
           </aside>

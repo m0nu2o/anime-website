@@ -1,0 +1,27 @@
+<svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="nexus-left" x1="4" y1="5" x2="13" y2="29" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stopColor="#ff4d6d" />
+      <stop offset="100%" stopColor="#c2183d" />
+    </linearGradient>
+    <linearGradient id="nexus-cross" x1="13" y1="5" x2="23" y2="31" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stopColor="#ff2a55" />
+      <stop offset="100%" stopColor="#8a0e28" />
+    </linearGradient>
+    <linearGradient id="nexus-right" x1="23" y1="7" x2="32" y2="31" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stopColor="#ff6b8b" />
+      <stop offset="100%" stopColor="#e61b45" />
+    </linearGradient>
+    <linearGradient id="nexus-sheen" x1="4" y1="5" x2="32" y2="31" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stopColor="#ffffff" stopOpacity="0.85" />
+      <stop offset="50%" stopColor="#ffffff" stopOpacity="0.2" />
+      <stop offset="100%" stopColor="#ffffff" stopOpacity="0.0" />
+    </linearGradient>
+  </defs>
+  <rect width="36" height="36" rx="8" fill="#090a10" />
+  <path d="M7 28L7 11L14.5 6L14.5 23L7 28Z" fill="url(#nexus-left)" />
+  <path d="M14.5 6L22.5 22L22.5 29.5L14.5 13.5L14.5 6Z" fill="url(#nexus-cross)" />
+  <path d="M22.5 12.5L30 7.5L30 24.5L22.5 29.5L22.5 12.5Z" fill="url(#nexus-right)" />
+  <path d="M7 11L14.5 6L22.5 22L30 7.5" stroke="url(#nexus-sheen)" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M7 28L14.5 23L22.5 29.5L30 24.5" stroke="rgba(255, 255, 255, 0.3)" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round" />
+</svg>

@@ -7,7 +7,26 @@ const JIKAN_HEADERS = {
   "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 NextGenAnime/1.0",
 };
 
-async function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutMs: number = 4000): Promise<Response> {
+function getJstBroadcastInfo(timestamp: number) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Tokyo",
+    weekday: "long",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(new Date(timestamp));
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return {
+    dayName: values.weekday || "Unknown",
+    dateString: `${values.year}-${values.month}-${values.day}`,
+    timeString: `${values.hour}:${values.minute} JST`,
+  };
+}
+
+async function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutMs: number = 3000): Promise<Response> {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -39,6 +58,7 @@ interface JikanMedia {
   };
   type?: string;
   status?: string;
+  airing?: boolean;
   season?: string;
   year?: number;
   episodes?: number;
@@ -48,9 +68,17 @@ interface JikanMedia {
   rank?: number;
   genres?: { name: string }[];
   studios?: { name: string }[];
-  broadcast?: { day?: string; time?: string };
+  broadcast?: { day?: string; time?: string; timezone?: string };
   aired?: { from?: string; to?: string };
   trailer?: { youtube_id?: string; url?: string };
+  next_airing_episode?: {
+    episode?: number;
+    aired_at?: string;
+    images?: {
+      webp?: { large_image_url?: string };
+      jpg?: { large_image_url?: string };
+    };
+  } | null;
 }
 
 function normalizeJikanAnime(item: JikanMedia): Anime {
@@ -110,8 +138,16 @@ export async function fetchJikanAnime(params: { search?: string; limit?: number;
 }
 
 export async function fetchJikanPopular(limit: number = 15): Promise<Anime[]> {
+  return fetchJikanTop(limit, "bypopularity");
+}
+
+export async function fetchJikanTop(
+  limit: number = 10,
+  filter?: "bypopularity" | "airing" | "favorite" | "upcoming"
+): Promise<Anime[]> {
   try {
-    const url = `${JIKAN_API_URL}/top/anime?limit=${limit}`;
+    const filterParam = filter ? `&filter=${filter}` : "";
+    const url = `${JIKAN_API_URL}/top/anime?limit=${limit}${filterParam}`;
     const response = await fetchWithTimeout(url);
     if (!response.ok) {
       throw new Error(`Jikan API Error: ${response.status}`);
@@ -121,7 +157,39 @@ export async function fetchJikanPopular(limit: number = 15): Promise<Anime[]> {
     return data.data.map(normalizeJikanAnime);
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : String(error);
-    console.warn(`Jikan popular fetch failed: ${msg}`);
+    console.warn(`Jikan top fetch (${filter}) failed: ${msg}`);
+    return [];
+  }
+}
+
+export async function fetchJikanGenres(): Promise<{ id: number; name: string; count?: number }[]> {
+  try {
+    const url = `${JIKAN_API_URL}/genres/anime`;
+    const response = await fetchWithTimeout(url);
+    if (!response.ok) throw new Error(`Jikan genres error: ${response.status}`);
+    const data = await response.json();
+    if (!Array.isArray(data?.data)) return [];
+    return data.data.map((g: { mal_id: number; name: string; count?: number }) => ({
+      id: g.mal_id,
+      name: g.name,
+      count: g.count,
+    }));
+  } catch (error) {
+    console.warn("Jikan genres fetch failed:", error);
+    return [];
+  }
+}
+
+export async function fetchJikanSeasonal(season: string, year: number, limit: number = 24): Promise<Anime[]> {
+  try {
+    const url = `${JIKAN_API_URL}/seasons/${year}/${season.toLowerCase()}?limit=${limit}`;
+    const response = await fetchWithTimeout(url);
+    if (!response.ok) throw new Error(`Jikan seasonal error: ${response.status}`);
+    const data = await response.json();
+    if (!Array.isArray(data?.data)) return [];
+    return data.data.map(normalizeJikanAnime);
+  } catch (error) {
+    console.warn(`Jikan seasonal fetch (${season} ${year}) failed:`, error);
     return [];
   }
 }
@@ -146,68 +214,131 @@ export async function fetchJikanAnimeById(malId: number): Promise<Anime | null> 
 
 export async function fetchJikanSchedules(day?: string): Promise<import("./types").AiringSchedule[]> {
   try {
-    const url = `${JIKAN_API_URL}/seasons/now?limit=25`;
+    const url = `${JIKAN_API_URL}/schedules?limit=25`;
     const response = await fetchWithTimeout(url, {}, 5000);
-    if (!response.ok) throw new Error(`Jikan Seasons Error: ${response.status}`);
+    if (!response.ok) throw new Error(`Jikan Schedules Error: ${response.status}`);
     const data = await response.json();
     if (!Array.isArray(data?.data)) return [];
 
-    let items: JikanMedia[] = data.data;
+    const targetDay = day && day.toLowerCase() !== "all days"
+      ? day.toLowerCase().replace(/s$/, "").trim()
+      : undefined;
 
-    // Filter by day if requested
-    if (day && day.toLowerCase() !== "all days") {
-      const targetDay = day.toLowerCase().replace(/s$/, "").trim();
-      items = items.filter((item) => {
-        const d = (item.broadcast?.day || "").toLowerCase().replace(/s$/, "").trim();
-        return d === targetDay;
+    const now = Date.now();
+    const oldestAiringAt = now - 90 * 24 * 60 * 60 * 1000;
+
+    return data.data
+      .filter((item: JikanMedia) => {
+        if (!item.airing || !item.next_airing_episode?.aired_at) return false;
+        const airedAt = Date.parse(item.next_airing_episode.aired_at);
+        if (Number.isNaN(airedAt) || airedAt < oldestAiringAt) return false;
+
+        if (!targetDay) return true;
+        const broadcastDay = (item.broadcast?.day || "").toLowerCase().replace(/s$/, "").trim();
+        return broadcastDay === targetDay;
+      })
+      .map((item: JikanMedia) => {
+        const nextEpisode = item.next_airing_episode!;
+        const airedAt = Date.parse(nextEpisode.aired_at!);
+        const broadcastInfo = getJstBroadcastInfo(airedAt);
+
+        return {
+          id: `jikan-${item.mal_id}-${nextEpisode.episode || "next"}`,
+          animeId: `mal-${item.mal_id}`,
+          animeTitle: item.title_english || item.title || item.title_japanese || "Unknown Title",
+          animeImage: nextEpisode.images?.webp?.large_image_url || nextEpisode.images?.jpg?.large_image_url || item.images?.webp?.large_image_url || item.images?.jpg?.large_image_url || "/placeholder-cover.svg",
+          format: item.type,
+          episodeNumber: typeof nextEpisode.episode === "number" && nextEpisode.episode > 0 ? nextEpisode.episode : null,
+          airingAt: broadcastInfo.dayName,
+          airingDate: broadcastInfo.dateString,
+          timeString: broadcastInfo.timeString,
+          hasExactTime: true,
+          airingAtTimestamp: Math.floor(airedAt / 1000),
+          timeUntilAiring: Math.floor((airedAt - now) / 1000),
+          status: airedAt <= now ? "aired" as const : (airedAt <= now + 24 * 60 * 60 * 1000 ? "airing_today" as const : "upcoming" as const),
+          genres: item.genres?.map((genre) => genre.name) || [],
+          score: item.score ? Math.round(item.score * 10) : undefined,
+          studio: item.studios?.[0]?.name,
+        };
       });
-    }
-
-    return items.map((item) => {
-      const broadcast = item.broadcast || {};
-      const rawDay = broadcast.day || "";
-      const dayName = rawDay.endsWith("s") ? rawDay.slice(0, -1) : (rawDay || "Unknown");
-      const timeStr = broadcast.time ? `${broadcast.time} JST` : "Broadcast TBA";
-      const studioName = item.studios?.[0]?.name;
-      
-      // Compute verified episode number and upcoming status
-      let nextEp = 1;
-      let isUpcoming = false;
-      if (item.status === "Not yet aired") {
-        isUpcoming = true;
-        nextEp = 1;
-      } else if (item.episodes) {
-        // If total episodes is verified (e.g. 11 or 12), use known count
-        nextEp = item.episodes;
-      } else if (item.aired?.from) {
-        const airedDate = new Date(item.aired.from).getTime();
-        if (!isNaN(airedDate) && airedDate > Date.now()) {
-          isUpcoming = true;
-          nextEp = 1;
-        } else {
-          nextEp = 1;
-        }
-      }
-
-      return {
-        id: String(item.mal_id),
-        animeId: `mal-${item.mal_id}`,
-        animeTitle: item.title_english || item.title || item.title_japanese || "Unknown Title",
-        animeImage: item.images?.webp?.large_image_url || item.images?.jpg?.large_image_url || "/placeholder-cover.svg",
-        episodeNumber: nextEp,
-        airingAt: dayName,
-        timeString: timeStr,
-        genres: item.genres?.map((g) => g.name) || [],
-        score: item.score ? Math.round(item.score * 10) : undefined,
-        studio: studioName,
-        status: isUpcoming ? "upcoming" : "airing_today",
-      };
-    });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     console.warn(`Jikan schedule fetch failed: ${msg}`);
     return [];
   }
 }
+
+interface JikanEpisodeRaw {
+  mal_id: number;
+  url?: string | null;
+  title?: string;
+  title_japanese?: string | null;
+  title_romanji?: string | null;
+  aired?: string | null;
+  score?: number | null;
+  filler?: boolean;
+  recap?: boolean;
+  forum_url?: string | null;
+}
+
+/**
+ * Fetch all episodes for an anime using Jikan API with full pagination.
+ * Jikan provides authoritative episode numbers, titles, and exact air dates.
+ */
+export async function fetchJikanEpisodes(malId: number): Promise<import("./types").Episode[]> {
+  try {
+    if (!malId || malId <= 0) return [];
+
+    const episodes: import("./types").Episode[] = [];
+    const now = Date.now();
+    let page = 1;
+    let hasNextPage = true;
+
+    while (hasNextPage && page <= 30) {
+      const url = `${JIKAN_API_URL}/anime/${malId}/episodes?page=${page}`;
+      const res = await fetchWithTimeout(url, {}, 4000);
+      if (!res.ok) break;
+
+      const data = await res.json();
+      const pageData: JikanEpisodeRaw[] = Array.isArray(data?.data) ? data.data : [];
+
+      for (const item of pageData) {
+        const epNum = item.mal_id;
+        let airdateTimestamp: number | undefined = undefined;
+        let status: "released" | "upcoming" | "unknown" = "unknown";
+
+        if (item.aired) {
+          const ts = Date.parse(item.aired);
+          if (!isNaN(ts)) {
+            airdateTimestamp = ts;
+            status = ts <= now ? "released" : "upcoming";
+          }
+        }
+
+        const title = item.title || item.title_romanji || item.title_japanese || `Episode ${epNum}`;
+
+        episodes.push({
+          id: `jikan-${malId}-${epNum}`,
+          number: epNum,
+          title,
+          airdate: item.aired || undefined,
+          airdateTimestamp,
+          status,
+        });
+      }
+
+      hasNextPage = Boolean(data?.pagination?.has_next_page);
+      if (pageData.length === 0) break;
+      page++;
+    }
+
+    return episodes;
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.warn(`Jikan fetchEpisodes failed (malId: ${malId}): ${msg}`);
+    return [];
+  }
+}
+
 
 

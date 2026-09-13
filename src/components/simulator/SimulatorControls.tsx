@@ -99,23 +99,23 @@ export default function SimulatorControls({ params, onChange, onReset }: Control
           </div>
           <div className={styles.infoList}>
             <div className={styles.infoItem}>
-              <span className={styles.tag} style={{ color: "#facc15" }}>01 � Fusion Core</span>
+              <span className={styles.tag} style={{ color: "#facc15" }}>01 • Fusion Core</span>
               <p>Temperatures exceed 15,000,000 K. Hydrogen nuclei fuse into helium via proton-proton chain reactions, generating pure radiant energy.</p>
             </div>
             <div className={styles.infoItem}>
-              <span className={styles.tag} style={{ color: "#fb923c" }}>02 � Radiative Zone</span>
+              <span className={styles.tag} style={{ color: "#fb923c" }}>02 • Radiative Zone</span>
               <p>Energy diffuses slowly outward via photons. Photons undergo countless absorptions and re-emissions taking over 100,000 years to reach the surface.</p>
             </div>
             <div className={styles.infoItem}>
-              <span className={styles.tag} style={{ color: "#f43f5e" }}>03 � Convection Cells</span>
-              <p>Hot plasma boils up toward the surface in colossal hexagonal B�nard convection granules, sinking back down as it cools.</p>
+              <span className={styles.tag} style={{ color: "#f43f5e" }}>03 • Convection Cells</span>
+              <p>Hot plasma boils up toward the surface in colossal hexagonal Bénard convection granules, sinking back down as it cools.</p>
             </div>
             <div className={styles.infoItem}>
-              <span className={styles.tag} style={{ color: "#c084fc" }}>04 � Coronal Loops</span>
-              <p>Intense twisted magnetic flux tubes trap superheated plasma at 2�3 million K, erupting in solar flares and coronal mass ejections (CMEs).</p>
+              <span className={styles.tag} style={{ color: "#c084fc" }}>04 • Coronal Loops</span>
+              <p>Intense twisted magnetic flux tubes trap superheated plasma at 2–3 million K, erupting in solar flares and coronal mass ejections (CMEs).</p>
             </div>
             <div className={styles.infoItem}>
-              <span className={styles.tag} style={{ color: "#38bdf8" }}>05 � Solar Wind</span>
+              <span className={styles.tag} style={{ color: "#38bdf8" }}>05 • Solar Wind</span>
               <p>A continuous outward stream of charged protons and electrons escapes through coronal holes at speeds from 400 to 800 km/s.</p>
             </div>
           </div>

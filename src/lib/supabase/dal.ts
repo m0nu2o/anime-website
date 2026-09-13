@@ -163,6 +163,16 @@ export async function isFavorite(userId: string, animeId: string): Promise<boole
   return !!data && !error;
 }
 
+/** Removes a favorite by identity only — no fabricated Anime stub required. */
+export async function removeFavorite(userId: string, animeId: string): Promise<boolean> {
+  const { error } = await supabase
+    .from("favorites")
+    .delete()
+    .eq("user_id", userId)
+    .eq("anime_id", animeId);
+  return !error;
+}
+
 export async function toggleFavorite(userId: string, anime: Anime): Promise<boolean> {
   const exists = await isFavorite(userId, anime.id);
   if (exists) {

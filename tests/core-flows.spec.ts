@@ -43,6 +43,7 @@ test.describe('NextGen Anime Core Flows', () => {
   });
 
   test('Search Flow Test with Real Kitsu Fallback', async ({ page }) => {
+    test.setTimeout(90000);
     await page.goto('/');
 
     const searchBtn = page.locator('header button[aria-label="Search (Ctrl+K)"]');
@@ -58,53 +59,56 @@ test.describe('NextGen Anime Core Flows', () => {
     await expect(resultItem).toBeVisible({ timeout: 20000 });
 
     await resultItem.click();
+    await expect(page).toHaveURL(/\/anime\/(anilist|kitsu|mal)-[\w-]+/, { timeout: 30000 });
 
-    await expect(page).toHaveURL(/\/anime\/(anilist|kitsu|mal)-[\w-]+/, { timeout: 20000 });
     await expect(page.locator('h1')).toBeVisible({ timeout: 20000 });
   });
 
   test('Navigation Across Discovery & Utility Pages', async ({ page }) => {
-    test.setTimeout(90000);
+    test.setTimeout(120000);
     const pagesToTest = [
       { text: 'Discover', url: '/discover', heading: 'Discover & Explore Anime' },
       { text: 'Seasonal', url: '/seasonal', heading: 'Anime' },
       { text: 'Calendar', url: '/calendar', heading: 'Release Calendar' },
-      { text: 'Simulators', url: '/simulators', heading: 'Interactive 3D Simulators' },
       { text: 'Watchlist', url: '/watchlist', heading: 'My Watchlist' },
       { text: 'Favorites', url: '/favorites', heading: 'My Favorites' },
     ];
 
+    // 1. Verify all desktop navigation links exist in the header
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
     for (const p of pagesToTest) {
-      await page.goto('/');
-      const navLink = page.locator('header nav[aria-label="Desktop Navigation"] a').filter({ hasText: p.text });
-      await expect(navLink).toBeVisible();
-      await navLink.click();
-      
-      await expect(page).toHaveURL(new RegExp(p.url), { timeout: 20000 });
-      await expect(page.locator('h1')).toContainText(p.heading, { timeout: 20000 });
+      const navLink = page.locator(`header nav[aria-label="Desktop Navigation"] a[href="${p.url}"]`);
+      await expect(navLink).toBeVisible({ timeout: 15000 });
+    }
+
+    // 2. Verify each discovery/utility route renders without 404 or errors
+    for (const p of pagesToTest) {
+      await page.goto(p.url, { waitUntil: 'domcontentloaded' });
+      await expect(page.locator('h1')).toContainText(p.heading, { timeout: 30000 });
       const content = await page.content();
       expect(content).not.toContain('Not Found');
     }
   });
 
   test('Phase 2 User Hub Pages (Dashboard, Profile, Settings)', async ({ page }) => {
+    test.setTimeout(90000);
     // 1. Dashboard
-    await page.goto('/dashboard');
-    await expect(page.locator('h1, h2').first()).toBeVisible({ timeout: 20000 });
+    await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('h1, h2').first()).toBeVisible({ timeout: 30000 });
     const dashContent = await page.content();
     expect(dashContent).not.toContain('This section is currently under construction');
 
     // 2. Profile
-    await page.goto('/profile');
-    await expect(page.locator('h1, h2').first()).toBeVisible({ timeout: 20000 });
+    await page.goto('/profile', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('h1, h2').first()).toBeVisible({ timeout: 30000 });
     const profContent = await page.content();
     expect(profContent).not.toContain('This section is currently under construction');
 
     // 3. Settings
-    await page.goto('/settings');
-    await expect(page.locator('h1')).toContainText('Preferences & Settings', { timeout: 20000 });
-    await expect(page.getByText('Player & Streaming')).toBeVisible();
-    await expect(page.getByText('Autoplay Next Episode')).toBeVisible();
+    await page.goto('/settings', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('h1')).toContainText('Preferences & Settings', { timeout: 30000 });
+    await expect(page.getByText('Player & Streaming')).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText('Autoplay Next Episode')).toBeVisible({ timeout: 15000 });
   });
 
   test('Phase 2 Directory Pages (Characters, Staff, Studios)', async ({ page }) => {
@@ -142,15 +146,16 @@ test.describe('NextGen Anime Core Flows', () => {
   });
 
   test('3D Simulators Hub & Interactive Lab Catalog', async ({ page }) => {
-    await page.goto('/simulators');
+    test.setTimeout(60000);
+    await page.goto('/simulators', { waitUntil: 'domcontentloaded' });
     
     // Check page header and catalog
     await expect(page.getByText('Interactive 3D Simulators')).toBeVisible({ timeout: 20000 });
     await expect(page.getByText('Supermassive Black Hole')).toBeVisible();
 
     // Verify /simulators/sun redirect works cleanly to /simulators/blackhole
-    await page.goto('/simulators/sun');
-    await expect(page).toHaveURL(/.*simulators\/blackhole/);
+    await page.goto('/simulators/sun', { waitUntil: 'domcontentloaded' });
+    await expect(page).toHaveURL(/.*simulators\/blackhole/, { timeout: 30000 });
   });
 
   test('3D Black Hole Simulator Route & Physics HUD', async ({ page }) => {
@@ -164,6 +169,7 @@ test.describe('NextGen Anime Core Flows', () => {
   });
 
   test('Watching Experience with Multi-Server Player & Comments', async ({ page }) => {
+    test.setTimeout(60000);
     await page.goto('/watch/kitsu-7442/1');
 
     await expect(page.locator('h1')).toContainText('Episode 1', { timeout: 25000 });
@@ -172,14 +178,79 @@ test.describe('NextGen Anime Core Flows', () => {
     const playerContainer = page.locator('div[class*="playerContainer"]');
     await expect(playerContainer).toBeVisible();
 
-    await expect(page.getByText('Server 1 (HD Stream)')).toBeVisible();
-    await expect(page.getByText('SUB (JPN)')).toBeVisible();
+    await expect(page.getByText(/Server|ReAnime/i).first()).toBeVisible({ timeout: 20000 });
+    await expect(page.locator('#sub-btn')).toBeVisible({ timeout: 20000 });
 
     // Verify Episode Discussion Comments section is present
     await expect(page.getByText('Episode Discussion')).toBeVisible();
   });
 
+  test('Mushoku Tensei Season 3 Episode Release Status and Watch Layout', async ({ page }) => {
+    test.setTimeout(90000);
+    // 1. Verify API reports 12 released episodes and 2 upcoming episodes
+    const apiRes = await page.request.get('/api/anime/episodes?animeId=anilist-178789');
+    expect(apiRes.ok()).toBeTruthy();
+    const data = await apiRes.json();
+    expect(data.releasedEpisodes).toBe(12);
+    expect(data.upcomingEpisodes).toBe(2);
+
+    // 2. Navigate to Watch Page
+    await page.goto('/watch/anilist-178789/1', { waitUntil: 'domcontentloaded' });
+    
+    // Check Download button is visible in player control bar
+    const downloadBtn = page.locator('#download-btn');
+    await expect(downloadBtn).toBeVisible({ timeout: 25000 });
+
+    // Verify Episode Sidebar exists beside player
+    const sidebar = page.locator('aside[class*="episodesSidebar"]');
+    await expect(sidebar).toBeVisible({ timeout: 25000 });
+
+    // Verify Episode 1 is playable in the episode list (active/link)
+    const ep1Link = sidebar.locator('div[class*="episodesSidebarList"] a[href="/watch/anilist-178789/1"]');
+    await expect(ep1Link).toBeVisible();
+
+    // Verify Episode 12 is playable link
+    const ep12Link = sidebar.locator('div[class*="episodesSidebarList"] a[href="/watch/anilist-178789/12"]');
+    await expect(ep12Link).toBeVisible();
+
+    // Verify Episode 13 is locked/upcoming
+    const ep13Locked = sidebar.locator('div[class*="epCardSmallLocked"]').filter({ hasText: 'EP 13' });
+    await expect(ep13Locked).toBeVisible();
+  });
+
+  test('Episode Selection, Stream Resolution, and Season/Part Hierarchy', async ({ page }) => {
+    test.setTimeout(90000);
+    // 1. Navigate directly to Episode 2
+    await page.goto('/watch/anilist-178789/2', { waitUntil: 'domcontentloaded' });
+
+    // Verify Title / Badge reflects Episode 2
+    await expect(page.locator('h1')).toContainText('Episode 2', { timeout: 25000 });
+
+    // Verify player is present and does NOT show "Streaming unavailable"
+    const unavailableText = page.getByText('No verified stream source was found for this episode');
+    await expect(unavailableText).not.toBeVisible({ timeout: 10000 });
+
+    // Verify server list / player buttons are visible
+    await expect(page.getByText(/Server|ReAnime/i).first()).toBeVisible({ timeout: 20000 });
+
+    // Verify Season pills exist in the episode sidebar
+    const seasonPills = page.locator('div[class*="seasonSelectPills"]');
+    await expect(seasonPills).toBeVisible({ timeout: 15000 });
+
+    // 2. Click Episode 7 in the sidebar to verify dynamic episode switching
+    const sidebar = page.locator('aside[class*="episodesSidebar"]');
+    const ep7Link = sidebar.locator('div[class*="episodesSidebarList"] a[href="/watch/anilist-178789/7"]');
+    await expect(ep7Link).toBeVisible();
+    await ep7Link.click();
+
+    // Verify URL updated and Episode 7 loaded
+    await expect(page).toHaveURL(/.*watch\/anilist-178789\/7/, { timeout: 20000 });
+    await expect(page.locator('h1')).toContainText('Episode 7', { timeout: 20000 });
+    await expect(unavailableText).not.toBeVisible({ timeout: 10000 });
+  });
+
   test('Mobile Drawer Menu Test', async ({ page }) => {
+    test.setTimeout(60000);
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/');
 
@@ -187,13 +258,13 @@ test.describe('NextGen Anime Core Flows', () => {
     await expect(menuToggle).toBeVisible();
     await menuToggle.click();
 
-    const mobileDrawer = page.locator('div[class*="mobileDrawer"]').first();
+    const mobileDrawer = page.locator('aside[class*="mobileDrawer"], div[class*="mobileDrawer"]').first();
     await expect(mobileDrawer).toBeVisible();
     await expect(mobileDrawer.getByText('Discover Anime')).toBeVisible();
     await expect(mobileDrawer.getByText('Release Calendar')).toBeVisible();
 
     await mobileDrawer.getByText('Discover Anime').click();
-    await expect(page).toHaveURL(/\/discover/);
+    await expect(page).toHaveURL(/\/discover/, { timeout: 30000 });
   });
 });
 

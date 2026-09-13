@@ -1,0 +1,180 @@
+.container {
+  position: relative;
+  display: inline-flex;
+}
+
+.detailWrapper {
+  width: 100%;
+}
+
+/* Detail Variant (for /anime/[id] action stack) */
+.detailBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 11px 16px;
+  border-radius: var(--radius-md, 10px);
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.detailBtn:hover:not(:disabled) {
+  background: rgba(244, 63, 94, 0.12);
+  border-color: rgba(244, 63, 94, 0.45);
+  color: #fda4af;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(244, 63, 94, 0.2);
+}
+
+.detailActive {
+  background: rgba(244, 63, 94, 0.2) !important;
+  border-color: #f43f5e !important;
+  color: #fff !important;
+  box-shadow: 0 0 18px rgba(244, 63, 94, 0.35) !important;
+}
+
+.detailActive:hover:not(:disabled) {
+  background: rgba(244, 63, 94, 0.28) !important;
+  border-color: #fb7185 !important;
+  box-shadow: 0 0 24px rgba(244, 63, 94, 0.5) !important;
+}
+
+/* Compact Variant (for /watch action bar) */
+.compactBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 14px;
+  border-radius: var(--radius-md, 10px);
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #e2e8f0;
+  font-size: 0.86rem;
+  font-weight: 700;
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.compactBtn:hover:not(:disabled) {
+  background: rgba(244, 63, 94, 0.14);
+  border-color: rgba(244, 63, 94, 0.4);
+  color: #fda4af;
+  transform: translateY(-1px);
+}
+
+.compactActive {
+  background: rgba(244, 63, 94, 0.22) !important;
+  border-color: #f43f5e !important;
+  color: #fff !important;
+  box-shadow: 0 0 14px rgba(244, 63, 94, 0.35) !important;
+}
+
+/* Icon Variant (for AnimeCard.tsx) */
+.iconBtn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 10, 16, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.iconContainer .toastFeedback {
+  top: calc(100% + 6px);
+  bottom: auto;
+  max-width: 180px;
+  white-space: normal;
+  text-align: center;
+}
+
+.iconBtn:hover:not(:disabled) {
+  transform: scale(1.14);
+  background: rgba(244, 63, 94, 0.25);
+  border-color: #f43f5e;
+  color: #f43f5e;
+  box-shadow: 0 0 16px rgba(244, 63, 94, 0.5);
+}
+
+.iconActive {
+  background: rgba(244, 63, 94, 0.3) !important;
+  border-color: #f43f5e !important;
+  color: #f43f5e !important;
+  box-shadow: 0 0 16px rgba(244, 63, 94, 0.5) !important;
+}
+
+/* Heart Pop Animation */
+.heartIcon {
+  transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.heartPop {
+  animation: heartPulse 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes heartPulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.35);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Toast Feedback */
+.toastFeedback {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 17, 26, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(244, 63, 94, 0.4);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 0 15px rgba(244, 63, 94, 0.25);
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 1000;
+  animation: toastFadeIn 0.25s ease-out;
+}
+
+@keyframes toastFadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 6px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}

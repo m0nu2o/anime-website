@@ -205,7 +205,7 @@ export default function TrendingHeroCarousel({ animeList }: TrendingHeroCarousel
               <div className={styles.playCircle}>
                 <Play size={18} fill="#fff" color="#fff" style={{ marginLeft: "2px" }} />
               </div>
-              <span className={styles.posterRank}>#{currentIndex + 1} Top Airing</span>
+              <span className={styles.posterRank}>#{currentIndex + 1} Trending</span>
             </div>
           </Link>
         </div>

@@ -47,7 +47,7 @@ export default async function AnimeDetailPage({ params }: { params: Promise<{ id
 
   // Parallel data fetching for comprehensive metadata
   const [episodes, characters, staff, relations, streamingLinks] = await Promise.all([
-    getAnimeEpisodes(anime.id),
+    getAnimeEpisodes(anime.id, anime.title.english || anime.title.romaji, anime),
     getAnimeCharacters(anime.id),
     getAnimeStaff(anime.id),
     getAnimeRelations(anime.id),
@@ -111,6 +111,7 @@ export default async function AnimeDetailPage({ params }: { params: Promise<{ id
             <DetailActions
               trailerUrl={anime.trailerUrl}
               youtubeVideoId={anime.youtubeVideoId}
+              anime={anime}
             />
           </div>
 

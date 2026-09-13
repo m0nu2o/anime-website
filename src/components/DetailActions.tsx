@@ -1,17 +1,18 @@
 "use client";
 
-import { useState } from "react";
-import { Play, Check, Plus, ExternalLink } from "lucide-react";
+import { Play } from "lucide-react";
+import { Anime } from "@/lib/api/types";
+import WatchlistStatusSelect from "@/components/WatchlistStatusSelect";
+import FavoriteButton from "@/components/FavoriteButton";
 import styles from "@/app/anime/[id]/page.module.css";
 
 interface DetailActionsProps {
   trailerUrl?: string;
   youtubeVideoId?: string;
+  anime?: Anime;
 }
 
-export default function DetailActions({ trailerUrl, youtubeVideoId }: DetailActionsProps) {
-  const [inList, setInList] = useState(false);
-
+export default function DetailActions({ trailerUrl, youtubeVideoId, anime }: DetailActionsProps) {
   const handleTrailerClick = () => {
     const el = document.getElementById("trailer-section");
     if (el) {
@@ -41,22 +42,13 @@ export default function DetailActions({ trailerUrl, youtubeVideoId }: DetailActi
         </button>
       )}
 
-      <button 
-        className={styles.secondaryAction}
-        onClick={() => setInList(!inList)}
-        aria-label={inList ? "Remove from list" : "Add to list"}
-        style={inList ? { borderColor: "var(--primary)", color: "var(--primary)" } : {}}
-      >
-        {inList ? (
-          <>
-            <Check size={18} /> In Watchlist
-          </>
-        ) : (
-          <>
-            <Plus size={18} /> Add to List
-          </>
-        )}
-      </button>
+      {anime && (
+        <WatchlistStatusSelect anime={anime} />
+      )}
+
+      {anime && (
+        <FavoriteButton anime={anime} variant="detail" />
+      )}
     </div>
   );
 }

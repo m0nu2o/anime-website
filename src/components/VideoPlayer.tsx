@@ -24,7 +24,9 @@ import {
   Headphones,
   Subtitles,
   X,
-  Check
+  Check,
+  PictureInPicture2,
+  Gauge
 } from "lucide-react";
 import styles from "./VideoPlayer.module.css";
 
@@ -33,6 +35,7 @@ interface VideoPlayerProps {
   animeTitle?: string;
   episodeNumber?: number;
   totalEpisodes?: number;
+  nextEpisodeNumber?: number | null;
   malId?: number;
   anilistId?: number;
   youtubeVideoId?: string;
@@ -42,7 +45,7 @@ interface VideoPlayerProps {
   onNextEpisode?: () => void;
 }
 
-type ServerType = "native_hls" | "gogo_embed" | "streamwish" | "trailer" | "demo_mp4";
+type ServerType = "native_hls" | "gogo_embed" | "trailer";
 
 interface CachedEpisodeData {
   animeId: string;
@@ -54,18 +57,28 @@ interface CachedEpisodeData {
   };
 }
 
-const QUALITY_OPTIONS = [
-  { quality: "1080p", label: "Full HD", size: "~380 MB", desc: "Studio master 1080p stream" },
-  { quality: "720p", label: "HD", size: "~220 MB", desc: "Crisp 720p high definition" },
-  { quality: "480p", label: "SD", size: "~130 MB", desc: "Standard definition" },
-  { quality: "360p", label: "Data Saver", size: "~75 MB", desc: "Mobile data friendly" },
-];
+interface DownloadOption {
+  quality: string;
+  label: string;
+  size: string | null; // real size when known (Content-Length); null = unavailable
+}
+
+// Qualities are ONLY offered when the resolved stream actually provides them.
+// Sizes are only shown when verified from the source response; otherwise null ("Size unavailable").
+const getDownloadLabel = (quality: string): string => {
+  if (quality === "1080p") return "Full HD";
+  if (quality === "720p") return "HD";
+  if (quality === "480p") return "SD";
+  if (quality === "360p") return "Data Saver";
+  return quality;
+};
 
 export default function VideoPlayer({
   animeId = "",
   animeTitle = "Anime Episode",
   episodeNumber = 1,
   totalEpisodes,
+  nextEpisodeNumber,
   malId,
   anilistId,
   youtubeVideoId,
@@ -100,6 +113,11 @@ export default function VideoPlayer({
   const [currentTime, setCurrentTime] = useState(initialTime);
   const [duration, setDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
+  const [volume, setVolume] = useState<number>(1);
+  const [playbackSpeed, setPlaybackSpeed] = useState<number>(1);
+  const [isSpeedMenuOpen, setIsSpeedMenuOpen] = useState(false);
+  const [isPipSupported, setIsPipSupported] = useState(false);
+  const [isAutoplayBlocked, setIsAutoplayBlocked] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isLoadingStream, setIsLoadingStream] = useState(false);
   const [isBuffering, setIsBuffering] = useState(false);
@@ -108,6 +126,8 @@ export default function VideoPlayer({
   const [availableQualities, setAvailableQualities] = useState<string[]>([]);
   const [selectedQuality, setSelectedQuality] = useState<string>("Auto");
   const [isQualityMenuOpen, setIsQualityMenuOpen] = useState(false);
+  const speedMenuRef = useRef<HTMLDivElement>(null);
+  const activeRequestIdRef = useRef<number>(0);
 
   // Watch History & Resume
   const [resumeNotice, setResumeNotice] = useState<{ episode: number; time: number } | null>(null);
@@ -116,6 +136,15 @@ export default function VideoPlayer({
   const [streamSources, setStreamSources] = useState<{ url: string; quality: string; isM3U8: boolean }[]>([]);
   const [embedUrls, setEmbedUrls] = useState<{ label: string; url: string; isDub?: boolean }[]>([]);
   const [activeEmbedIdx, setActiveEmbedIdx] = useState(0);
+  const availableDownloadSources = streamSources.filter(
+    (s) => s.url && (s.url.startsWith("http://") || s.url.startsWith("https://")) && !s.url.includes("placeholder") && !s.url.includes("trailer")
+  );
+  const hasDirectDownloads = availableDownloadSources.length > 0;
+  const downloadOptions = availableDownloadSources.map((source) => ({
+    quality: source.quality || "Default",
+    label: getDownloadLabel(source.quality || "Default"),
+    url: source.url,
+  }));
 
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -142,10 +171,9 @@ export default function VideoPlayer({
   }, [isDownloadOpen]);
 
   // Handle Download trigger
-  const handleDownloadQuality = (quality: string) => {
+  const handleDownloadQuality = async (quality: string, explicitSourceUrl?: string) => {
     setIsDownloadOpen(false);
     setDownloadingQuality(quality);
-    showStatus(`📥 Starting ${quality} download: Ep ${episodeNumber} (${isDub ? "DUB" : "SUB"})`, "success");
 
     const safeTitle = (animeTitle || "Anime")
       .replace(/[^a-zA-Z0-9_\- ]/g, "")
@@ -154,36 +182,72 @@ export default function VideoPlayer({
       .slice(0, 32);
     const fileName = `${safeTitle}_EP${episodeNumber}_${quality}_${isDub ? "DUB" : "SUB"}.mp4`;
 
-    const downloadApiUrl = `/api/anime/download?title=${encodeURIComponent(cleanTitle)}&episode=${episodeNumber}&quality=${quality}&dub=${isDub}`;
+    const directUrl = explicitSourceUrl || (availableDownloadSources.length > 0 ? availableDownloadSources[0].url : "");
+    const downloadApiUrl = `/api/anime/download?title=${encodeURIComponent(cleanTitle)}&episode=${episodeNumber}&quality=${quality}&dub=${isDub}${directUrl ? `&sourceUrl=${encodeURIComponent(directUrl)}` : ""}${animeId ? `&animeId=${encodeURIComponent(animeId)}` : ""}`;
+
+    showStatus(`📥 Starting ${quality} download for Ep ${episodeNumber}...`, "success");
 
     try {
-      // Invisible trigger to initiate native browser download dialog without navigating
+      // Trigger native browser download directly via temporary anchor
       const a = document.createElement("a");
       a.href = downloadApiUrl;
       a.setAttribute("download", fileName);
       document.body.appendChild(a);
       a.click();
       a.remove();
+      showStatus(`📥 Download started: ${safeTitle} Ep ${episodeNumber} (${quality} ${isDub ? "DUB" : "SUB"})`, "success");
     } catch {
-      window.location.href = downloadApiUrl;
-    }
-
-    setTimeout(() => {
+      showStatus(`⚠️ Unable to start download for Ep ${episodeNumber}.`, "warning");
+    } finally {
       setDownloadingQuality(null);
-    }, 3500);
+    }
   };
 
   // Primary title slug for embedding
   const cleanTitle = animeTitle.replace(/\([^)]*\)/g, "").trim();
 
-  // Load language preference on mount
+  // Load language preference and volume on mount
   useEffect(() => {
     try {
       const savedLang = localStorage.getItem("preferredLanguage");
       if (savedLang === "dub") setIsDub(true);
       else if (savedLang === "sub") setIsDub(false);
     } catch {}
+
+    try {
+      const savedVol = localStorage.getItem("nextgen_player_volume");
+      if (savedVol !== null) {
+        const v = parseFloat(savedVol);
+        if (!isNaN(v) && v >= 0 && v <= 1) {
+          setVolume(v);
+          if (videoRef.current) {
+            videoRef.current.volume = v;
+            videoRef.current.muted = v === 0;
+          }
+          if (v === 0) setIsMuted(true);
+        }
+      }
+    } catch {}
+
+    if (typeof document !== "undefined" && "pictureInPictureEnabled" in document) {
+      setIsPipSupported(Boolean(document.pictureInPictureEnabled));
+    }
   }, []);
+
+  // Close speed menu on click outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (speedMenuRef.current && !speedMenuRef.current.contains(e.target as Node)) {
+        setIsSpeedMenuOpen(false);
+      }
+    };
+    if (isSpeedMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isSpeedMenuOpen]);
 
   // Watch History: Check if previous progress exists
   useEffect(() => {
@@ -224,26 +288,34 @@ export default function VideoPlayer({
   // 1. Fetch real stream sources from our Next.js streaming API
   useEffect(() => {
     let isCancelled = false;
+    const requestId = ++activeRequestIdRef.current;
+
     async function loadStream() {
       setIsLoadingStream(true);
       setIsBuffering(true);
+      // Clear previous episode sources immediately to prevent race conditions or cross-episode leaks
+      setStreamSources([]);
+      setEmbedUrls([]);
+      setActiveServer(null);
 
       // Check preloaded cache first for instant switch
       if (typeof window !== "undefined") {
         const winWithCache = window as unknown as { __nextEpisodeCache?: CachedEpisodeData };
         const cached = winWithCache.__nextEpisodeCache;
         if (cached && cached.animeId === animeId && cached.episode === episodeNumber && cached.data?.success) {
-          setStreamSources(cached.data.sources || []);
-          setEmbedUrls(cached.data.embedUrls || []);
-          setActiveEmbedIdx(0);
-          if (cached.data.sources && cached.data.sources.length > 0) {
-            setActiveServer("native_hls");
-          } else if (cached.data.embedUrls && cached.data.embedUrls.length > 0) {
-            setActiveServer("gogo_embed");
+          if (!isCancelled && requestId === activeRequestIdRef.current) {
+            setStreamSources(cached.data.sources || []);
+            setEmbedUrls(cached.data.embedUrls || []);
+            setActiveEmbedIdx(0);
+            if (cached.data.sources && cached.data.sources.length > 0) {
+              setActiveServer("native_hls");
+            } else if (cached.data.embedUrls && cached.data.embedUrls.length > 0) {
+              setActiveServer("gogo_embed");
+            }
+            setIsLoadingStream(false);
+            setIsBuffering(false);
+            return;
           }
-          setIsLoadingStream(false);
-          setIsBuffering(false);
-          return;
         }
       }
 
@@ -253,7 +325,7 @@ export default function VideoPlayer({
         );
         if (res.ok) {
           const data = await res.json();
-          if (!isCancelled && data.success) {
+          if (!isCancelled && requestId === activeRequestIdRef.current && data.success) {
             setStreamSources(data.sources || []);
             setEmbedUrls(data.embedUrls || []);
             const hasDubServer = Boolean(data.dubAvailable && (data.embedUrls || []).some((e: { isDub?: boolean }) => Boolean(e.isDub) === true));
@@ -270,19 +342,21 @@ export default function VideoPlayer({
                 showStatus("🎤 Playing English Dub", "success");
               } else {
                 targetIsDub = false;
-                showStatus("🎬 English Dub not available. Playing Sub instead.", "warning");
+                if (hasSubServer) {
+                  showStatus("🎬 English Dub not available. Playing Sub instead.", "warning");
+                }
                 try { localStorage.setItem("preferredLanguage", "sub"); } catch {}
               }
             } else if (savedPref === "sub") {
               targetIsDub = false;
-              showStatus("📝 Playing Japanese with English Subtitles", "success");
-            } else {
-              targetIsDub = hasDubServer;
-              if (targetIsDub) {
-                showStatus("🎤 Playing English Dub", "success");
-              } else {
+              if (hasSubServer) {
                 showStatus("📝 Playing Japanese with English Subtitles", "success");
+              } else if (hasDubServer) {
+                targetIsDub = true;
+                showStatus("🎤 Sub unavailable. Playing English Dub instead.", "warning");
               }
+            } else {
+              targetIsDub = hasDubServer && !hasSubServer;
             }
 
             setIsDub(targetIsDub);
@@ -301,7 +375,7 @@ export default function VideoPlayer({
       } catch (err) {
         console.warn("Failed to load anime stream:", err);
       } finally {
-        if (!isCancelled) {
+        if (!isCancelled && requestId === activeRequestIdRef.current) {
           setIsLoadingStream(false);
           setIsBuffering(false);
         }
@@ -350,7 +424,7 @@ export default function VideoPlayer({
       hlsRef.current = null;
     }
 
-    if (activeServer === "native_hls" || activeServer === "demo_mp4") {
+    if (activeServer === "native_hls") {
       const sourceUrl = videoUrl || (streamSources.length > 0 ? streamSources[0].url : "");
 
       if (!sourceUrl) return;
@@ -462,17 +536,20 @@ export default function VideoPlayer({
     }
   }, [isBuffering]);
 
-  // Smart Next Episode Transition
+  // Smart Next Episode Transition (strictly to verified next released episode)
   const goToNextEpisode = useCallback(() => {
     if (onNextEpisode) {
       onNextEpisode();
+    } else if (animeId && typeof nextEpisodeNumber === "number" && nextEpisodeNumber > 0) {
+      router.push(`/watch/${animeId}/${nextEpisodeNumber}`);
     } else if (animeId && episodeNumber) {
       if (totalEpisodes && episodeNumber >= totalEpisodes) {
+        showStatus("🎉 You are caught up to the latest released episode!", "success");
         return;
       }
-      router.push(`/watch/${animeId}/${episodeNumber + 1}`);
+      showStatus("No subsequent released episode available.", "warning");
     }
-  }, [onNextEpisode, animeId, episodeNumber, totalEpisodes, router]);
+  }, [onNextEpisode, animeId, episodeNumber, nextEpisodeNumber, totalEpisodes, router, showStatus]);
 
   // Video ended -> trigger next episode
   const handleVideoEnded = () => {
@@ -482,12 +559,21 @@ export default function VideoPlayer({
     }
   };
 
-  // Toggle Play / Pause
+  // Toggle Play / Pause with Autoplay Policy check
   const togglePlay = () => {
     if (!videoRef.current) return;
     if (videoRef.current.paused) {
-      videoRef.current.play().catch(() => {});
-      setIsPlaying(true);
+      videoRef.current
+        .play()
+        .then(() => {
+          setIsPlaying(true);
+          setIsAutoplayBlocked(false);
+        })
+        .catch((err) => {
+          if (err?.name === "NotAllowedError") {
+            setIsAutoplayBlocked(true);
+          }
+        });
     } else {
       videoRef.current.pause();
       setIsPlaying(false);
@@ -523,12 +609,59 @@ export default function VideoPlayer({
     }
   }, []);
 
+  // Volume slider change
+  const handleVolumeChange = (newVol: number) => {
+    const safeVol = Math.max(0, Math.min(1, newVol));
+    setVolume(safeVol);
+    if (videoRef.current) {
+      videoRef.current.volume = safeVol;
+      videoRef.current.muted = safeVol === 0;
+    }
+    setIsMuted(safeVol === 0);
+    try {
+      localStorage.setItem("nextgen_player_volume", String(safeVol));
+    } catch {}
+  };
+
   // Mute toggle
   const toggleMute = () => {
     if (!videoRef.current) return;
-    const next = !isMuted;
-    videoRef.current.muted = next;
-    setIsMuted(next);
+    if (isMuted || volume === 0) {
+      const restoreVol = volume > 0 ? volume : 0.8;
+      videoRef.current.muted = false;
+      videoRef.current.volume = restoreVol;
+      setVolume(restoreVol);
+      setIsMuted(false);
+    } else {
+      videoRef.current.muted = true;
+      setIsMuted(true);
+    }
+  };
+
+  // Playback speed selector
+  const handleSpeedChange = (speed: number) => {
+    setPlaybackSpeed(speed);
+    if (videoRef.current) {
+      videoRef.current.playbackRate = speed;
+    }
+    setIsSpeedMenuOpen(false);
+    showStatus(`⚡ Playback speed: ${speed}x`, "success");
+  };
+
+  // Picture in Picture toggle
+  const togglePictureInPicture = async () => {
+    if (!videoRef.current) return;
+    try {
+      const doc = document as Document & { pictureInPictureElement?: Element; exitPictureInPicture?: () => Promise<void> };
+      if (doc.pictureInPictureElement) {
+        await doc.exitPictureInPicture?.();
+      } else if (videoRef.current.requestPictureInPicture) {
+        await videoRef.current.requestPictureInPicture();
+      }
+    } catch (err) {
+      console.warn("PiP error:", err);
+      showStatus("Picture-in-Picture unavailable in this browser.", "warning");
+    }
   };
 
   // Subtitle & Audio track management for HLS / Video element
@@ -566,8 +699,8 @@ export default function VideoPlayer({
     }
   }, []);
 
-  const hasDub = Boolean(dubAvailable ?? embedUrls.some((e) => e.isDub === true));
-  const hasSub = Boolean(subAvailable ?? embedUrls.some((e) => !e.isDub));
+  const hasDub = typeof dubAvailable === "boolean" ? dubAvailable : embedUrls.some((e) => e.isDub === true) || null;
+  const hasSub = typeof subAvailable === "boolean" ? subAvailable : embedUrls.some((e) => e.isDub === false) || null;
 
   // Language switch handler with full status banner feedback & subtitle sync
   const switchLanguage = useCallback((targetLang: "dub" | "sub") => {
@@ -575,7 +708,7 @@ export default function VideoPlayer({
 
     if (targetLang === "dub") {
       if (!hasDub) {
-        showStatus("🎬 English Dub not available for this anime.", "warning");
+        showStatus(hasDub === null ? "🎤 English Dub availability not verified for this anime." : "🎬 English Dub not available for this anime.", "warning");
         if (hasSub) {
           setIsDub(false);
           try { localStorage.setItem("preferredLanguage", "sub"); } catch {}
@@ -638,6 +771,9 @@ export default function VideoPlayer({
       } else if (e.key === "s" || e.key === "S") {
         e.preventDefault();
         switchLanguage("sub");
+      } else if (e.key === "p" || e.key === "P") {
+        e.preventDefault();
+        togglePictureInPicture();
       } else if (e.shiftKey && (e.key === "N" || e.key === "n")) {
         e.preventDefault();
         goToNextEpisode();
@@ -646,7 +782,7 @@ export default function VideoPlayer({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [toggleFullscreen, goToNextEpisode, duration, isPlaying, switchLanguage]);
+  }, [toggleFullscreen, goToNextEpisode, duration, isPlaying, switchLanguage, togglePictureInPicture]);
 
   // Format time mm:ss
   const formatTime = (seconds: number) => {
@@ -655,7 +791,8 @@ export default function VideoPlayer({
     return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
   };
 
-  const filteredEmbeds = embedUrls.filter((embed) => (isDub ? embed.isDub === true : !embed.isDub));
+  const preferredEmbeds = embedUrls.filter((embed) => (isDub ? embed.isDub === true : !embed.isDub));
+  const filteredEmbeds = preferredEmbeds.length > 0 ? preferredEmbeds : embedUrls;
 
   return (
     <div className={styles.wrapper}>
@@ -723,76 +860,102 @@ export default function VideoPlayer({
               onClick={() => switchLanguage("dub")}
               disabled={!hasDub}
               className={`${styles.audioSegmentBtn} ${isDub ? styles.audioSegmentActive : ""} ${!hasDub ? styles.audioSegmentDisabled : ""}`}
-              title={hasDub ? "Play English Dub" : "English Dub unavailable for this anime"}
+              title={hasDub === null ? "DUB availability not verified" : hasDub ? "Play English Dub" : "English Dub unavailable for this anime"}
               aria-checked={isDub}
               role="radio"
             >
               <Headphones size={13} className={styles.audioIcon} />
               <span>DUB</span>
-              {hasDub && <span className={styles.dubDot} title="English Dub Available" />}
+              {hasDub === null && <span className={styles.dubDot} title="DUB availability not verified" />}
+              {hasDub === true && <span className={styles.dubDot} title="English Dub Available" />}
             </button>
           </div>
 
-          {/* Modern Download Button with Interactive Quality Selector */}
-          <div className={styles.downloadWrapper} ref={downloadMenuRef}>
+          {/* Real Download Button — Always Visible in Control Bar */}
+          {hasDirectDownloads ? (
+            <div className={styles.downloadWrapper} ref={downloadMenuRef}>
+              <button
+                id="download-btn"
+                type="button"
+                onClick={() => setIsDownloadOpen((prev) => !prev)}
+                className={`${styles.downloadBtn} ${isDownloadOpen ? styles.downloadBtnActive : ""}`}
+                title="Download Episode"
+                aria-label="Download Episode with quality selection"
+                aria-haspopup="true"
+                aria-expanded={isDownloadOpen}
+                disabled={Boolean(downloadingQuality)}
+              >
+                {downloadingQuality ? (
+                  <>
+                    <span className={styles.downloadSpinner} />
+                    <span>Downloading...</span>
+                  </>
+                ) : (
+                  <>
+                    <Download size={13} className={styles.downloadIcon} />
+                    <span>Download</span>
+                    <ChevronDown size={11} className={`${styles.downloadChevron} ${isDownloadOpen ? styles.chevronRotated : ""}`} />
+                  </>
+                )}
+              </button>
+
+              {/* Quality Selection Popover Menu */}
+              {isDownloadOpen && (
+                <div className={styles.qualityDropdown} role="menu" aria-label="Select download quality">
+                  <div className={styles.qualityHeader}>
+                    <div className={styles.qualityTitleWrap}>
+                      <Download size={13} className={styles.qualityHeaderIcon} />
+                      <span className={styles.qualityHeaderTitle}>Download Ep {episodeNumber}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsDownloadOpen(false)}
+                      className={styles.qualityCloseBtn}
+                      aria-label="Close download menu"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+
+                  <div className={styles.qualityList}>
+                    {downloadOptions.map((opt) => (
+                      <button
+                        key={opt.quality}
+                        type="button"
+                        onClick={() => handleDownloadQuality(opt.quality, opt.url)}
+                        className={styles.qualityOption}
+                        role="menuitem"
+                        disabled={Boolean(downloadingQuality)}
+                      >
+                        <span className={styles.qualityBadge}>{opt.quality}</span>
+                        <div className={styles.qualityMeta}>
+                          <span className={styles.qualityLabel}>{opt.label}</span>
+                          <span className={styles.qualitySize}>{opt.url.endsWith(".m3u8") ? "HLS Stream" : "Direct Stream"}</span>
+                        </div>
+                        {downloadingQuality === opt.quality ? (
+                          <span className={styles.downloadSpinner} />
+                        ) : (
+                          <Download size={12} className={styles.qualityDownloadIcon} />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
             <button
               id="download-btn"
               type="button"
-              onClick={() => setIsDownloadOpen((prev) => !prev)}
-              className={`${styles.downloadBtn} ${isDownloadOpen ? styles.downloadBtnActive : ""}`}
-              title="Download Episode"
-              aria-label="Download Episode with quality selection"
-              aria-haspopup="true"
-              aria-expanded={isDownloadOpen}
+              className={`${styles.downloadBtn} ${styles.downloadBtnDisabled}`}
+              title="Download unavailable for this stream source"
+              disabled
+              aria-disabled="true"
             >
               <Download size={13} className={styles.downloadIcon} />
-              <span>Download</span>
-              <ChevronDown size={11} className={`${styles.downloadChevron} ${isDownloadOpen ? styles.chevronRotated : ""}`} />
+              <span>Download unavailable</span>
             </button>
-
-            {/* Quality Selection Popover Menu */}
-            {isDownloadOpen && (
-              <div className={styles.qualityDropdown} role="menu" aria-label="Select download quality">
-                <div className={styles.qualityHeader}>
-                  <div className={styles.qualityTitleWrap}>
-                    <Download size={13} className={styles.qualityHeaderIcon} />
-                    <span className={styles.qualityHeaderTitle}>Download Ep {episodeNumber}</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setIsDownloadOpen(false)}
-                    className={styles.qualityCloseBtn}
-                    aria-label="Close download menu"
-                  >
-                    <X size={12} />
-                  </button>
-                </div>
-
-                <div className={styles.qualityList}>
-                  {QUALITY_OPTIONS.map((opt) => (
-                    <button
-                      key={opt.quality}
-                      type="button"
-                      onClick={() => handleDownloadQuality(opt.quality)}
-                      className={styles.qualityOption}
-                      role="menuitem"
-                    >
-                      <span className={styles.qualityBadge}>{opt.quality}</span>
-                      <div className={styles.qualityMeta}>
-                        <span className={styles.qualityLabel}>{opt.label}</span>
-                        <span className={styles.qualitySize}>{opt.size}</span>
-                      </div>
-                      {downloadingQuality === opt.quality ? (
-                        <Check size={13} className={styles.qualityCheckedIcon} />
-                      ) : (
-                        <Download size={12} className={styles.qualityDownloadIcon} />
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+          )}
 
           <button
             onClick={toggleFullscreen}
@@ -923,40 +1086,56 @@ export default function VideoPlayer({
               </div>
             )}
           </div>
-        ) : activeServer === "gogo_embed" && embedUrls[activeEmbedIdx] ? (
-          <iframe
-            key={`${embedUrls[activeEmbedIdx].url}-${isDub}`}
-            src={embedUrls[activeEmbedIdx].url}
-            title={`${animeTitle} - Episode ${episodeNumber} - ${embedUrls[activeEmbedIdx].label}`}
-            className={styles.videoFrame}
-            referrerPolicy="no-referrer"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-            allowFullScreen
-            loading="eager"
-          />
+        ) : activeServer === "gogo_embed" && (embedUrls[activeEmbedIdx] || embedUrls[0]) ? (
+          (() => {
+            const currentEmbed = embedUrls[activeEmbedIdx] || embedUrls[0];
+            return (
+              <iframe
+                key={`${currentEmbed.url}-${isDub}`}
+                src={currentEmbed.url}
+                title={`${animeTitle} - Episode ${episodeNumber} - ${currentEmbed.label}`}
+                className={styles.videoFrame}
+                referrerPolicy="no-referrer"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                allowFullScreen
+                loading="eager"
+              />
+            );
+          })()
         ) : (
-          <div className={styles.placeholderFrame}>
-            <div className={styles.notice}>
-              <h3>Select Streaming Server</h3>
-              <p>Click any server button above or switch to Official PV to begin playback.</p>
-              {embedUrls.length > 0 && (
-                <button
-                  onClick={() => { setActiveServer("gogo_embed"); setActiveEmbedIdx(0); }}
-                  style={{
-                    marginTop: "14px",
-                    padding: "10px 20px",
-                    borderRadius: "8px",
-                    background: "linear-gradient(135deg, #f43f5e, #e11d48)",
-                    color: "#fff",
-                    border: "none",
-                    cursor: "pointer",
-                    fontWeight: 700,
-                    fontSize: "0.9rem"
-                  }}
-                >
-                  ▶ Watch on ReAnime Server HD-1
-                </button>
-              )}
+          <>
+            {/* No verified source: honest empty state, no fake play button */}
+            {!isLoadingStream && filteredEmbeds.length === 0 && streamSources.length === 0 && (
+              <div className={styles.placeholderFrame}>
+                <div className={styles.notice}>
+                  <h3>Streaming unavailable</h3>
+                  <p>No verified stream source was found for this episode. Please try again later.</p>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Autoplay Blocked Notification Overlay */}
+        {isAutoplayBlocked && (
+          <div className={styles.autoplayBlockedOverlay}>
+            <div className={styles.autoplayBlockedCard}>
+              <Play size={32} className={styles.autoplayBlockedIcon} />
+              <h3>Autoplay Blocked by Browser</h3>
+              <p>Your browser requires interaction before media playback can start for Episode {episodeNumber}.</p>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsAutoplayBlocked(false);
+                  if (videoRef.current) {
+                    videoRef.current.play().then(() => setIsPlaying(true)).catch(() => {});
+                  }
+                }}
+                className={styles.autoplayResumeBtn}
+              >
+                <Play size={16} fill="#fff" />
+                Play Episode {episodeNumber}
+              </button>
             </div>
           </div>
         )}
@@ -972,8 +1151,8 @@ export default function VideoPlayer({
         </button>
       </div>
 
-      {/* In-Player Scrubber & Controls Bar */}
-      {(activeServer === "native_hls" || activeServer === "demo_mp4") && (
+      {/* In-Player Scrubber & Controls Bar (native playback only) */}
+      {activeServer === "native_hls" && (
         <div className={styles.playerControlsBar}>
           <button onClick={togglePlay} className={styles.playBtn} title={isPlaying ? "Pause (Space)" : "Play (Space)"}>
             {isPlaying ? <Pause size={16} fill="#fff" /> : <Play size={16} fill="#fff" />}
@@ -992,6 +1171,7 @@ export default function VideoPlayer({
                 setCurrentTime(val);
               }}
               className={styles.scrubberInput}
+              aria-label="Playback scrubber"
             />
             <div 
               className={styles.scrubberProgress} 
@@ -1001,6 +1181,50 @@ export default function VideoPlayer({
 
           <div className={styles.timeDisplay}>
             {formatTime(currentTime)} / {formatTime(duration)}
+          </div>
+
+          {/* Volume Control with Range Slider */}
+          <div className={styles.volumeWrapper}>
+            <button onClick={toggleMute} className={styles.volumeBtn} title={isMuted || volume === 0 ? "Unmute (M)" : "Mute (M)"}>
+              {isMuted || volume === 0 ? <VolumeX size={16} /> : <Volume2 size={16} />}
+            </button>
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.05}
+              value={isMuted ? 0 : volume}
+              onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
+              className={styles.volumeSlider}
+              title={`Volume: ${Math.round((isMuted ? 0 : volume) * 100)}%`}
+              aria-label="Volume level"
+            />
+          </div>
+
+          {/* Playback Speed Selector */}
+          <div className={styles.speedWrapper} ref={speedMenuRef}>
+            <button
+              onClick={() => setIsSpeedMenuOpen(!isSpeedMenuOpen)}
+              className={styles.controlBtn}
+              style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}
+              title="Playback Speed"
+            >
+              <Gauge size={14} />
+              <span className={styles.qualityLabel}>{playbackSpeed}x</span>
+            </button>
+            {isSpeedMenuOpen && (
+              <div className={styles.speedMenu}>
+                {[0.5, 0.75, 1, 1.25, 1.5, 2].map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => handleSpeedChange(s)}
+                    className={`${styles.speedOption} ${playbackSpeed === s ? styles.speedOptionActive : ""}`}
+                  >
+                    {s}x
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Quality Selector */}
@@ -1045,10 +1269,14 @@ export default function VideoPlayer({
             </div>
           )}
 
-          <button onClick={toggleMute} className={styles.volumeBtn} title={isMuted ? "Unmute (M)" : "Mute (M)"}>
-            {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
-          </button>
+          {/* Picture in Picture */}
+          {isPipSupported && (
+            <button onClick={togglePictureInPicture} className={styles.pipBtn} title="Picture in Picture (P)">
+              <PictureInPicture2 size={16} />
+            </button>
+          )}
 
+          {/* Fullscreen */}
           <button onClick={toggleFullscreen} className={styles.fsBtn} title="Fullscreen (F)">
             {isFullscreen ? <Minimize size={16} /> : <Maximize size={16} />}
           </button>
@@ -1073,26 +1301,9 @@ export default function VideoPlayer({
             <RotateCw size={13} /> +10s
           </button>
           <button 
-            onClick={() => handleSeek(90)} 
-            className={styles.controlBtn} 
-            title="Skip Opening Theme (Standard 90 seconds)"
-          >
-            Skip OP (90s)
-          </button>
-          <button 
-            onClick={() => {
-              if (autoNext) goToNextEpisode();
-              else handleSeek(90);
-            }} 
-            className={styles.controlBtn} 
-            title="Skip Ending Theme & Credits (90 seconds)"
-          >
-            Skip ED (90s)
-          </button>
-          <button 
             onClick={() => setAutoNext(!autoNext)} 
             className={`${styles.controlBtn} ${autoNext ? styles.controlBtnActive : ""}`}
-            title="Automatically transition to the next episode when finished"
+            title="Automatically transition to the next released episode when finished"
           >
             Auto-Next: {autoNext ? "ON" : "OFF"}
           </button>
@@ -1101,7 +1312,9 @@ export default function VideoPlayer({
         <div className={styles.rightControls}>
           <div className={styles.hotkeysHelp}>
             <span className={styles.kbd}>Space</span> Play • 
-            <span className={styles.kbd}>F</span> Fullscreen • 
+            <span className={styles.kbd}>F</span> Full • 
+            <span className={styles.kbd}>P</span> PiP • 
+            <span className={styles.kbd}>M</span> Mute • 
             <span className={styles.kbd}>← / →</span> ±10s
           </div>
 

@@ -23,8 +23,8 @@ export default function SettingsPage() {
 
   // Playback settings
   const [autoplay, setAutoplay] = useState(true);
-  const [autoSkip, setAutoSkip] = useState(false);
   const [quality, setQuality] = useState("1080p");
+  const [preferredAudio, setPreferredAudio] = useState("sub");
   const [clearedMessage, setClearedMessage] = useState("");
   const [exportMessage, setExportMessage] = useState("");
 
@@ -33,11 +33,11 @@ export default function SettingsPage() {
     const savedAutoplay = localStorage.getItem("nextgen_autoplay");
     if (savedAutoplay !== null) setAutoplay(savedAutoplay === "true");
 
-    const savedAutoSkip = localStorage.getItem("nextgen_autoskip");
-    if (savedAutoSkip !== null) setAutoSkip(savedAutoSkip === "true");
-
     const savedQuality = localStorage.getItem("nextgen_quality");
     if (savedQuality) setQuality(savedQuality);
+
+    const savedAudio = localStorage.getItem("preferredLanguage");
+    if (savedAudio) setPreferredAudio(savedAudio);
   }, []);
 
   const toggleAutoplay = () => {
@@ -46,15 +46,14 @@ export default function SettingsPage() {
     localStorage.setItem("nextgen_autoplay", String(next));
   };
 
-  const toggleAutoSkip = () => {
-    const next = !autoSkip;
-    setAutoSkip(next);
-    localStorage.setItem("nextgen_autoskip", String(next));
-  };
-
   const handleQualityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setQuality(e.target.value);
     localStorage.setItem("nextgen_quality", e.target.value);
+  };
+
+  const handleAudioChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setPreferredAudio(e.target.value);
+    localStorage.setItem("preferredLanguage", e.target.value);
   };
 
   const handleExportData = async () => {
@@ -77,9 +76,9 @@ export default function SettingsPage() {
 
   const handleClearLocalCache = () => {
     localStorage.removeItem("nextgen_autoplay");
-    localStorage.removeItem("nextgen_autoskip");
     localStorage.removeItem("nextgen_quality");
-    setClearedMessage("Local storage preferences reset.");
+    localStorage.removeItem("watchHistory");
+    setClearedMessage("Local playback preferences and history reset.");
     setTimeout(() => setClearedMessage(""), 3000);
   };
 
@@ -163,16 +162,13 @@ export default function SettingsPage() {
 
           <div className={styles.settingRow}>
             <div>
-              <div className={styles.settingLabel}>Auto-Skip Opening / Ending</div>
-              <div className={styles.settingDesc}>Automatically fast-forward recognized intro sequences.</div>
+              <div className={styles.settingLabel}>Preferred Audio Language</div>
+              <div className={styles.settingDesc}>Choose your default playback audio track (with graceful fallback).</div>
             </div>
-            <button 
-              onClick={toggleAutoSkip}
-              className={`${styles.toggle} ${autoSkip ? styles.toggleActive : ""}`}
-              aria-label="Toggle auto-skip"
-            >
-              <span className={`${styles.toggleThumb} ${autoSkip ? styles.toggleThumbActive : ""}`} />
-            </button>
+            <select value={preferredAudio} onChange={handleAudioChange} className={styles.select}>
+              <option value="sub">Japanese (English Subtitles)</option>
+              <option value="dub">English Dubbed</option>
+            </select>
           </div>
 
           <div className={styles.settingRow}>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import { useAuth } from "@/lib/supabase/AuthContext";
@@ -26,12 +26,10 @@ import {
   Award, 
   Image as ImageIcon,
   Flame,
-  Play,
   X,
-  UserCheck,
-  Zap,
   Shield,
-  Layers
+  Upload,
+  Trash2
 } from "lucide-react";
 import styles from "./page.module.css";
 
@@ -64,95 +62,25 @@ const PRESET_BANNERS = [
   },
 ];
 
-// World-Class Anime Hero Avatar Presets
-const PRESET_AVATARS = [
-  {
-    name: "Satoru Gojo",
-    url: "https://images.unsplash.com/photo-1563089145-599997674d42?w=300&auto=format&fit=crop&q=80",
-  },
-  {
-    name: "Luffy (Gear 5)",
-    url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80",
-  },
-  {
-    name: "Frieren (Elf Mage)",
-    url: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=300&auto=format&fit=crop&q=80",
-  },
-  {
-    name: "Tanjiro Kamado",
-    url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80",
-  },
-  {
-    name: "Sung Jinwoo",
-    url: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=300&auto=format&fit=crop&q=80",
-  },
-  {
-    name: "Makima",
-    url: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&auto=format&fit=crop&q=80",
-  },
-];
-
-// Top Anime Badges & Achievements
-const ACHIEVEMENTS = [
-  {
-    id: "pioneer",
-    title: "Otaku Pioneer",
-    desc: "Member of NextGen Anime's early access platform.",
-    iconType: "pioneer",
-    unlocked: true,
-  },
-  {
-    id: "voyager",
-    title: "Cosmic Voyager",
-    desc: "Explored 3D particle black holes & quantum simulators.",
-    iconType: "voyager",
-    unlocked: true,
-  },
-  {
-    id: "binge",
-    title: "Marathon Legend",
-    desc: "Watched over 25+ episodes of anime in one stretch.",
-    iconType: "binge",
-    unlocked: true,
-  },
-  {
-    id: "critic",
-    title: "Pro Anime Critic",
-    desc: "Rated and reviewed series in the anime community.",
-    iconType: "critic",
-    unlocked: true,
-  },
-  {
-    id: "shonen",
-    title: "Shonen Prodigy",
-    desc: "Tracked classic action and battle anime series.",
-    iconType: "shonen",
-    unlocked: true,
-  },
-  {
-    id: "nightowl",
-    title: "Midnight Streamer",
-    desc: "Streamed episodes between 1:00 AM and 5:00 AM JST.",
-    iconType: "nightowl",
-    unlocked: true,
-  },
-  {
-    id: "speedrun",
-    title: "OP/ED Skipper",
-    desc: "Mastered instant 90s opening & ending skip controls.",
-    iconType: "speedrun",
-    unlocked: true,
-  },
-  {
-    id: "collector",
-    title: "Master Collector",
-    desc: "Added 10+ anime to personalized favorites & watchlist.",
-    iconType: "collector",
-    unlocked: false,
-  },
-];
 
 type ActiveTab = "overview" | "watchlist" | "favorites" | "badges";
+
+function getInitials(name: string): string {
+  const initials = name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part.charAt(0))
+    .join("");
+  return (initials || "U").toUpperCase();
+}
+
+function getJoinedYear(value?: string): string {
+  const date = value ? new Date(value) : null;
+  return date && !Number.isNaN(date.getTime())
+    ? `Joined ${date.getFullYear()}`
+    : "Join date unavailable";
+}
 
 export default function ProfilePage() {
   const { user, profile, refreshProfile, openAuthModal } = useAuth();
@@ -169,13 +97,17 @@ export default function ProfilePage() {
   const [editAvatar, setEditAvatar] = useState("");
   const [editBanner, setEditBanner] = useState("");
   const [saving, setSaving] = useState(false);
+  const [avatarLoading, setAvatarLoading] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Load user data or local demo data
+  // Load user data or local guest data
   useEffect(() => {
     async function loadData() {
       if (user) {
         try {
+          const { syncGuestDataToSupabase } = await import("@/lib/storage/guestStore");
+          await syncGuestDataToSupabase(user.id);
           const [wlData, favData] = await Promise.all([
             getUserWatchlist(user.id),
             getUserFavorites(user.id),
@@ -185,6 +117,13 @@ export default function ProfilePage() {
         } catch (err) {
           console.warn("Error loading user profile data:", err);
         }
+      } else {
+        // Real local data for guests
+        try {
+          const { getGuestWatchlist, getGuestFavorites } = await import("@/lib/storage/guestStore");
+          setWatchlist(getGuestWatchlist());
+          setFavorites(getGuestFavorites());
+        } catch {}
       }
       setLoading(false);
     }
@@ -196,15 +135,13 @@ export default function ProfilePage() {
     if (profile) {
       setEditUsername(profile.username || "");
       setEditBio(profile.bio || "");
-      setEditAvatar(profile.avatar_url || PRESET_AVATARS[0].url);
+      setEditAvatar(profile.avatar_url || "");
     } else if (user) {
-      setEditUsername(user.email?.split("@")[0] || "NextGen Otaku");
-      setEditAvatar(PRESET_AVATARS[0].url);
+      setEditUsername(user.email?.split("@")[0] || "User");
     } else {
-      // Demo guest fallback values
-      setEditUsername("ShadowOtaku");
-      setEditBio("Obsessed with dark fantasy, Isekai, and high-octane battle Shonen. Catch me streaming late into Tokyo midnight.");
-      setEditAvatar(PRESET_AVATARS[0].url);
+      // Guest values
+      setEditUsername("Guest");
+      setEditBio("Guest profiles do not have a saved bio.");
       setEditBanner(PRESET_BANNERS[0].url);
     }
 
@@ -212,12 +149,55 @@ export default function ProfilePage() {
       const savedBanner = localStorage.getItem("profile_banner");
       if (savedBanner) setEditBanner(savedBanner);
       else setEditBanner(PRESET_BANNERS[0].url);
+
+      const savedAvatar = localStorage.getItem("profile_avatar");
+      if (savedAvatar && (!profile || !profile.avatar_url)) {
+        setEditAvatar(savedAvatar);
+      }
     } catch {}
   }, [profile, user]);
 
   const showToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 3000);
+  };
+
+  const handleAvatarFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      showToast("Please select a valid image file (PNG, JPG, WebP, etc.).");
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      showToast("Avatar image must be under 2MB.");
+      return;
+    }
+
+    setAvatarLoading(true);
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setEditAvatar(reader.result);
+        showToast("Avatar image loaded!");
+      }
+      setAvatarLoading(false);
+    };
+    reader.onerror = () => {
+      showToast("Failed to read image file.");
+      setAvatarLoading(false);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveAvatar = () => {
+    setEditAvatar("");
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+    showToast("Avatar reset to default initials.");
   };
 
   const handleSaveProfile = async (e: React.FormEvent) => {
@@ -227,6 +207,12 @@ export default function ProfilePage() {
     try {
       if (editBanner) {
         localStorage.setItem("profile_banner", editBanner);
+      }
+
+      if (editAvatar) {
+        localStorage.setItem("profile_avatar", editAvatar);
+      } else {
+        localStorage.removeItem("profile_avatar");
       }
 
       if (user) {
@@ -255,13 +241,21 @@ export default function ProfilePage() {
     }
   };
 
-  // Metric computations
-  const completedCount = watchlist.filter((w) => w.status === "completed").length || (user ? 0 : 18);
-  const watchingCount = watchlist.filter((w) => w.status === "watching").length || (user ? 0 : 7);
-  const planningCount = watchlist.filter((w) => w.status === "planning").length || (user ? 0 : 14);
-  const totalEpisodesWatched = watchlist.reduce((acc, curr) => acc + (curr.progress || 0), 0) || (user ? 0 : 342);
-  const totalDaysWatched = (totalEpisodesWatched * 23.5 / 1440).toFixed(1);
-  const meanScore = "8.8";
+  // Metric computations - 100% genuine data, no fabricated placeholders
+  const completedCount = watchlist.filter((w) => w.status === "completed").length;
+  const watchingCount = watchlist.filter((w) => w.status === "watching").length;
+  const planningCount = watchlist.filter((w) => w.status === "planning").length;
+  const totalEpisodesWatched = watchlist.reduce((acc, curr) => acc + (curr.progress || 0), 0);
+  const totalDaysWatched = "Unavailable";
+  const scoredItems = watchlist.filter((w) => typeof w.score === "number" && w.score > 0);
+  const meanScore = scoredItems.length > 0
+    ? (scoredItems.reduce((acc, curr) => acc + (curr.score || 0), 0) / scoredItems.length).toFixed(1)
+    : "—";
+  const totalTracked = completedCount + watchingCount + planningCount;
+  const completedWidth = totalTracked > 0 ? (completedCount / totalTracked) * 100 : 0;
+  const watchingWidth = totalTracked > 0 ? (watchingCount / totalTracked) * 100 : 0;
+  const planningWidth = totalTracked > 0 ? (planningCount / totalTracked) * 100 : 0;
+
 
   // Filtered watchlist
   const filteredWatchlist = useMemo(() => {
@@ -270,9 +264,9 @@ export default function ProfilePage() {
   }, [watchlist, watchlistFilter]);
 
   const currentBanner = editBanner || PRESET_BANNERS[0].url;
-  const currentAvatar = editAvatar || (profile?.avatar_url) || PRESET_AVATARS[0].url;
-  const currentUsername = profile?.username || editUsername || "Anime Otaku";
-  const currentBio = profile?.bio || editBio || "Passionate anime fan exploring worlds, seasons, and cinematic anime simulations.";
+  const currentAvatar = editAvatar || profile?.avatar_url;
+  const currentUsername = profile?.username || editUsername || (user ? "Account" : "Guest");
+  const currentBio = profile?.bio || editBio || (user ? "No bio added yet." : "Guest profiles do not have a saved bio.");
 
   return (
     <>
@@ -295,6 +289,48 @@ export default function ProfilePage() {
             fontWeight: 700,
           }}>
             {toast}
+          </div>
+        )}
+
+        {/* Guest Banner Callout */}
+        {!user && (
+          <div style={{
+            margin: "16px 24px 0",
+            padding: "16px 20px",
+            background: "linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(236, 72, 153, 0.15) 100%)",
+            border: "1px solid rgba(99, 102, 241, 0.35)",
+            borderRadius: "14px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: "14px",
+            color: "#fff"
+          }}>
+            <div>
+              <h3 style={{ margin: "0 0 4px 0", fontSize: "1rem", fontWeight: 800 }}>👋 Guest Profile Mode</h3>
+              <p style={{ margin: 0, fontSize: "0.85rem", color: "#cbd5e1" }}>
+                You are currently browsing without an account. Sign in to permanently save your watchlist, unlock custom badges, and sync across all devices.
+              </p>
+            </div>
+            <div style={{ display: "flex", gap: "10px" }}>
+              <button
+                onClick={openAuthModal}
+                style={{
+                  background: "var(--primary, #6366f1)",
+                  color: "#fff",
+                  border: "none",
+                  padding: "8px 18px",
+                  borderRadius: "8px",
+                  fontWeight: 700,
+                  fontSize: "0.85rem",
+                  cursor: "pointer",
+                  boxShadow: "0 4px 14px rgba(99, 102, 241, 0.4)"
+                }}
+              >
+                Sign In / Register
+              </button>
+            </div>
           </div>
         )}
 
@@ -321,13 +357,19 @@ export default function ProfilePage() {
         <div className={styles.identityCard}>
           <div className={styles.identityLeft}>
             <div className={styles.avatarContainer}>
-              <img 
-                src={currentAvatar} 
-                alt={currentUsername} 
-                className={styles.avatarImg} 
-              />
-              <span className={styles.levelBadge} title="Level 42 Master Otaku">
-                <Flame size={11} /> LV. 42
+              {currentAvatar ? (
+                <img 
+                  src={currentAvatar} 
+                  alt={currentUsername} 
+                  className={styles.avatarImg} 
+                />
+              ) : (
+                <div className={styles.avatarImg} style={{ display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, color: "#fff", fontSize: "2rem" }}>
+                  {getInitials(currentUsername)}
+                </div>
+              )}
+              <span className={styles.levelBadge} title="Account level unavailable">
+                <Shield size={11} /> Status unavailable
               </span>
             </div>
 
@@ -335,7 +377,7 @@ export default function ProfilePage() {
               <div className={styles.nameRow}>
                 <h1 className={styles.displayName}>{currentUsername}</h1>
                 <span className={styles.proPill}>
-                  <Sparkles size={11} /> Master Otaku
+                  <Sparkles size={11} /> {user ? "Member" : "Guest"}
                 </span>
                 {!user && (
                   <span style={{
@@ -356,11 +398,11 @@ export default function ProfilePage() {
                 <span className={styles.handle}>@{currentUsername.toLowerCase().replace(/\s+/g, "_")}</span>
                 <span>•</span>
                 <span style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                  <Calendar size={13} /> Joined 2026
+                  <Calendar size={13} /> {getJoinedYear(profile?.created_at)}
                 </span>
                 <span>•</span>
                 <span style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                  <Shield size={13} style={{ color: "#10b981" }} /> Verified Streamer
+                  <Shield size={13} style={{ color: "#94a3b8" }} /> Streaming status unavailable
                 </span>
               </div>
             </div>
@@ -387,7 +429,7 @@ export default function ProfilePage() {
 
         {/* Bio Strip */}
         <div className={styles.bioBox}>
-          <p style={{ margin: 0 }}>"{currentBio}"</p>
+          <p style={{ margin: 0 }}>&quot;{currentBio}&quot;</p>
         </div>
 
         {/* 3. World-Class Anime Metrics Dashboard Cards */}
@@ -460,9 +502,10 @@ export default function ProfilePage() {
             <span>{completedCount + watchingCount + planningCount} Series Total</span>
           </div>
           <div className={styles.multiBar}>
-            <div className={styles.barCompleted} style={{ width: "55%" }} title="Completed" />
-            <div className={styles.barWatching} style={{ width: "25%" }} title="Watching" />
-            <div className={styles.barPlanning} style={{ width: "20%" }} title="Planning" />
+            <div className={styles.barCompleted} style={{ width: `${completedWidth}%` }} title="Completed" />
+            <div className={styles.barWatching} style={{ width: `${watchingWidth}%` }} title="Watching" />
+            <div className={styles.barPlanning} style={{ width: `${planningWidth}%` }} title="Planning" />
+
           </div>
           <div className={styles.progressLegend}>
             <div className={styles.legendItem}>
@@ -494,21 +537,21 @@ export default function ProfilePage() {
             className={`${styles.tabBtn} ${activeTab === "watchlist" ? styles.activeTabBtn : ""}`}
           >
             <Bookmark size={16} />
-            <span>Watchlist ({watchlist.length || 25})</span>
+            <span>Watchlist ({watchlist.length})</span>
           </button>
           <button 
             onClick={() => setActiveTab("favorites")} 
             className={`${styles.tabBtn} ${activeTab === "favorites" ? styles.activeTabBtn : ""}`}
           >
             <Heart size={16} />
-            <span>Favorite Series ({favorites.length || 8})</span>
+            <span>Favorite Series ({favorites.length})</span>
           </button>
           <button 
             onClick={() => setActiveTab("badges")} 
             className={`${styles.tabBtn} ${activeTab === "badges" ? styles.activeTabBtn : ""}`}
           >
             <Award size={16} />
-            <span>Achievements ({ACHIEVEMENTS.filter(a => a.unlocked).length}/{ACHIEVEMENTS.length})</span>
+            <span>Achievements unavailable</span>
           </button>
         </div>
 
@@ -519,65 +562,41 @@ export default function ProfilePage() {
               {/* Highlighted Favorites Shelf */}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "18px" }}>
                 <h3 style={{ fontSize: "1.2rem", fontWeight: 800, color: "#fff", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
-                  <Heart size={18} fill="var(--primary)" color="var(--primary)" /> Top Anime Showcase
+                  <Heart size={18} fill="var(--primary)" color="var(--primary)" /> Favorite Anime Showcase
                 </h3>
                 <button onClick={() => setActiveTab("favorites")} style={{ background: "none", border: "none", color: "var(--primary)", fontWeight: 700, fontSize: "0.85rem", cursor: "pointer" }}>
                   View All &rarr;
                 </button>
               </div>
 
-              <div className={styles.animeGrid}>
-                {[
-                  { id: "anilist-16498", title: "Attack on Titan", image: "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=400", score: "9.0", format: "TV" },
-                  { id: "anilist-154587", title: "Frieren: Beyond Journey's End", image: "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=400", score: "9.1", format: "TV" },
-                  { id: "anilist-11061", title: "Hunter x Hunter (2011)", image: "https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?w=400", score: "9.0", format: "TV" },
-                  { id: "anilist-99147", title: "Vinland Saga", image: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=400", score: "8.8", format: "TV" },
-                  { id: "anilist-1535", title: "Death Note", image: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=400", score: "8.7", format: "TV" },
-                  { id: "anilist-21", title: "One Piece", image: "https://images.unsplash.com/photo-1563089145-599997674d42?w=400", score: "8.9", format: "TV" },
-                ].map((anime) => (
-                  <Link href={`/anime/${anime.id}`} key={anime.id} className={styles.animeCard}>
-                    <img src={anime.image} alt={anime.title} className={styles.animePoster} loading="lazy" />
-                    <div className={styles.animeOverlay}>
-                      <h4 className={styles.animeTitle}>{anime.title}</h4>
-                      <div className={styles.animeMeta}>
-                        <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          <Star size={11} fill="currentColor" /> {anime.score}
-                        </span>
-                        <span style={{ color: "#94a3b8" }}>{anime.format}</span>
+              {favorites.length > 0 ? (
+                <div className={styles.animeGrid}>
+                  {favorites.slice(0, 6).map((item) => (
+                    <Link href={`/anime/${item.anime_id}`} key={item.id} className={styles.animeCard}>
+                      <img src={item.anime_image || "/placeholder-cover.svg"} alt={item.anime_title || "Favorite anime"} className={styles.animePoster} loading="lazy" />
+                      <div className={styles.animeOverlay}>
+                        <h4 className={styles.animeTitle}>{item.anime_title || "Untitled favorite"}</h4>
+                        <div className={styles.animeMeta}>
+                          <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                            <Star size={11} fill="currentColor" /> {item.anime_score ?? "Score unavailable"}
+                          </span>
+                          <span style={{ color: "#94a3b8" }}>{item.anime_format || "Format unavailable"}</span>
+                        </div>
                       </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-
-              {/* Favorite Anime Genres Breakdown */}
-              <div style={{ marginTop: "36px", padding: "24px", borderRadius: "20px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                <h4 style={{ margin: "0 0 16px 0", fontSize: "1.1rem", fontWeight: 800, color: "#fff" }}>Top Watched Genres</h4>
-                <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-                  {[
-                    { name: "Action & Adventure", percent: "88%", color: "#ef4444" },
-                    { name: "Dark Fantasy & Supernatural", percent: "76%", color: "#8b5cf6" },
-                    { name: "Isekai & Reincarnation", percent: "64%", color: "#06b6d4" },
-                    { name: "Sci-Fi & Cyberpunk", percent: "52%", color: "#10b981" },
-                    { name: "Psychological Thriller", percent: "48%", color: "#f59e0b" },
-                  ].map((genre) => (
-                    <div key={genre.name} style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "10px",
-                      padding: "8px 16px",
-                      background: "rgba(255,255,255,0.05)",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      borderRadius: "12px",
-                      fontSize: "0.85rem",
-                      fontWeight: 700
-                    }}>
-                      <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: genre.color }} />
-                      <span style={{ color: "#fff" }}>{genre.name}</span>
-                      <span style={{ color: "var(--text-muted)", fontSize: "0.78rem" }}>{genre.percent}</span>
-                    </div>
+                    </Link>
                   ))}
                 </div>
+              ) : (
+                <div style={{ padding: "48px 20px", textAlign: "center", color: "var(--text-muted)", border: "1px dashed rgba(255,255,255,0.15)", borderRadius: "16px" }}>
+                  Favorite anime data is unavailable.
+                </div>
+              )}
+
+              <div style={{ marginTop: "36px", padding: "24px", borderRadius: "20px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                <h4 style={{ margin: "0 0 16px 0", fontSize: "1.1rem", fontWeight: 800, color: "#fff" }}>Favorite Anime Genres</h4>
+                <p style={{ margin: 0, color: "var(--text-muted)", fontSize: "0.9rem", lineHeight: 1.6 }}>
+                  Genre statistics are unavailable for this profile.
+                </p>
               </div>
             </div>
           )}
@@ -652,7 +671,7 @@ export default function ProfilePage() {
               ) : (
                 <div style={{ gridColumn: "1 / -1", padding: "60px 20px", textAlign: "center", color: "var(--text-muted)" }}>
                   <Heart size={40} style={{ opacity: 0.4, marginBottom: "12px" }} />
-                  <p style={{ margin: 0, fontSize: "1rem", fontWeight: 600 }}>You haven't added any favorite anime yet.</p>
+                  <p style={{ margin: 0, fontSize: "1rem", fontWeight: 600 }}>You haven&apos;t added any favorite anime yet.</p>
                   <Link href="/discover" style={{ display: "inline-block", marginTop: "16px", color: "var(--primary)", fontWeight: 700, textDecoration: "none" }}>
                     Explore Popular Anime &rarr;
                   </Link>
@@ -663,33 +682,15 @@ export default function ProfilePage() {
 
           {activeTab === "badges" && (
             <div className={styles.badgesGrid}>
-              {ACHIEVEMENTS.map((badge) => (
-                <div 
-                  key={badge.id} 
-                  className={`${styles.badgeCard} ${badge.unlocked ? styles.badgeUnlocked : ""}`}
-                  style={{ opacity: badge.unlocked ? 1 : 0.5 }}
-                >
-                  <div className={styles.badgeIcon}>
-                    {badge.iconType === "pioneer" && <Shield size={24} style={{ color: "#3b82f6" }} />}
-                    {badge.iconType === "voyager" && <Sparkles size={24} style={{ color: "#8b5cf6" }} />}
-                    {badge.iconType === "binge" && <Zap size={24} style={{ color: "#f59e0b" }} />}
-                    {badge.iconType === "critic" && <Star size={24} style={{ color: "#facc15" }} />}
-                    {badge.iconType === "shonen" && <Flame size={24} style={{ color: "#ef4444" }} />}
-                    {badge.iconType === "nightowl" && <Clock size={24} style={{ color: "#06b6d4" }} />}
-                    {badge.iconType === "speedrun" && <Play size={24} style={{ color: "#10b981" }} />}
-                    {badge.iconType === "collector" && <Award size={24} style={{ color: "#ec4899" }} />}
-                  </div>
-                  <div className={styles.badgeInfo}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                      <h4>{badge.title}</h4>
-                      {badge.unlocked && (
-                        <CheckCircle2 size={14} style={{ color: "#10b981" }} />
-                      )}
-                    </div>
-                    <p>{badge.desc}</p>
-                  </div>
+              <div className={styles.badgeCard}>
+                <div className={styles.badgeIcon}>
+                  <Award size={24} style={{ color: "#ec4899" }} />
                 </div>
-              ))}
+                <div className={styles.badgeInfo}>
+                  <h4>Achievements unavailable</h4>
+                  <p>Profile achievement data is not available.</p>
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -723,20 +724,52 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-                {/* Avatar Presets */}
+                {/* Profile Avatar Upload */}
                 <div className={styles.formField}>
-                  <label>Choose Anime Avatar Preset</label>
-                  <div className={styles.presetGrid}>
-                    {PRESET_AVATARS.map((avatar) => (
-                      <img
-                        key={avatar.name}
-                        src={avatar.url}
-                        alt={avatar.name}
-                        title={avatar.name}
-                        onClick={() => setEditAvatar(avatar.url)}
-                        className={`${styles.presetAvatar} ${editAvatar === avatar.url ? styles.presetSelected : ""}`}
+                  <label>Profile Avatar</label>
+                  <div className={styles.avatarCustomizerRow}>
+                    <div className={styles.avatarPreviewWrap}>
+                      {editAvatar ? (
+                        <img src={editAvatar} alt="Avatar preview" className={styles.avatarPreviewImg} />
+                      ) : (
+                        <div className={styles.avatarPreviewFallback}>
+                          {getInitials(editUsername || "User")}
+                        </div>
+                      )}
+                    </div>
+                    <div className={styles.avatarUploadControls}>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleAvatarFileChange}
+                        style={{ display: "none" }}
                       />
-                    ))}
+                      <div className={styles.avatarBtnRow}>
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className={styles.uploadAvatarBtn}
+                          disabled={avatarLoading}
+                        >
+                          <Upload size={14} />
+                          <span>{avatarLoading ? "Uploading..." : "Upload Image"}</span>
+                        </button>
+                        {editAvatar && (
+                          <button
+                            type="button"
+                            onClick={handleRemoveAvatar}
+                            className={styles.removeAvatarBtn}
+                          >
+                            <Trash2 size={13} />
+                            <span>Remove</span>
+                          </button>
+                        )}
+                      </div>
+                      <span className={styles.avatarHint}>
+                        JPG, PNG, WebP up to 2MB. Preview updates instantly.
+                      </span>
+                    </div>
                   </div>
                 </div>
 

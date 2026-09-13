@@ -60,7 +60,7 @@ export default function SearchDialog() {
           if (!ignore) {
             setResults(data || []);
           }
-        } catch (err) {
+        } catch {
           if (!ignore) {
             setResults([]);
           }
@@ -72,7 +72,7 @@ export default function SearchDialog() {
       } else {
         setResults([]);
       }
-    }, 300);
+    }, 500);
 
     return () => {
       ignore = true;
@@ -135,28 +135,42 @@ export default function SearchDialog() {
           ) : loading ? (
             <div className={styles.loadingState}>
               <Loader2 className={styles.spinner} />
-              <p>Searching...</p>
+              <p>Searching titles...</p>
             </div>
           ) : results.length > 0 ? (
             <div className={styles.resultsList}>
-              {results.map((anime) => (
-                <Link 
-                  href={`/anime/${anime.id}`}
-                  key={anime.id} 
-                  className={styles.resultItem}
-                  onClick={handleClose}
-                >
-                  <img src={anime.images.cover || "/placeholder-cover.svg"} alt="cover" className={styles.resultImage} />
-                  <div className={styles.resultInfo}>
-                    <h4>{anime.title.english || anime.title.romaji}</h4>
-                    <span>{anime.year} • {anime.format}</span>
-                  </div>
-                </Link>
-              ))}
+              {results.map((anime) => {
+                const score = anime.score
+                  ? (anime.score > 10 ? (anime.score / 10).toFixed(1) : anime.score.toFixed(1))
+                  : null;
+
+                return (
+                  <Link
+                    href={`/anime/${anime.id}`}
+                    key={anime.id}
+                    className={styles.resultItem}
+                    onClick={handleClose}
+                  >
+                    <img src={anime.images.cover || "/placeholder-cover.svg"} alt="cover" className={styles.resultImage} />
+                    <div className={styles.resultInfo}>
+                      <h4>{anime.title.english || anime.title.romaji}</h4>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.8rem", color: "var(--text-secondary, #94a3b8)" }}>
+                        <span>{anime.format || "TV"}</span>
+                        {anime.year && <span>• {anime.year}</span>}
+                        {score && (
+                          <span style={{ color: "#facc15", fontWeight: 700 }}>
+                            ★ {score}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           ) : (
             <div className={styles.emptyState}>
-              <p>No results found for &quot;{query}&quot;</p>
+              <p>No anime found for &quot;{query}&quot;</p>
             </div>
           )}
         </div>

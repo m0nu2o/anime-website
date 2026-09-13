@@ -4,11 +4,12 @@ import React, { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Tabs, { TabItem } from "@/components/ui/Tabs";
 import EmptyState from "@/components/ui/EmptyState";
+import { Bookmark, Loader2 } from "lucide-react";
 import { useAuth } from "@/lib/supabase/AuthContext";
-import { getWatchlist, updateWatchlistStatus, removeFromWatchlist } from "@/lib/supabase/dal";
-import { WatchlistItem, WatchlistStatus } from "@/lib/supabase/types";
-import { Bookmark, Star, Trash2, Plus, Play, Loader2 } from "lucide-react";
-import Link from "next/link";
+import { getWatchlist } from "@/lib/supabase/dal";
+import { WatchlistItem } from "@/lib/supabase/types";
+import AnimeCard from "@/components/AnimeCard";
+import { Anime } from "@/lib/api/types";
 import styles from "./page.module.css";
 
 const WATCHLIST_TABS: TabItem[] = [
@@ -27,11 +28,13 @@ export default function WatchlistPage() {
   const [loading, setLoading] = useState(true);
 
   const loadWatchlist = async () => {
+    setLoading(true);
     if (!user) {
+      setItems([]);
       setLoading(false);
       return;
     }
-    setLoading(true);
+
     try {
       const data = await getWatchlist(user.id);
       setItems(data);
@@ -47,29 +50,6 @@ export default function WatchlistPage() {
       loadWatchlist();
     }
   }, [user, authLoading]);
-
-  const handleStatusChange = async (animeId: string, newStatus: WatchlistStatus) => {
-    if (!user) return;
-    await updateWatchlistStatus(user.id, animeId, newStatus);
-    setItems((prev) =>
-      prev.map((item) => (item.anime_id === animeId ? { ...item, status: newStatus } : item))
-    );
-  };
-
-  const handleProgressIncrement = async (animeId: string, currentProgress: number) => {
-    if (!user) return;
-    const newProg = currentProgress + 1;
-    await updateWatchlistStatus(user.id, animeId, "watching", newProg);
-    setItems((prev) =>
-      prev.map((item) => (item.anime_id === animeId ? { ...item, progress: newProg } : item))
-    );
-  };
-
-  const handleDelete = async (animeId: string) => {
-    if (!user) return;
-    await removeFromWatchlist(user.id, animeId);
-    setItems((prev) => prev.filter((item) => item.anime_id !== animeId));
-  };
 
   const filteredItems =
     activeTab === "all" ? items : items.filter((item) => item.status === activeTab);
@@ -88,18 +68,41 @@ export default function WatchlistPage() {
           </p>
         </div>
 
-        {authLoading ? (
+        {!user && !authLoading ? (
+          <div style={{
+            background: "rgba(99, 102, 241, 0.12)",
+            border: "1px solid rgba(99, 102, 241, 0.3)",
+            borderRadius: "12px",
+            padding: "18px 22px",
+            marginBottom: "24px",
+            color: "#c7d2fe",
+            fontSize: "0.95rem",
+            textAlign: "center",
+          }}>
+            <p style={{ margin: 0 }}>Sign in to view and manage your watchlist.</p>
+            <button
+              onClick={openAuthModal}
+              style={{
+                background: "var(--primary, #6366f1)",
+                color: "#fff",
+                border: "none",
+                borderRadius: "8px",
+                padding: "8px 16px",
+                fontWeight: 700,
+                fontSize: "0.85rem",
+                cursor: "pointer",
+                marginTop: "10px",
+              }}
+            >
+              Sign In
+            </button>
+          </div>
+        ) : null}
+
+        {authLoading || loading ? (
           <div className={styles.loadingWrapper}>
             <Loader2 className="spinner" size={28} />
           </div>
-        ) : !user ? (
-          <EmptyState
-            icon={<Bookmark size={36} />}
-            title="Sign In to Access Your Watchlist"
-            description="Create an account to save your anime progress, organize your catalog, and continue watching seamlessly on any device."
-            actionText="Sign In / Register"
-            onAction={openAuthModal}
-          />
         ) : (
           <div className={styles.content}>
             <Tabs
@@ -117,73 +120,29 @@ export default function WatchlistPage() {
               </div>
             ) : filteredItems.length > 0 ? (
               <div className={styles.itemsList}>
-                {filteredItems.map((item) => (
-                  <div key={item.id} className={styles.card}>
-                    <Link href={`/anime/${item.anime_id}`} className={styles.posterWrapper}>
-                      <img
-                        src={item.anime_image || "/placeholder-cover.svg"}
-                        alt={item.anime_title || "Anime"}
-                        className={styles.poster}
-                      />
-                    </Link>
-
-                    <div className={styles.details}>
-                      <div className={styles.topRow}>
-                        <Link href={`/anime/${item.anime_id}`} className={styles.itemTitle}>
-                          {item.anime_title || "Untitled Anime"}
-                        </Link>
-                        <button
-                          className={styles.deleteBtn}
-                          onClick={() => handleDelete(item.anime_id)}
-                          title="Remove from watchlist"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-
-                      <div className={styles.metaRow}>
-                        {item.anime_format && <span className={styles.formatBadge}>{item.anime_format}</span>}
-                        {item.anime_score && (
-                          <span className={styles.scoreBadge}>
-                            <Star size={12} fill="#facc15" color="#facc15" /> {(item.anime_score > 10 ? item.anime_score / 10 : item.anime_score).toFixed(1)}
-                          </span>
-                        )}
-                      </div>
-
-                      <div className={styles.actionsRow}>
-                        {/* Status dropdown */}
-                        <select
-                          className={styles.statusSelect}
-                          value={item.status}
-                          onChange={(e) => handleStatusChange(item.anime_id, e.target.value as WatchlistStatus)}
-                        >
-                          <option value="watching">Watching</option>
-                          <option value="completed">Completed</option>
-                          <option value="planning">Plan to Watch</option>
-                          <option value="on_hold">On Hold</option>
-                          <option value="dropped">Dropped</option>
-                        </select>
-
-                        {/* Progress counter */}
-                        <div className={styles.progressCounter}>
-                          <span>Episode {item.progress}</span>
-                          <button
-                            className={styles.incrementBtn}
-                            onClick={() => handleProgressIncrement(item.anime_id, item.progress)}
-                            title="Increment episode watched"
-                          >
-                            <Plus size={14} />
-                          </button>
-                        </div>
-
-                        {/* Watch link */}
-                        <Link href={`/watch/${item.anime_id}/${item.progress || 1}`} className={styles.watchBtn}>
-                          <Play size={13} fill="#fff" /> Resume
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                {filteredItems.map((item) => {
+                  const animeObj: Anime = {
+                    id: item.anime_id,
+                    provider: item.anime_id.startsWith("anilist-") ? "anilist" : item.anime_id.startsWith("kitsu-") ? "kitsu" : "mal",
+                    title: {
+                      english: item.anime_title,
+                      romaji: item.anime_title,
+                    },
+                    images: {
+                      cover: item.anime_image || "/placeholder-cover.svg",
+                      largeCover: item.anime_image || "/placeholder-cover.svg",
+                    },
+                    score: item.anime_score,
+                    format: item.anime_format as any,
+                  };
+                  return (
+                    <AnimeCard
+                      key={item.id}
+                      anime={animeObj}
+                      onWatchlistToggle={() => loadWatchlist()}
+                    />
+                  );
+                })}
               </div>
             ) : (
               <EmptyState

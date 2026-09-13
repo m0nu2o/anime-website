@@ -1,0 +1,325 @@
+.section {
+  margin: 64px 0 40px;
+  position: relative;
+}
+
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.headerLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.titleWrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.headerIcon {
+  color: var(--primary, #f43f5e);
+}
+
+.title {
+  font-size: 1.45rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text-main, #fff);
+  margin: 0;
+}
+
+.subtitle {
+  font-size: 0.88rem;
+  color: var(--text-muted, #94a3b8);
+  margin: 0;
+}
+
+.browseAllBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--primary, #f43f5e);
+  text-decoration: none;
+  padding: 6px 12px;
+  border-radius: var(--radius-md, 8px);
+  background: rgba(244, 63, 94, 0.08);
+  border: 1px solid rgba(244, 63, 94, 0.2);
+  transition: all var(--transition-fast, 0.2s);
+}
+
+.browseAllBtn:hover {
+  background: rgba(244, 63, 94, 0.16);
+  border-color: rgba(244, 63, 94, 0.4);
+  transform: translateY(-1px);
+}
+
+/* Comments Grid */
+.postsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 18px;
+}
+
+.postCard {
+  background: var(--glass-standard-bg, rgba(18, 18, 28, 0.75));
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-lg, 16px);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 14px;
+  transition: all var(--transition-fast, 0.2s);
+}
+
+.postCard:hover {
+  border-color: rgba(244, 63, 94, 0.35);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  transform: translateY(-2px);
+}
+
+.postHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatarWrap {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: rgba(244, 63, 94, 0.15);
+  border: 1px solid rgba(244, 63, 94, 0.3);
+}
+
+.avatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatarFallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--primary, #f43f5e);
+}
+
+.authorMeta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 2px;
+}
+
+.username {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-main, #fff);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.subMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--primary, #f43f5e);
+  background: rgba(244, 63, 94, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.timeAgo {
+  font-size: 0.75rem;
+  color: var(--text-muted, #94a3b8);
+}
+
+.postBody {
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--text-muted, #cbd5e1);
+  flex-grow: 1;
+}
+
+.commentContent {
+  margin: 0;
+  word-break: break-word;
+}
+
+.spoilerNotice {
+  padding: 8px 12px;
+  background: rgba(234, 179, 8, 0.1);
+  border: 1px dashed rgba(234, 179, 8, 0.3);
+  border-radius: 6px;
+  color: #facc15;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.postFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.likes {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.78rem;
+  color: var(--text-muted, #94a3b8);
+}
+
+.joinDiscussionLink {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--primary, #f43f5e);
+  text-decoration: none;
+  transition: color var(--transition-fast, 0.2s);
+}
+
+.joinDiscussionLink:hover {
+  text-decoration: underline;
+}
+
+/* Brand Empty State CTA */
+.emptyStateCard {
+  position: relative;
+  border-radius: var(--radius-xl, 20px);
+  background: radial-gradient(circle at 50% 0%, rgba(30, 20, 38, 0.9), rgba(12, 12, 18, 0.95));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 44px 28px;
+  overflow: hidden;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+}
+
+.emptyStateGlow {
+  position: absolute;
+  top: -120px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 480px;
+  height: 240px;
+  background: radial-gradient(ellipse, rgba(244, 63, 94, 0.2), transparent 70%);
+  pointer-events: none;
+}
+
+.emptyStateInner {
+  position: relative;
+  z-index: 2;
+  max-width: 580px;
+  margin: 0 auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.iconCircle {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(244, 63, 94, 0.12);
+  border: 1px solid rgba(244, 63, 94, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 24px rgba(244, 63, 94, 0.2);
+  margin-bottom: 4px;
+}
+
+.flameIcon {
+  color: var(--primary, #f43f5e);
+}
+
+.emptyTitle {
+  font-size: 1.45rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #fff;
+  margin: 0;
+}
+
+.emptyDesc {
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: var(--text-muted, #94a3b8);
+  margin: 0;
+}
+
+.ctaRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.primaryCta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: var(--radius-md, 10px);
+  background: linear-gradient(135deg, #f43f5e, #e11d48);
+  color: #fff;
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 4px 16px rgba(244, 63, 94, 0.4);
+  transition: all var(--transition-fast, 0.2s);
+}
+
+.primaryCta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(244, 63, 94, 0.6);
+}
+
+.secondaryCta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: var(--radius-md, 10px);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--text-main, #fff);
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all var(--transition-fast, 0.2s);
+}
+
+.secondaryCta:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+}

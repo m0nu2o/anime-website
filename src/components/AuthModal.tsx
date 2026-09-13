@@ -116,7 +116,7 @@ export default function AuthModal() {
                 required
                 minLength={6}
                 className={styles.input}
-                placeholder="��������"
+                placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />

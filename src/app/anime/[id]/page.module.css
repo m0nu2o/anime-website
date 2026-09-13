@@ -71,6 +71,8 @@
 
 /* Hero Section */
 .heroCard {
+  position: relative;
+  z-index: 20;
   display: grid;
   grid-template-columns: 280px 1fr;
   gap: 36px;

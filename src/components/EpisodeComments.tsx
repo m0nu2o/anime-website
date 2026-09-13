@@ -10,8 +10,7 @@ import {
   AlertTriangle, 
   Trash2, 
   Eye, 
-  EyeOff,
-  Sparkles
+  EyeOff
 } from "lucide-react";
 import styles from "./EpisodeComments.module.css";
 import Skeleton from "@/components/ui/Skeleton";
@@ -34,6 +33,16 @@ interface EpisodeCommentsProps {
   episode: number;
 }
 
+function getInitials(name: string): string {
+  const initials = name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part.charAt(0))
+    .join("");
+  return (initials || "U").toUpperCase();
+}
+
 export default function EpisodeComments({ animeId, episode }: EpisodeCommentsProps) {
   const { user, profile, openAuthModal } = useAuth();
   const [comments, setComments] = useState<CommentItem[]>([]);
@@ -42,6 +51,16 @@ export default function EpisodeComments({ animeId, episode }: EpisodeCommentsPro
   const [isSpoiler, setIsSpoiler] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [revealedSpoilers, setRevealedSpoilers] = useState<Record<string, boolean>>({});
+  const [likedComments, setLikedComments] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("likedComments");
+      if (stored) {
+        setLikedComments(new Set(JSON.parse(stored)));
+      }
+    } catch {}
+  }, []);
 
   useEffect(() => {
     async function loadComments() {
@@ -72,8 +91,8 @@ export default function EpisodeComments({ animeId, episode }: EpisodeCommentsPro
     if (!user || !text.trim()) return;
 
     setSubmitting(true);
-    const authorName = profile?.username || user.email?.split("@")[0] || "Anime Otaku";
-    const authorAvatar = profile?.avatar_url || "";
+    const authorName = profile?.username || user.email?.split("@")[0] || "User";
+    const authorAvatar = profile?.avatar_url || undefined;
 
     try {
       const { data, error } = await supabase
@@ -104,6 +123,15 @@ export default function EpisodeComments({ animeId, episode }: EpisodeCommentsPro
   };
 
   const handleLike = async (commentId: string, currentLikes: number) => {
+    if (likedComments.has(commentId)) return; // Prevent duplicate like
+
+    const nextLiked = new Set(likedComments);
+    nextLiked.add(commentId);
+    setLikedComments(nextLiked);
+    try {
+      localStorage.setItem("likedComments", JSON.stringify(Array.from(nextLiked)));
+    } catch {}
+
     const nextLikes = currentLikes + 1;
     setComments((prev) =>
       prev.map((c) => (c.id === commentId ? { ...c, likes: nextLikes } : c))
@@ -204,11 +232,13 @@ export default function EpisodeComments({ animeId, episode }: EpisodeCommentsPro
 
             return (
               <div key={comment.id} className={styles.commentCard}>
-                <img
-                  src={comment.avatar_url || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80"}
-                  alt={comment.username}
-                  className={styles.avatar}
-                />
+                {comment.avatar_url ? (
+                  <img src={comment.avatar_url} alt={comment.username} className={styles.avatar} />
+                ) : (
+                  <div className={styles.avatar} style={{ display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, color: "#fff", fontSize: "0.85rem" }}>
+                    {getInitials(comment.username)}
+                  </div>
+                )}
                 <div className={styles.commentBody}>
                   <div className={styles.commentMeta}>
                     <span className={styles.author}>{comment.username}</span>
@@ -238,13 +268,20 @@ export default function EpisodeComments({ animeId, episode }: EpisodeCommentsPro
                   )}
 
                   <div className={styles.commentActions}>
-                    <button
-                      onClick={() => handleLike(comment.id, comment.likes)}
-                      className={styles.actionBtn}
-                      title="Upvote comment"
-                    >
-                      <ThumbsUp size={13} /> {comment.likes > 0 ? comment.likes : "Like"}
-                    </button>
+                    {(() => {
+                      const hasLiked = likedComments.has(comment.id);
+                      return (
+                        <button
+                          onClick={() => handleLike(comment.id, comment.likes)}
+                          className={`${styles.actionBtn} ${hasLiked ? styles.actionBtnActive : ""}`}
+                          disabled={hasLiked}
+                          title={hasLiked ? "You upvoted this comment" : "Upvote comment"}
+                          style={hasLiked ? { color: "#a855f7" } : undefined}
+                        >
+                          <ThumbsUp size={13} fill={hasLiked ? "currentColor" : "none"} /> {comment.likes > 0 ? comment.likes : "Like"}
+                        </button>
+                      );
+                    })()}
 
                     {comment.is_spoiler && isRevealed && (
                       <button

@@ -1,77 +1,82 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { getAiringSchedule } from "@/lib/api";
 
-const KUHI_API_URL = process.env.KUHI_API_URL || "http://localhost:8000";
+interface ScheduleItem {
+  id: string;
+  title: string;
+  image: string;
+  episode: number | null;
+  isUpcoming?: boolean;
+  status?: string;
+  time: string;
+  day: string;
+  airingDate?: string;
+  hasExactTime?: boolean;
+  score?: number;
+  studio?: string;
+  genres?: string[];
+  airingAtTimestamp?: number;
+  format?: string;
+}
 
-const DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+function getJstDateKey(timestamp?: number) {
+  if (!timestamp) return undefined;
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Tokyo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date(timestamp * 1000));
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${values.year}-${values.month}-${values.day}`;
+}
 
-export async function GET(request: NextRequest) {
-  // 1. Primary: Kuhi API /anime/schedule
+export async function GET() {
   try {
-    const res = await fetch(`${KUHI_API_URL}/anime/schedule`, {
-      headers: { Accept: "application/json" },
-      signal: AbortSignal.timeout(2000),
-    });
-    if (res.ok) {
-      const data = await res.json();
-      if (data && typeof data === "object") {
-        return NextResponse.json({
-          success: true,
-          provider: "Kuhi API (FastAPI)",
-          schedule: data,
-          updatedAt: new Date().toISOString(),
-        }, {
-          headers: { "Cache-Control": "public, s-maxage=21600, stale-while-revalidate=86400" },
-        });
-      }
-    }
-  } catch {}
-
-  // 2. Fallback: Jikan & Kitsu Normalized Broadcast Schedule
-  try {
-    const rawItems = await getAiringSchedule(undefined, 60);
-    const schedule: Record<string, any[]> = {
-      monday: [],
-      tuesday: [],
-      wednesday: [],
-      thursday: [],
-      friday: [],
-      saturday: [],
-      sunday: [],
-    };
-
-    const seenKeys = new Set<string>();
+    const rawItems = await getAiringSchedule(undefined, 150);
+    const schedule: Record<string, ScheduleItem[]> = {};
+    const seenEntries = new Set<string>();
 
     for (const item of rawItems) {
-      const dayKey = (item.airingAt || "").toLowerCase();
-      if (!schedule[dayKey]) continue;
+      const airingDate = item.airingDate || getJstDateKey(item.airingAtTimestamp);
+      const title = (item.animeTitle || "").trim();
+      const episodeKey = item.episodeNumber ?? "unknown";
+      const identity = item.anilistId ? `ani-${item.anilistId}` : item.malId ? `mal-${item.malId}` : item.animeId;
+      const dedupeKey = `${identity}|${episodeKey}|${airingDate}`.toLowerCase();
+      if (!airingDate || !title || seenEntries.has(dedupeKey)) continue;
 
-      const normTitle = (item.animeTitle || "").toLowerCase().trim();
-      if (!normTitle || seenKeys.has(normTitle)) continue;
-      seenKeys.add(normTitle);
-
-      schedule[dayKey].push({
+      seenEntries.add(dedupeKey);
+      schedule[airingDate] ||= [];
+      schedule[airingDate].push({
         id: item.animeId,
-        title: item.animeTitle,
+        title,
         image: item.animeImage,
-        episode: item.episodeNumber,
+        episode: item.episodeNumber ?? null,
         isUpcoming: item.status === "upcoming",
         status: item.status || "airing_today",
-        time: item.timeString ? item.timeString.replace(" JST", "").trim() : undefined,
-        day: item.airingAt,
+        time: item.timeString ? item.timeString.replace(/\s+JST$/i, "").trim() : "TBA",
+        day: (item.airingAt || airingDate).charAt(0).toUpperCase() + (item.airingAt || airingDate).slice(1),
+        airingDate,
+        hasExactTime: item.hasExactTime ?? Boolean(item.airingAtTimestamp),
         score: item.score,
         studio: item.studio,
         genres: item.genres || [],
+        airingAtTimestamp: item.airingAtTimestamp,
+        format: item.format,
       });
+    }
+
+    for (const date of Object.keys(schedule)) {
+      schedule[date].sort((a, b) => (a.airingAtTimestamp || 0) - (b.airingAtTimestamp || 0));
     }
 
     return NextResponse.json({
       success: true,
-      provider: "Jikan & Kitsu Live Network",
+      provider: "Jikan, AniList & Kitsu Live Broadcast Feeds",
       schedule,
       updatedAt: new Date().toISOString(),
     }, {
-      headers: { "Cache-Control": "public, s-maxage=21600, stale-while-revalidate=86400" },
+      headers: { "Cache-Control": "public, s-maxage=1800, stale-while-revalidate=3600" },
     });
   } catch (err: unknown) {
     console.error("Schedule API Error:", err);

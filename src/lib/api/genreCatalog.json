@@ -1,0 +1,3490 @@
+{
+  "Action": [
+    {
+      "id": "kitsu-7442",
+      "title": "Attack on Titan",
+      "image": "https://media.kitsu.app/anime/poster_images/7442/large.jpg",
+      "format": "TV",
+      "score": "8.4",
+      "episodes": 25,
+      "year": 2013,
+      "genres": [
+        "Action"
+      ]
+    },
+    {
+      "id": "kitsu-11469",
+      "title": "Boku no Hero Academia",
+      "image": "https://media.kitsu.app/anime/poster_images/11469/large.jpg",
+      "format": "TV",
+      "score": "8.3",
+      "episodes": 13,
+      "year": 2016,
+      "genres": [
+        "Action"
+      ]
+    },
+    {
+      "id": "kitsu-12268",
+      "title": "Boku no Hero Academia 2",
+      "image": "https://media.kitsu.app/anime/poster_images/12268/large.jpg",
+      "format": "TV",
+      "score": "8.3",
+      "episodes": 25,
+      "year": 2017,
+      "genres": [
+        "Action"
+      ]
+    },
+    {
+      "id": "kitsu-10740",
+      "title": "One Punch Man",
+      "image": "https://media.kitsu.app/anime/poster_images/10740/large.jpg",
+      "format": "TV",
+      "score": "8.3",
+      "episodes": 12,
+      "year": 2015,
+      "genres": [
+        "Action"
+      ]
+    },
+    {
+      "id": "kitsu-13881",
+      "title": "Boku no Hero Academia 3",
+      "image": "https://media.kitsu.app/anime/poster_images/13881/large.jpg",
+      "format": "TV",
+      "score": "8.3",
+      "episodes": 25,
+      "year": 2018,
+      "genres": [
+        "Action"
+      ]
+    },
+    {
+      "id": "kitsu-3936",
+      "title": "Fullmetal Alchemist: Brotherhood",
+      "image": "https://media.kitsu.app/anime/poster_images/3936/large.jpg",
+      "format": "TV",
+      "score": "8.3",
+      "episodes": 64,
+      "year": 2009,
+      "genres": [
+        "Action"
+      ]
+    },
+    {
+      "id": "kitsu-6448",
+      "title": "Hunter x Hunter (2011)",
+      "image": "https://media.kitsu.app/anime/poster_images/6448/large.jpg",
+      "format": "TV",
+      "score": "8.4",
+      "episodes": 148,
+      "year": 2011,
+      "genres": [
+        "Action"
+      ]
+    },
+    {
+      "id": "kitsu-41370",
+      "title": "Kimetsu no Yaiba",
+      "image": "https://media.kitsu.app/anime/poster_images/41370/large.jpg",
+      "format": "TV",
+      "score": "8.6",
+      "episodes": 26,
+      "year": 2019,
+      "genres": [
+        "Action"
+      ]
+    },
+    {
+      "id": "kitsu-8699",
+      "title": "Nanatsu no Taizai",
+      "image": "https://media.kitsu.app/anime/poster_images/8699/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 24,
+      "year": 2014,
+      "genres": [
+        "Action"
+      ]
+    },
+    {
+      "id": "kitsu-8671",
+      "title": "Attack on Titan Season 2",
+      "image": "https://media.kitsu.app/anime/poster_images/8671/large.jpg",
+      "format": "TV",
+      "score": "8.4",
+      "episodes": 12,
+      "year": 2017,
+      "genres": [
+        "Action"
+      ]
+    },
+    {
+      "id": "kitsu-12",
+      "title": "One Piece",
+      "image": "https://media.kitsu.app/anime/poster_images/12/large.jpg",
+      "format": "TV",
+      "score": "8.4",
+      "episodes": null,
+      "year": 1999,
+      "genres": [
+        "Action"
+      ]
+    },
+    {
+      "id": "kitsu-13569",
+      "title": "Attack on Titan Season 3",
+      "image": "https://media.kitsu.app/anime/poster_images/13569/large.jpg",
+      "format": "TV",
+      "score": "8.4",
+      "episodes": 12,
+      "year": 2018,
+      "genres": [
+        "Action"
+      ]
+    },
+    {
+      "id": "anilist-113415",
+      "title": "Jujutsu Kaisen",
+      "image": "https://media.kitsu.app/anime/poster_images/42765/large.jpg",
+      "format": "TV",
+      "score": "8.6",
+      "episodes": 24,
+      "year": 2020,
+      "genres": [
+        "Action"
+      ]
+    },
+    {
+      "id": "anilist-127230",
+      "title": "Chainsaw Man",
+      "image": "https://media.kitsu.app/anime/poster_images/43806/large.jpg",
+      "format": "TV",
+      "score": "8.4",
+      "episodes": 12,
+      "year": 2022,
+      "genres": [
+        "Action"
+      ]
+    },
+    {
+      "id": "anilist-101348",
+      "title": "Vinland Saga",
+      "image": "https://media.kitsu.app/anime/poster_images/41316/large.jpg",
+      "format": "TV",
+      "score": "8.8",
+      "episodes": 24,
+      "year": 2019,
+      "genres": [
+        "Action"
+      ]
+    },
+    {
+      "id": "anilist-151807",
+      "title": "Solo Leveling",
+      "image": "https://media.kitsu.app/anime/46083/poster_image/large-9844dd11e06d99723c21a1f0a1491cf6.jpeg",
+      "format": "TV",
+      "score": "8.3",
+      "episodes": 12,
+      "year": 2024,
+      "genres": [
+        "Action"
+      ]
+    },
+    {
+      "id": "anilist-120377",
+      "title": "Cyberpunk: Edgerunners",
+      "image": "https://media.kitsu.app/anime/poster_images/43225/large.jpg",
+      "format": "TV",
+      "score": "8.6",
+      "episodes": 10,
+      "year": 2022,
+      "genres": [
+        "Action"
+      ]
+    },
+    {
+      "id": "anilist-153288",
+      "title": "Kaiju No. 8",
+      "image": "https://media.kitsu.app/anime/46215/poster_image/large-2a316c52a0a28f8f2b23a9d727eb3721.jpeg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 12,
+      "year": 2024,
+      "genres": [
+        "Action"
+      ]
+    }
+  ],
+  "Romance": [
+    {
+      "id": "kitsu-11614",
+      "title": "Kimi no Na wa.",
+      "image": "https://media.kitsu.app/anime/poster_images/11614/large.jpg",
+      "format": "MOVIE",
+      "score": "8.3",
+      "episodes": 1,
+      "year": 2016,
+      "genres": [
+        "Romance"
+      ]
+    },
+    {
+      "id": "kitsu-10028",
+      "title": "Koe no Katachi",
+      "image": "https://media.kitsu.app/anime/poster_images/10028/large.jpg",
+      "format": "MOVIE",
+      "score": "8.4",
+      "episodes": 1,
+      "year": 2016,
+      "genres": [
+        "Romance"
+      ]
+    },
+    {
+      "id": "kitsu-176",
+      "title": "Spirited Away",
+      "image": "https://media.kitsu.app/anime/poster_images/176/large.jpg",
+      "format": "MOVIE",
+      "score": "8.3",
+      "episodes": 1,
+      "year": 2001,
+      "genres": [
+        "Romance"
+      ]
+    },
+    {
+      "id": "kitsu-8403",
+      "title": "Shigatsu wa Kimi no Uso",
+      "image": "https://media.kitsu.app/anime/poster_images/8403/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 22,
+      "year": 2014,
+      "genres": [
+        "Romance"
+      ]
+    },
+    {
+      "id": "kitsu-3532",
+      "title": "Toradora!",
+      "image": "https://media.kitsu.app/anime/poster_images/3532/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 25,
+      "year": 2008,
+      "genres": [
+        "Romance"
+      ]
+    },
+    {
+      "id": "kitsu-6589",
+      "title": "Sword Art Online",
+      "image": "https://media.kitsu.app/anime/poster_images/6589/large.jpg",
+      "format": "TV",
+      "score": "7.4",
+      "episodes": 25,
+      "year": 2012,
+      "genres": [
+        "Romance"
+      ]
+    },
+    {
+      "id": "kitsu-395",
+      "title": "Howl's Moving Castle",
+      "image": "https://media.kitsu.app/anime/395/poster_image/large-eb75740695abaf88c5714c268a51b7ef.jpeg",
+      "format": "MOVIE",
+      "score": "8.2",
+      "episodes": 1,
+      "year": 2004,
+      "genres": [
+        "Romance"
+      ]
+    },
+    {
+      "id": "kitsu-5981",
+      "title": "Ano Hi Mita Hana no Namae wo Bokutachi wa Mada Shiranai.",
+      "image": "https://media.kitsu.app/anime/poster_images/5981/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 11,
+      "year": 2011,
+      "genres": [
+        "Romance"
+      ]
+    },
+    {
+      "id": "kitsu-3919",
+      "title": "Bakemonogatari",
+      "image": "https://media.kitsu.app/anime/poster_images/3919/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 15,
+      "year": 2009,
+      "genres": [
+        "Romance"
+      ]
+    },
+    {
+      "id": "kitsu-755",
+      "title": "Ouran High School Host Club",
+      "image": "https://media.kitsu.app/anime/poster_images/755/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 26,
+      "year": 2006,
+      "genres": [
+        "Romance"
+      ]
+    },
+    {
+      "id": "kitsu-3505",
+      "title": "Clannad: After Story",
+      "image": "https://media.kitsu.app/anime/poster_images/3505/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 24,
+      "year": 2008,
+      "genres": [
+        "Romance"
+      ]
+    },
+    {
+      "id": "kitsu-8174",
+      "title": "Sword Art Online II",
+      "image": "https://media.kitsu.app/anime/poster_images/8174/large.jpg",
+      "format": "TV",
+      "score": "6.9",
+      "episodes": 24,
+      "year": 2014,
+      "genres": [
+        "Romance"
+      ]
+    },
+    {
+      "id": "anilist-101921",
+      "title": "Kaguya-sama: Love Is War",
+      "image": "https://media.kitsu.app/anime/poster_images/41456/large.jpg",
+      "format": "TV",
+      "score": "8.7",
+      "episodes": 12,
+      "year": 2019,
+      "genres": [
+        "Romance"
+      ]
+    },
+    {
+      "id": "anilist-124080",
+      "title": "Horimiya",
+      "image": "https://media.kitsu.app/anime/poster_images/43594/large.jpg",
+      "format": "TV",
+      "score": "8.1",
+      "episodes": 13,
+      "year": 2021,
+      "genres": [
+        "Romance"
+      ]
+    },
+    {
+      "id": "anilist-153152",
+      "title": "The Dangers in My Heart",
+      "image": "https://media.kitsu.app/anime/46261/poster_image/large-ca90fc08fe64b1842eb3bc73aa12d0a0.jpeg",
+      "format": "TV",
+      "score": "8.7",
+      "episodes": 12,
+      "year": 2023,
+      "genres": [
+        "Romance"
+      ]
+    },
+    {
+      "id": "anilist-101291",
+      "title": "Rascal Does Not Dream of Bunny Girl Senpai",
+      "image": "https://media.kitsu.app/anime/poster_images/41313/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 13,
+      "year": 2018,
+      "genres": [
+        "Romance"
+      ]
+    },
+    {
+      "id": "anilist-132405",
+      "title": "My Dress-Up Darling",
+      "image": "https://media.kitsu.app/anime/poster_images/44425/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 12,
+      "year": 2022,
+      "genres": [
+        "Romance"
+      ]
+    },
+    {
+      "id": "anilist-105334",
+      "title": "Fruits Basket (2019)",
+      "image": "https://media.kitsu.app/anime/poster_images/41708/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 25,
+      "year": 2019,
+      "genres": [
+        "Romance"
+      ]
+    }
+  ],
+  "Sports": [
+    {
+      "id": "kitsu-8133",
+      "title": "Haikyuu!!",
+      "image": "https://media.kitsu.app/anime/poster_images/8133/large.jpg",
+      "format": "TV",
+      "score": "8.3",
+      "episodes": 25,
+      "year": 2014,
+      "genres": [
+        "Sports"
+      ]
+    },
+    {
+      "id": "kitsu-10076",
+      "title": "Haikyuu!! Second Season",
+      "image": "https://media.kitsu.app/anime/poster_images/10076/large.jpg",
+      "format": "TV",
+      "score": "8.3",
+      "episodes": 25,
+      "year": 2015,
+      "genres": [
+        "Sports"
+      ]
+    },
+    {
+      "id": "kitsu-11935",
+      "title": "Haikyuu!!: Karasuno Koukou VS Shiratorizawa Gakuen Koukou",
+      "image": "https://media.kitsu.app/anime/poster_images/11935/large.jpg",
+      "format": "TV",
+      "score": "8.3",
+      "episodes": 10,
+      "year": 2016,
+      "genres": [
+        "Sports"
+      ]
+    },
+    {
+      "id": "kitsu-6595",
+      "title": "Kuroko no Basket",
+      "image": "https://media.kitsu.app/anime/6595/poster_image/large-9161d8a3eb309dd4fe533c7c328d2adb.jpeg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 25,
+      "year": 2012,
+      "genres": [
+        "Sports"
+      ]
+    },
+    {
+      "id": "kitsu-42059",
+      "title": "Haikyuu!!: To the Top",
+      "image": "https://media.kitsu.app/anime/poster_images/42059/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 13,
+      "year": 2020,
+      "genres": [
+        "Sports"
+      ]
+    },
+    {
+      "id": "kitsu-42938",
+      "title": "Haikyuu!! TO THE TOP 2",
+      "image": "https://media.kitsu.app/anime/42938/poster_image/large-ccf036352448925c9ff35842dd8cfa43.jpeg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 12,
+      "year": 2020,
+      "genres": [
+        "Sports"
+      ]
+    },
+    {
+      "id": "kitsu-7545",
+      "title": "Kuroko no Basket 2nd Season",
+      "image": "https://media.kitsu.app/anime/7545/poster_image/large-883018330cf9afcca7057ddc0a5ec9c7.jpeg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 25,
+      "year": 2013,
+      "genres": [
+        "Sports"
+      ]
+    },
+    {
+      "id": "kitsu-11999",
+      "title": "Yuri!!! on Ice",
+      "image": "https://media.kitsu.app/anime/11999/poster_image/large-60e50583621348bf1956fbaa81837c85.jpeg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 12,
+      "year": 2016,
+      "genres": [
+        "Sports"
+      ]
+    },
+    {
+      "id": "kitsu-8524",
+      "title": "Kuroko no Basket 3rd Season",
+      "image": "https://media.kitsu.app/anime/8524/poster_image/large-ed5d77190c21ccf9ad9da5de1341aba8.jpeg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 25,
+      "year": 2015,
+      "genres": [
+        "Sports"
+      ]
+    },
+    {
+      "id": "kitsu-7664",
+      "title": "Free!",
+      "image": "https://media.kitsu.app/anime/poster_images/7664/large.jpg",
+      "format": "TV",
+      "score": "7.5",
+      "episodes": 12,
+      "year": 2013,
+      "genres": [
+        "Sports"
+      ]
+    },
+    {
+      "id": "kitsu-10847",
+      "title": "Haikyuu!! Movie 2: Shousha to Haisha",
+      "image": "https://media.kitsu.app/anime/poster_images/10847/large.jpg",
+      "format": "MOVIE",
+      "score": "8.2",
+      "episodes": 1,
+      "year": 2015,
+      "genres": [
+        "Sports"
+      ]
+    },
+    {
+      "id": "kitsu-43595",
+      "title": "SK8",
+      "image": "https://media.kitsu.app/anime/poster_images/43595/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 12,
+      "year": 2021,
+      "genres": [
+        "Sports"
+      ]
+    },
+    {
+      "id": "anilist-137822",
+      "title": "Blue Lock",
+      "image": "https://media.kitsu.app/anime/poster_images/44918/large.jpg",
+      "format": "TV",
+      "score": "8.1",
+      "episodes": 24,
+      "year": 2022,
+      "genres": [
+        "Sports"
+      ]
+    },
+    {
+      "id": "anilist-263",
+      "title": "Hajime no Ippo",
+      "image": "https://media.kitsu.app/anime/poster_images/240/large.jpg",
+      "format": "TV",
+      "score": "8.7",
+      "episodes": 75,
+      "year": 2000,
+      "genres": [
+        "Sports"
+      ]
+    },
+    {
+      "id": "anilist-249",
+      "title": "Slam Dunk",
+      "image": "https://media.kitsu.app/anime/poster_images/227/large.jpg",
+      "format": "TV",
+      "score": "8.5",
+      "episodes": 101,
+      "year": 1993,
+      "genres": [
+        "Sports"
+      ]
+    },
+    {
+      "id": "anilist-101903",
+      "title": "Run with the Wind",
+      "image": "https://media.kitsu.app/anime/poster_images/41457/large.jpg",
+      "format": "TV",
+      "score": "8.4",
+      "episodes": 23,
+      "year": 2018,
+      "genres": [
+        "Sports"
+      ]
+    },
+    {
+      "id": "anilist-139940",
+      "title": "Ao Ashi",
+      "image": "https://media.kitsu.app/anime/poster_images/45074/large.jpg",
+      "format": "TV",
+      "score": "8.1",
+      "episodes": 24,
+      "year": 2022,
+      "genres": [
+        "Sports"
+      ]
+    }
+  ],
+  "Comedy": [
+    {
+      "id": "kitsu-11469",
+      "title": "Boku no Hero Academia",
+      "image": "https://media.kitsu.app/anime/poster_images/11469/large.jpg",
+      "format": "TV",
+      "score": "8.3",
+      "episodes": 13,
+      "year": 2016,
+      "genres": [
+        "Comedy"
+      ]
+    },
+    {
+      "id": "kitsu-12268",
+      "title": "Boku no Hero Academia 2",
+      "image": "https://media.kitsu.app/anime/poster_images/12268/large.jpg",
+      "format": "TV",
+      "score": "8.3",
+      "episodes": 25,
+      "year": 2017,
+      "genres": [
+        "Comedy"
+      ]
+    },
+    {
+      "id": "kitsu-10740",
+      "title": "One Punch Man",
+      "image": "https://media.kitsu.app/anime/poster_images/10740/large.jpg",
+      "format": "TV",
+      "score": "8.3",
+      "episodes": 12,
+      "year": 2015,
+      "genres": [
+        "Comedy"
+      ]
+    },
+    {
+      "id": "kitsu-13881",
+      "title": "Boku no Hero Academia 3",
+      "image": "https://media.kitsu.app/anime/poster_images/13881/large.jpg",
+      "format": "TV",
+      "score": "8.3",
+      "episodes": 25,
+      "year": 2018,
+      "genres": [
+        "Comedy"
+      ]
+    },
+    {
+      "id": "kitsu-8699",
+      "title": "Nanatsu no Taizai",
+      "image": "https://media.kitsu.app/anime/poster_images/8699/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 24,
+      "year": 2014,
+      "genres": [
+        "Comedy"
+      ]
+    },
+    {
+      "id": "kitsu-12",
+      "title": "One Piece",
+      "image": "https://media.kitsu.app/anime/poster_images/12/large.jpg",
+      "format": "TV",
+      "score": "8.4",
+      "episodes": null,
+      "year": 1999,
+      "genres": [
+        "Comedy"
+      ]
+    },
+    {
+      "id": "kitsu-10877",
+      "title": "Ansatsu Kyoushitsu 2nd Season",
+      "image": "https://media.kitsu.app/anime/poster_images/10877/large.jpg",
+      "format": "TV",
+      "score": "8.3",
+      "episodes": 25,
+      "year": 2016,
+      "genres": [
+        "Comedy"
+      ]
+    },
+    {
+      "id": "kitsu-8133",
+      "title": "Haikyuu!!",
+      "image": "https://media.kitsu.app/anime/poster_images/8133/large.jpg",
+      "format": "TV",
+      "score": "8.3",
+      "episodes": 25,
+      "year": 2014,
+      "genres": [
+        "Comedy"
+      ]
+    },
+    {
+      "id": "kitsu-8640",
+      "title": "Ansatsu Kyoushitsu",
+      "image": "https://media.kitsu.app/anime/poster_images/8640/large.jpg",
+      "format": "TV",
+      "score": "8.3",
+      "episodes": 22,
+      "year": 2015,
+      "genres": [
+        "Comedy"
+      ]
+    },
+    {
+      "id": "kitsu-7880",
+      "title": "No Game No Life",
+      "image": "https://media.kitsu.app/anime/poster_images/7880/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 12,
+      "year": 2014,
+      "genres": [
+        "Comedy"
+      ]
+    },
+    {
+      "id": "kitsu-5646",
+      "title": "Steins;Gate",
+      "image": "https://media.kitsu.app/anime/poster_images/5646/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 24,
+      "year": 2011,
+      "genres": [
+        "Comedy"
+      ]
+    },
+    {
+      "id": "kitsu-1555",
+      "title": "Naruto: Shippuuden",
+      "image": "https://media.kitsu.app/anime/poster_images/1555/large.jpg",
+      "format": "TV",
+      "score": "8.4",
+      "episodes": 500,
+      "year": 2007,
+      "genres": [
+        "Comedy"
+      ]
+    },
+    {
+      "id": "anilist-140960",
+      "title": "Spy x Family",
+      "image": "https://media.kitsu.app/anime/poster_images/45025/large.jpg",
+      "format": "TV",
+      "score": "8.5",
+      "episodes": 12,
+      "year": 2022,
+      "genres": [
+        "Comedy"
+      ]
+    },
+    {
+      "id": "anilist-21202",
+      "title": "KonoSuba",
+      "image": "https://media.kitsu.app/anime/poster_images/11186/large.jpg",
+      "format": "TV",
+      "score": "8.1",
+      "episodes": 10,
+      "year": 2016,
+      "genres": [
+        "Comedy"
+      ]
+    },
+    {
+      "id": "anilist-21804",
+      "title": "The Disastrous Life of Saiki K.",
+      "image": "https://media.kitsu.app/anime/poster_images/11953/large.jpg",
+      "format": "TV",
+      "score": "8.4",
+      "episodes": 120,
+      "year": 2016,
+      "genres": [
+        "Comedy"
+      ]
+    },
+    {
+      "id": "anilist-100922",
+      "title": "Grand Blue",
+      "image": "https://media.kitsu.app/anime/poster_images/41123/large.jpg",
+      "format": "TV",
+      "score": "8.3",
+      "episodes": 12,
+      "year": 2018,
+      "genres": [
+        "Comedy"
+      ]
+    },
+    {
+      "id": "anilist-130003",
+      "title": "Bocchi the Rock!",
+      "image": "https://media.kitsu.app/anime/44196/poster_image/large-18751eb4270ebc64f9bf36a4bb0a11a8.jpeg",
+      "format": "TV",
+      "score": "8.8",
+      "episodes": 12,
+      "year": 2022,
+      "genres": [
+        "Comedy"
+      ]
+    },
+    {
+      "id": "anilist-10165",
+      "title": "Nichijou",
+      "image": "https://media.kitsu.app/anime/poster_images/5927/large.jpg",
+      "format": "TV",
+      "score": "8.4",
+      "episodes": 26,
+      "year": 2011,
+      "genres": [
+        "Comedy"
+      ]
+    }
+  ],
+  "Sci-Fi": [
+    {
+      "id": "kitsu-10740",
+      "title": "One Punch Man",
+      "image": "https://media.kitsu.app/anime/poster_images/10740/large.jpg",
+      "format": "TV",
+      "score": "8.3",
+      "episodes": 12,
+      "year": 2015,
+      "genres": [
+        "Sci-Fi"
+      ]
+    },
+    {
+      "id": "kitsu-5646",
+      "title": "Steins;Gate",
+      "image": "https://media.kitsu.app/anime/poster_images/5646/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 24,
+      "year": 2011,
+      "genres": [
+        "Sci-Fi"
+      ]
+    },
+    {
+      "id": "kitsu-41312",
+      "title": "Yakusoku no Neverland",
+      "image": "https://media.kitsu.app/anime/poster_images/41312/large.jpg",
+      "format": "TV",
+      "score": "8.3",
+      "episodes": 12,
+      "year": 2019,
+      "genres": [
+        "Sci-Fi"
+      ]
+    },
+    {
+      "id": "kitsu-6589",
+      "title": "Sword Art Online",
+      "image": "https://media.kitsu.app/anime/poster_images/6589/large.jpg",
+      "format": "TV",
+      "score": "7.4",
+      "episodes": 25,
+      "year": 2012,
+      "genres": [
+        "Sci-Fi"
+      ]
+    },
+    {
+      "id": "kitsu-1415",
+      "title": "Code Geass: Lelouch of the Rebellion",
+      "image": "https://media.kitsu.app/anime/poster_images/1415/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 25,
+      "year": 2006,
+      "genres": [
+        "Sci-Fi"
+      ]
+    },
+    {
+      "id": "kitsu-8147",
+      "title": "Kiseijuu: Sei no Kakuritsu",
+      "image": "https://media.kitsu.app/anime/poster_images/8147/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 24,
+      "year": 2014,
+      "genres": [
+        "Sci-Fi"
+      ]
+    },
+    {
+      "id": "kitsu-1",
+      "title": "Cowboy Bebop",
+      "image": "https://media.kitsu.app/anime/poster_images/1/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 26,
+      "year": 1998,
+      "genres": [
+        "Sci-Fi"
+      ]
+    },
+    {
+      "id": "kitsu-2634",
+      "title": "Code Geass: Lelouch of the Rebellion R2",
+      "image": "https://media.kitsu.app/anime/poster_images/2634/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 25,
+      "year": 2008,
+      "genres": [
+        "Sci-Fi"
+      ]
+    },
+    {
+      "id": "kitsu-12230",
+      "title": "Violet Evergarden",
+      "image": "https://media.kitsu.app/anime/poster_images/12230/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 13,
+      "year": 2018,
+      "genres": [
+        "Sci-Fi"
+      ]
+    },
+    {
+      "id": "kitsu-1801",
+      "title": "Tengen Toppa Gurren Lagann",
+      "image": "https://media.kitsu.app/anime/poster_images/1801/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 27,
+      "year": 2007,
+      "genres": [
+        "Sci-Fi"
+      ]
+    },
+    {
+      "id": "kitsu-7000",
+      "title": "Psycho-Pass",
+      "image": "https://media.kitsu.app/anime/poster_images/7000/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 22,
+      "year": 2012,
+      "genres": [
+        "Sci-Fi"
+      ]
+    },
+    {
+      "id": "kitsu-12566",
+      "title": "One Punch Man 2",
+      "image": "https://media.kitsu.app/anime/poster_images/12566/large.jpg",
+      "format": "TV",
+      "score": "7.9",
+      "episodes": 12,
+      "year": 2019,
+      "genres": [
+        "Sci-Fi"
+      ]
+    }
+  ],
+  "Fantasy": [
+    {
+      "id": "kitsu-7442",
+      "title": "Attack on Titan",
+      "image": "https://media.kitsu.app/anime/poster_images/7442/large.jpg",
+      "format": "TV",
+      "score": "8.4",
+      "episodes": 25,
+      "year": 2013,
+      "genres": [
+        "Fantasy"
+      ]
+    },
+    {
+      "id": "kitsu-3936",
+      "title": "Fullmetal Alchemist: Brotherhood",
+      "image": "https://media.kitsu.app/anime/poster_images/3936/large.jpg",
+      "format": "TV",
+      "score": "8.3",
+      "episodes": 64,
+      "year": 2009,
+      "genres": [
+        "Fantasy"
+      ]
+    },
+    {
+      "id": "kitsu-41370",
+      "title": "Kimetsu no Yaiba",
+      "image": "https://media.kitsu.app/anime/poster_images/41370/large.jpg",
+      "format": "TV",
+      "score": "8.6",
+      "episodes": 26,
+      "year": 2019,
+      "genres": [
+        "Fantasy"
+      ]
+    },
+    {
+      "id": "kitsu-8699",
+      "title": "Nanatsu no Taizai",
+      "image": "https://media.kitsu.app/anime/poster_images/8699/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 24,
+      "year": 2014,
+      "genres": [
+        "Fantasy"
+      ]
+    },
+    {
+      "id": "kitsu-8671",
+      "title": "Attack on Titan Season 2",
+      "image": "https://media.kitsu.app/anime/poster_images/8671/large.jpg",
+      "format": "TV",
+      "score": "8.4",
+      "episodes": 12,
+      "year": 2017,
+      "genres": [
+        "Fantasy"
+      ]
+    },
+    {
+      "id": "kitsu-12",
+      "title": "One Piece",
+      "image": "https://media.kitsu.app/anime/poster_images/12/large.jpg",
+      "format": "TV",
+      "score": "8.4",
+      "episodes": null,
+      "year": 1999,
+      "genres": [
+        "Fantasy"
+      ]
+    },
+    {
+      "id": "kitsu-13569",
+      "title": "Attack on Titan Season 3",
+      "image": "https://media.kitsu.app/anime/poster_images/13569/large.jpg",
+      "format": "TV",
+      "score": "8.4",
+      "episodes": 12,
+      "year": 2018,
+      "genres": [
+        "Fantasy"
+      ]
+    },
+    {
+      "id": "kitsu-176",
+      "title": "Spirited Away",
+      "image": "https://media.kitsu.app/anime/poster_images/176/large.jpg",
+      "format": "MOVIE",
+      "score": "8.3",
+      "episodes": 1,
+      "year": 2001,
+      "genres": [
+        "Fantasy"
+      ]
+    },
+    {
+      "id": "kitsu-41982",
+      "title": "Attack on Titan Season 3 Part 2",
+      "image": "https://media.kitsu.app/anime/poster_images/41982/large.jpg",
+      "format": "TV",
+      "score": "8.5",
+      "episodes": 10,
+      "year": 2019,
+      "genres": [
+        "Fantasy"
+      ]
+    },
+    {
+      "id": "kitsu-12633",
+      "title": "Nanatsu no Taizai: Imashime no Fukkatsu",
+      "image": "https://media.kitsu.app/anime/poster_images/12633/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 24,
+      "year": 2018,
+      "genres": [
+        "Fantasy"
+      ]
+    },
+    {
+      "id": "kitsu-7880",
+      "title": "No Game No Life",
+      "image": "https://media.kitsu.app/anime/poster_images/7880/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 12,
+      "year": 2014,
+      "genres": [
+        "Fantasy"
+      ]
+    },
+    {
+      "id": "kitsu-42586",
+      "title": "Kimetsu no Yaiba: Mugen Ressha-hen",
+      "image": "https://media.kitsu.app/anime/poster_images/42586/large.jpg",
+      "format": "MOVIE",
+      "score": "8.7",
+      "episodes": 1,
+      "year": 2020,
+      "genres": [
+        "Fantasy"
+      ]
+    }
+  ],
+  "Horror": [
+    {
+      "id": "kitsu-7442",
+      "title": "Attack on Titan",
+      "image": "https://media.kitsu.app/anime/poster_images/7442/large.jpg",
+      "format": "TV",
+      "score": "8.4",
+      "episodes": 25,
+      "year": 2013,
+      "genres": [
+        "Horror"
+      ]
+    },
+    {
+      "id": "kitsu-41312",
+      "title": "Yakusoku no Neverland",
+      "image": "https://media.kitsu.app/anime/poster_images/41312/large.jpg",
+      "format": "TV",
+      "score": "8.3",
+      "episodes": 12,
+      "year": 2019,
+      "genres": [
+        "Horror"
+      ]
+    },
+    {
+      "id": "kitsu-8271",
+      "title": "Tokyo Ghoul",
+      "image": "https://media.kitsu.app/anime/poster_images/8271/large.jpg",
+      "format": "TV",
+      "score": "8.0",
+      "episodes": 12,
+      "year": 2014,
+      "genres": [
+        "Horror"
+      ]
+    },
+    {
+      "id": "kitsu-8147",
+      "title": "Kiseijuu: Sei no Kakuritsu",
+      "image": "https://media.kitsu.app/anime/poster_images/8147/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 24,
+      "year": 2014,
+      "genres": [
+        "Horror"
+      ]
+    },
+    {
+      "id": "kitsu-6266",
+      "title": "Mirai Nikki (TV)",
+      "image": "https://media.kitsu.app/anime/poster_images/6266/large.jpg",
+      "format": "TV",
+      "score": "7.5",
+      "episodes": 26,
+      "year": 2011,
+      "genres": [
+        "Horror"
+      ]
+    },
+    {
+      "id": "kitsu-6462",
+      "title": "Another",
+      "image": "https://media.kitsu.app/anime/poster_images/6462/large.jpg",
+      "format": "TV",
+      "score": "7.5",
+      "episodes": 12,
+      "year": 2012,
+      "genres": [
+        "Horror"
+      ]
+    },
+    {
+      "id": "kitsu-5853",
+      "title": "Mahou Shoujo Madoka★Magica",
+      "image": "https://media.kitsu.app/anime/poster_images/5853/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 12,
+      "year": 2011,
+      "genres": [
+        "Horror"
+      ]
+    },
+    {
+      "id": "kitsu-9135",
+      "title": "Tokyo Ghoul √A",
+      "image": "https://media.kitsu.app/anime/poster_images/9135/large.jpg",
+      "format": "TV",
+      "score": "7.1",
+      "episodes": 12,
+      "year": 2015,
+      "genres": [
+        "Horror"
+      ]
+    },
+    {
+      "id": "kitsu-201",
+      "title": "Elfen Lied",
+      "image": "https://media.kitsu.app/anime/poster_images/201/large.jpg",
+      "format": "TV",
+      "score": "7.4",
+      "episodes": 13,
+      "year": 2004,
+      "genres": [
+        "Horror"
+      ]
+    },
+    {
+      "id": "kitsu-5187",
+      "title": "Highschool of the Dead",
+      "image": "https://media.kitsu.app/anime/poster_images/5187/large.jpg",
+      "format": "TV",
+      "score": "7.1",
+      "episodes": 12,
+      "year": 2010,
+      "genres": [
+        "Horror"
+      ]
+    },
+    {
+      "id": "kitsu-7158",
+      "title": "JoJo no Kimyou na Bouken (TV)",
+      "image": "https://media.kitsu.app/anime/7158/poster_image/large-9e79f5c290ae821d2141473e6fdb6532.jpeg",
+      "format": "TV",
+      "score": "8.0",
+      "episodes": 26,
+      "year": 2012,
+      "genres": [
+        "Horror"
+      ]
+    },
+    {
+      "id": "kitsu-13929",
+      "title": "Tokyo Ghoul:re",
+      "image": "https://media.kitsu.app/anime/poster_images/13929/large.jpg",
+      "format": "TV",
+      "score": "7.2",
+      "episodes": 12,
+      "year": 2018,
+      "genres": [
+        "Horror"
+      ]
+    }
+  ],
+  "Mystery": [
+    {
+      "id": "kitsu-1376",
+      "title": "Death Note",
+      "image": "https://media.kitsu.app/anime/poster_images/1376/large.jpg",
+      "format": "TV",
+      "score": "8.3",
+      "episodes": 37,
+      "year": 2006,
+      "genres": [
+        "Mystery"
+      ]
+    },
+    {
+      "id": "kitsu-42422",
+      "title": "Attack on Titan: The Final Season",
+      "image": "https://media.kitsu.app/anime/poster_images/42422/large.jpg",
+      "format": "TV",
+      "score": "8.5",
+      "episodes": 16,
+      "year": 2020,
+      "genres": [
+        "Mystery"
+      ]
+    },
+    {
+      "id": "kitsu-41312",
+      "title": "Yakusoku no Neverland",
+      "image": "https://media.kitsu.app/anime/poster_images/41312/large.jpg",
+      "format": "TV",
+      "score": "8.3",
+      "episodes": 12,
+      "year": 2019,
+      "genres": [
+        "Mystery"
+      ]
+    },
+    {
+      "id": "kitsu-8271",
+      "title": "Tokyo Ghoul",
+      "image": "https://media.kitsu.app/anime/poster_images/8271/large.jpg",
+      "format": "TV",
+      "score": "8.0",
+      "episodes": 12,
+      "year": 2014,
+      "genres": [
+        "Mystery"
+      ]
+    },
+    {
+      "id": "kitsu-11110",
+      "title": "Boku dake ga Inai Machi",
+      "image": "https://media.kitsu.app/anime/poster_images/11110/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 12,
+      "year": 2016,
+      "genres": [
+        "Mystery"
+      ]
+    },
+    {
+      "id": "kitsu-9969",
+      "title": "Death Parade",
+      "image": "https://media.kitsu.app/anime/poster_images/9969/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 12,
+      "year": 2015,
+      "genres": [
+        "Mystery"
+      ]
+    },
+    {
+      "id": "kitsu-6266",
+      "title": "Mirai Nikki (TV)",
+      "image": "https://media.kitsu.app/anime/poster_images/6266/large.jpg",
+      "format": "TV",
+      "score": "7.5",
+      "episodes": 26,
+      "year": 2011,
+      "genres": [
+        "Mystery"
+      ]
+    },
+    {
+      "id": "kitsu-3919",
+      "title": "Bakemonogatari",
+      "image": "https://media.kitsu.app/anime/poster_images/3919/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 15,
+      "year": 2009,
+      "genres": [
+        "Mystery"
+      ]
+    },
+    {
+      "id": "kitsu-4696",
+      "title": "Durarara!!",
+      "image": "https://media.kitsu.app/anime/poster_images/4696/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 24,
+      "year": 2010,
+      "genres": [
+        "Mystery"
+      ]
+    },
+    {
+      "id": "kitsu-6462",
+      "title": "Another",
+      "image": "https://media.kitsu.app/anime/poster_images/6462/large.jpg",
+      "format": "TV",
+      "score": "7.5",
+      "episodes": 12,
+      "year": 2012,
+      "genres": [
+        "Mystery"
+      ]
+    },
+    {
+      "id": "kitsu-9135",
+      "title": "Tokyo Ghoul √A",
+      "image": "https://media.kitsu.app/anime/poster_images/9135/large.jpg",
+      "format": "TV",
+      "score": "7.1",
+      "episodes": 12,
+      "year": 2015,
+      "genres": [
+        "Mystery"
+      ]
+    },
+    {
+      "id": "kitsu-6686",
+      "title": "Hyouka",
+      "image": "https://media.kitsu.app/anime/poster_images/6686/large.jpg",
+      "format": "TV",
+      "score": "8.1",
+      "episodes": 22,
+      "year": 2012,
+      "genres": [
+        "Mystery"
+      ]
+    }
+  ],
+  "Slice of Life": [
+    {
+      "id": "kitsu-3532",
+      "title": "Toradora!",
+      "image": "https://media.kitsu.app/anime/poster_images/3532/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 25,
+      "year": 2008,
+      "genres": [
+        "Slice of Life"
+      ]
+    },
+    {
+      "id": "kitsu-11578",
+      "title": "Mob Psycho 100",
+      "image": "https://media.kitsu.app/anime/11578/poster_image/large-e969f8a688549dd8e02ffd59f49122e9.jpeg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 12,
+      "year": 2016,
+      "genres": [
+        "Slice of Life"
+      ]
+    },
+    {
+      "id": "kitsu-12230",
+      "title": "Violet Evergarden",
+      "image": "https://media.kitsu.app/anime/poster_images/12230/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 13,
+      "year": 2018,
+      "genres": [
+        "Slice of Life"
+      ]
+    },
+    {
+      "id": "kitsu-5981",
+      "title": "Ano Hi Mita Hana no Namae wo Bokutachi wa Mada Shiranai.",
+      "image": "https://media.kitsu.app/anime/poster_images/5981/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 11,
+      "year": 2011,
+      "genres": [
+        "Slice of Life"
+      ]
+    },
+    {
+      "id": "kitsu-6711",
+      "title": "Wolf Children",
+      "image": "https://media.kitsu.app/anime/poster_images/6711/large.jpg",
+      "format": "MOVIE",
+      "score": "8.2",
+      "episodes": 1,
+      "year": 2012,
+      "genres": [
+        "Slice of Life"
+      ]
+    },
+    {
+      "id": "kitsu-3505",
+      "title": "Clannad: After Story",
+      "image": "https://media.kitsu.app/anime/poster_images/3505/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 24,
+      "year": 2008,
+      "genres": [
+        "Slice of Life"
+      ]
+    },
+    {
+      "id": "kitsu-7314",
+      "title": "The Devil is a Part-Timer!",
+      "image": "https://media.kitsu.app/anime/poster_images/7314/large.jpg",
+      "format": "TV",
+      "score": "8.0",
+      "episodes": 13,
+      "year": 2013,
+      "genres": [
+        "Slice of Life"
+      ]
+    },
+    {
+      "id": "kitsu-4696",
+      "title": "Durarara!!",
+      "image": "https://media.kitsu.app/anime/poster_images/4696/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 24,
+      "year": 2010,
+      "genres": [
+        "Slice of Life"
+      ]
+    },
+    {
+      "id": "kitsu-41056",
+      "title": "Seishun Buta Yarou wa Bunny Girl Senpai no Yume wo Minai",
+      "image": "https://media.kitsu.app/anime/poster_images/41056/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 13,
+      "year": 2018,
+      "genres": [
+        "Slice of Life"
+      ]
+    },
+    {
+      "id": "kitsu-6169",
+      "title": "Hotarubi no Mori e",
+      "image": "https://media.kitsu.app/anime/poster_images/6169/large.jpg",
+      "format": "MOVIE",
+      "score": "8.2",
+      "episodes": 1,
+      "year": 2011,
+      "genres": [
+        "Slice of Life"
+      ]
+    },
+    {
+      "id": "kitsu-41071",
+      "title": "Mob Psycho 100 II",
+      "image": "https://media.kitsu.app/anime/41071/poster_image/large-eb5901d93c7bc43349ecca94890b0f02.jpeg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 13,
+      "year": 2019,
+      "genres": [
+        "Slice of Life"
+      ]
+    },
+    {
+      "id": "kitsu-6686",
+      "title": "Hyouka",
+      "image": "https://media.kitsu.app/anime/poster_images/6686/large.jpg",
+      "format": "TV",
+      "score": "8.1",
+      "episodes": 22,
+      "year": 2012,
+      "genres": [
+        "Slice of Life"
+      ]
+    }
+  ],
+  "Supernatural": [
+    {
+      "id": "kitsu-10740",
+      "title": "One Punch Man",
+      "image": "https://media.kitsu.app/anime/poster_images/10740/large.jpg",
+      "format": "TV",
+      "score": "8.3",
+      "episodes": 12,
+      "year": 2015,
+      "genres": [
+        "Supernatural"
+      ]
+    },
+    {
+      "id": "kitsu-1376",
+      "title": "Death Note",
+      "image": "https://media.kitsu.app/anime/poster_images/1376/large.jpg",
+      "format": "TV",
+      "score": "8.3",
+      "episodes": 37,
+      "year": 2006,
+      "genres": [
+        "Supernatural"
+      ]
+    },
+    {
+      "id": "kitsu-11614",
+      "title": "Kimi no Na wa.",
+      "image": "https://media.kitsu.app/anime/poster_images/11614/large.jpg",
+      "format": "MOVIE",
+      "score": "8.3",
+      "episodes": 1,
+      "year": 2016,
+      "genres": [
+        "Supernatural"
+      ]
+    },
+    {
+      "id": "kitsu-41370",
+      "title": "Kimetsu no Yaiba",
+      "image": "https://media.kitsu.app/anime/poster_images/41370/large.jpg",
+      "format": "TV",
+      "score": "8.6",
+      "episodes": 26,
+      "year": 2019,
+      "genres": [
+        "Supernatural"
+      ]
+    },
+    {
+      "id": "kitsu-176",
+      "title": "Spirited Away",
+      "image": "https://media.kitsu.app/anime/poster_images/176/large.jpg",
+      "format": "MOVIE",
+      "score": "8.3",
+      "episodes": 1,
+      "year": 2001,
+      "genres": [
+        "Supernatural"
+      ]
+    },
+    {
+      "id": "kitsu-42586",
+      "title": "Kimetsu no Yaiba: Mugen Ressha-hen",
+      "image": "https://media.kitsu.app/anime/poster_images/42586/large.jpg",
+      "format": "MOVIE",
+      "score": "8.7",
+      "episodes": 1,
+      "year": 2020,
+      "genres": [
+        "Supernatural"
+      ]
+    },
+    {
+      "id": "kitsu-42765",
+      "title": "Jujutsu Kaisen",
+      "image": "https://media.kitsu.app/anime/42765/poster_image/large-5ce19551c1a6cf995b378205b9149b5c.jpeg",
+      "format": "TV",
+      "score": "8.6",
+      "episodes": 24,
+      "year": 2020,
+      "genres": [
+        "Supernatural"
+      ]
+    },
+    {
+      "id": "kitsu-7881",
+      "title": "Noragami",
+      "image": "https://media.kitsu.app/anime/poster_images/7881/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 12,
+      "year": 2014,
+      "genres": [
+        "Supernatural"
+      ]
+    },
+    {
+      "id": "kitsu-10800",
+      "title": "Noragami Aragoto",
+      "image": "https://media.kitsu.app/anime/poster_images/10800/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 13,
+      "year": 2015,
+      "genres": [
+        "Supernatural"
+      ]
+    },
+    {
+      "id": "kitsu-11110",
+      "title": "Boku dake ga Inai Machi",
+      "image": "https://media.kitsu.app/anime/poster_images/11110/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 12,
+      "year": 2016,
+      "genres": [
+        "Supernatural"
+      ]
+    },
+    {
+      "id": "kitsu-9969",
+      "title": "Death Parade",
+      "image": "https://media.kitsu.app/anime/poster_images/9969/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 12,
+      "year": 2015,
+      "genres": [
+        "Supernatural"
+      ]
+    },
+    {
+      "id": "kitsu-6266",
+      "title": "Mirai Nikki (TV)",
+      "image": "https://media.kitsu.app/anime/poster_images/6266/large.jpg",
+      "format": "TV",
+      "score": "7.5",
+      "episodes": 26,
+      "year": 2011,
+      "genres": [
+        "Supernatural"
+      ]
+    }
+  ],
+  "Mecha": [
+    {
+      "id": "kitsu-1415",
+      "title": "Code Geass: Lelouch of the Rebellion",
+      "image": "https://media.kitsu.app/anime/poster_images/1415/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 25,
+      "year": 2006,
+      "genres": [
+        "Mecha"
+      ]
+    },
+    {
+      "id": "kitsu-2634",
+      "title": "Code Geass: Lelouch of the Rebellion R2",
+      "image": "https://media.kitsu.app/anime/poster_images/2634/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 25,
+      "year": 2008,
+      "genres": [
+        "Mecha"
+      ]
+    },
+    {
+      "id": "kitsu-1801",
+      "title": "Tengen Toppa Gurren Lagann",
+      "image": "https://media.kitsu.app/anime/poster_images/1801/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 27,
+      "year": 2007,
+      "genres": [
+        "Mecha"
+      ]
+    },
+    {
+      "id": "kitsu-21",
+      "title": "Neon Genesis Evangelion",
+      "image": "https://media.kitsu.app/anime/21/poster_image/large-9a3a9086a1b563e9e72d510118eb7d3c.jpeg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 26,
+      "year": 1995,
+      "genres": [
+        "Mecha"
+      ]
+    },
+    {
+      "id": "kitsu-13600",
+      "title": "Darling in the FranXX",
+      "image": "https://media.kitsu.app/anime/poster_images/13600/large.jpg",
+      "format": "TV",
+      "score": "7.4",
+      "episodes": 24,
+      "year": 2018,
+      "genres": [
+        "Mecha"
+      ]
+    },
+    {
+      "id": "kitsu-6349",
+      "title": "Guilty Crown",
+      "image": "https://media.kitsu.app/anime/poster_images/6349/large.jpg",
+      "format": "TV",
+      "score": "7.3",
+      "episodes": 22,
+      "year": 2011,
+      "genres": [
+        "Mecha"
+      ]
+    },
+    {
+      "id": "kitsu-23",
+      "title": "Neon Genesis Evangelion: The End of Evangelion",
+      "image": "https://media.kitsu.app/anime/23/poster_image/large-ebaaa2562ec3d01f8158bb068edaf361.jpeg",
+      "format": "MOVIE",
+      "score": "8.2",
+      "episodes": 1,
+      "year": 1997,
+      "genres": [
+        "Mecha"
+      ]
+    },
+    {
+      "id": "kitsu-202",
+      "title": "FLCL",
+      "image": "https://media.kitsu.app/anime/202/poster_image/large-aaa4382e2d089a683af13bfd86aa4d34.jpeg",
+      "format": "OVA",
+      "score": "8.0",
+      "episodes": 6,
+      "year": 2000,
+      "genres": [
+        "Mecha"
+      ]
+    },
+    {
+      "id": "kitsu-7278",
+      "title": "Date A Live",
+      "image": "https://media.kitsu.app/anime/poster_images/7278/large.jpg",
+      "format": "TV",
+      "score": "7.2",
+      "episodes": 12,
+      "year": 2013,
+      "genres": [
+        "Mecha"
+      ]
+    },
+    {
+      "id": "kitsu-25",
+      "title": "Ghost in the Shell",
+      "image": "https://media.kitsu.app/anime/25/poster_image/large-a571f1f78eb5147a952e6c333b32a16d.jpeg",
+      "format": "MOVIE",
+      "score": "8.2",
+      "episodes": 1,
+      "year": 1995,
+      "genres": [
+        "Mecha"
+      ]
+    },
+    {
+      "id": "kitsu-472",
+      "title": "Castle in the Sky",
+      "image": "https://media.kitsu.app/anime/poster_images/472/large.jpg",
+      "format": "MOVIE",
+      "score": "8.2",
+      "episodes": 1,
+      "year": 1986,
+      "genres": [
+        "Mecha"
+      ]
+    },
+    {
+      "id": "kitsu-3250",
+      "title": "Evangelion: 2.0 You Can (Not) Advance",
+      "image": "https://media.kitsu.app/anime/3250/poster_image/large-862805f10b5eb3664c6debd517751fde.jpeg",
+      "format": "MOVIE",
+      "score": "8.2",
+      "episodes": 1,
+      "year": 2009,
+      "genres": [
+        "Mecha"
+      ]
+    }
+  ],
+  "Music": [
+    {
+      "id": "kitsu-8403",
+      "title": "Shigatsu wa Kimi no Uso",
+      "image": "https://media.kitsu.app/anime/poster_images/8403/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 22,
+      "year": 2014,
+      "genres": [
+        "Music"
+      ]
+    },
+    {
+      "id": "kitsu-4240",
+      "title": "K-On!",
+      "image": "https://media.kitsu.app/anime/poster_images/4240/large.jpg",
+      "format": "TV",
+      "score": "7.8",
+      "episodes": 13,
+      "year": 2009,
+      "genres": [
+        "Music"
+      ]
+    },
+    {
+      "id": "kitsu-41332",
+      "title": "Peace Sign",
+      "image": "https://media.kitsu.app/anime/poster_images/41332/large.jpg",
+      "format": "MUSIC",
+      "score": "8.3",
+      "episodes": 1,
+      "year": 2017,
+      "genres": [
+        "Music"
+      ]
+    },
+    {
+      "id": "kitsu-42379",
+      "title": "Given",
+      "image": "https://media.kitsu.app/anime/poster_images/42379/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 11,
+      "year": 2019,
+      "genres": [
+        "Music"
+      ]
+    },
+    {
+      "id": "kitsu-5124",
+      "title": "K-On!!",
+      "image": "https://media.kitsu.app/anime/poster_images/5124/large.jpg",
+      "format": "TV",
+      "score": "8.1",
+      "episodes": 26,
+      "year": 2010,
+      "genres": [
+        "Music"
+      ]
+    },
+    {
+      "id": "kitsu-400",
+      "title": "Perfect Blue",
+      "image": "https://media.kitsu.app/anime/poster_images/400/large.jpg",
+      "format": "MOVIE",
+      "score": "8.2",
+      "episodes": 1,
+      "year": 1998,
+      "genres": [
+        "Music"
+      ]
+    },
+    {
+      "id": "kitsu-777",
+      "title": "Nana",
+      "image": "https://media.kitsu.app/anime/777/poster_image/large-02fd1b083aefd40778a677450e2c23da.jpeg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 47,
+      "year": 2006,
+      "genres": [
+        "Music"
+      ]
+    },
+    {
+      "id": "kitsu-6760",
+      "title": "Kids on the Slope",
+      "image": "https://media.kitsu.app/anime/poster_images/6760/large.jpg",
+      "format": "TV",
+      "score": "8.1",
+      "episodes": 12,
+      "year": 2012,
+      "genres": [
+        "Music"
+      ]
+    },
+    {
+      "id": "kitsu-9980",
+      "title": "Hibike! Euphonium",
+      "image": "https://media.kitsu.app/anime/poster_images/9980/large.jpg",
+      "format": "TV",
+      "score": "8.0",
+      "episodes": 13,
+      "year": 2015,
+      "genres": [
+        "Music"
+      ]
+    },
+    {
+      "id": "kitsu-5810",
+      "title": "K-On! Movie",
+      "image": "https://media.kitsu.app/anime/poster_images/5810/large.jpg",
+      "format": "MOVIE",
+      "score": "8.2",
+      "episodes": 1,
+      "year": 2011,
+      "genres": [
+        "Music"
+      ]
+    },
+    {
+      "id": "kitsu-7203",
+      "title": "Love Live! School Idol Project",
+      "image": "https://media.kitsu.app/anime/poster_images/7203/large.jpg",
+      "format": "TV",
+      "score": "7.4",
+      "episodes": 13,
+      "year": 2013,
+      "genres": [
+        "Music"
+      ]
+    },
+    {
+      "id": "kitsu-12668",
+      "title": "Shelter",
+      "image": "https://media.kitsu.app/anime/poster_images/12668/large.jpg",
+      "format": "MUSIC",
+      "score": "8.1",
+      "episodes": 1,
+      "year": 2016,
+      "genres": [
+        "Music"
+      ]
+    }
+  ],
+  "Psychological": [
+    {
+      "id": "kitsu-1376",
+      "title": "Death Note",
+      "image": "https://media.kitsu.app/anime/poster_images/1376/large.jpg",
+      "format": "TV",
+      "score": "8.3",
+      "episodes": 37,
+      "year": 2006,
+      "genres": [
+        "Psychological"
+      ]
+    },
+    {
+      "id": "kitsu-41312",
+      "title": "Yakusoku no Neverland",
+      "image": "https://media.kitsu.app/anime/poster_images/41312/large.jpg",
+      "format": "TV",
+      "score": "8.3",
+      "episodes": 12,
+      "year": 2019,
+      "genres": [
+        "Psychological"
+      ]
+    },
+    {
+      "id": "kitsu-8271",
+      "title": "Tokyo Ghoul",
+      "image": "https://media.kitsu.app/anime/poster_images/8271/large.jpg",
+      "format": "TV",
+      "score": "8.0",
+      "episodes": 12,
+      "year": 2014,
+      "genres": [
+        "Psychological"
+      ]
+    },
+    {
+      "id": "kitsu-11110",
+      "title": "Boku dake ga Inai Machi",
+      "image": "https://media.kitsu.app/anime/poster_images/11110/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 12,
+      "year": 2016,
+      "genres": [
+        "Psychological"
+      ]
+    },
+    {
+      "id": "kitsu-8147",
+      "title": "Kiseijuu: Sei no Kakuritsu",
+      "image": "https://media.kitsu.app/anime/poster_images/8147/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 24,
+      "year": 2014,
+      "genres": [
+        "Psychological"
+      ]
+    },
+    {
+      "id": "kitsu-11209",
+      "title": "Re:Zero kara Hajimeru Isekai Seikatsu",
+      "image": "https://media.kitsu.app/anime/poster_images/11209/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 25,
+      "year": 2016,
+      "genres": [
+        "Psychological"
+      ]
+    },
+    {
+      "id": "kitsu-7000",
+      "title": "Psycho-Pass",
+      "image": "https://media.kitsu.app/anime/poster_images/7000/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 22,
+      "year": 2012,
+      "genres": [
+        "Psychological"
+      ]
+    },
+    {
+      "id": "kitsu-9969",
+      "title": "Death Parade",
+      "image": "https://media.kitsu.app/anime/poster_images/9969/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 12,
+      "year": 2015,
+      "genres": [
+        "Psychological"
+      ]
+    },
+    {
+      "id": "kitsu-6266",
+      "title": "Mirai Nikki (TV)",
+      "image": "https://media.kitsu.app/anime/poster_images/6266/large.jpg",
+      "format": "TV",
+      "score": "7.5",
+      "episodes": 26,
+      "year": 2011,
+      "genres": [
+        "Psychological"
+      ]
+    },
+    {
+      "id": "kitsu-21",
+      "title": "Neon Genesis Evangelion",
+      "image": "https://media.kitsu.app/anime/21/poster_image/large-9a3a9086a1b563e9e72d510118eb7d3c.jpeg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 26,
+      "year": 1995,
+      "genres": [
+        "Psychological"
+      ]
+    },
+    {
+      "id": "kitsu-41373",
+      "title": "Kaguya-sama wa Kokurasetai: Tensai-tachi no Renai Zunousen",
+      "image": "https://media.kitsu.app/anime/poster_images/41373/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 12,
+      "year": 2019,
+      "genres": [
+        "Psychological"
+      ]
+    },
+    {
+      "id": "kitsu-5853",
+      "title": "Mahou Shoujo Madoka★Magica",
+      "image": "https://media.kitsu.app/anime/poster_images/5853/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 12,
+      "year": 2011,
+      "genres": [
+        "Psychological"
+      ]
+    }
+  ],
+  "Isekai": [
+    {
+      "id": "kitsu-176",
+      "title": "Spirited Away",
+      "image": "https://media.kitsu.app/anime/poster_images/176/large.jpg",
+      "format": "MOVIE",
+      "score": "8.3",
+      "episodes": 1,
+      "year": 2001,
+      "genres": [
+        "Isekai"
+      ]
+    },
+    {
+      "id": "kitsu-7880",
+      "title": "No Game No Life",
+      "image": "https://media.kitsu.app/anime/poster_images/7880/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 12,
+      "year": 2014,
+      "genres": [
+        "Isekai"
+      ]
+    },
+    {
+      "id": "kitsu-6589",
+      "title": "Sword Art Online",
+      "image": "https://media.kitsu.app/anime/poster_images/6589/large.jpg",
+      "format": "TV",
+      "score": "7.4",
+      "episodes": 25,
+      "year": 2012,
+      "genres": [
+        "Isekai"
+      ]
+    },
+    {
+      "id": "kitsu-11209",
+      "title": "Re:Zero kara Hajimeru Isekai Seikatsu",
+      "image": "https://media.kitsu.app/anime/poster_images/11209/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 25,
+      "year": 2016,
+      "genres": [
+        "Isekai"
+      ]
+    },
+    {
+      "id": "kitsu-11937",
+      "title": "Kono Subarashii Sekai ni Shukufuku wo! 2",
+      "image": "https://media.kitsu.app/anime/poster_images/11937/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 10,
+      "year": 2017,
+      "genres": [
+        "Isekai"
+      ]
+    },
+    {
+      "id": "kitsu-8174",
+      "title": "Sword Art Online II",
+      "image": "https://media.kitsu.app/anime/poster_images/8174/large.jpg",
+      "format": "TV",
+      "score": "6.9",
+      "episodes": 24,
+      "year": 2014,
+      "genres": [
+        "Isekai"
+      ]
+    },
+    {
+      "id": "kitsu-7314",
+      "title": "The Devil is a Part-Timer!",
+      "image": "https://media.kitsu.app/anime/poster_images/7314/large.jpg",
+      "format": "TV",
+      "score": "8.0",
+      "episodes": 13,
+      "year": 2013,
+      "genres": [
+        "Isekai"
+      ]
+    },
+    {
+      "id": "kitsu-41024",
+      "title": "Tensei shitara Slime Datta Ken",
+      "image": "https://media.kitsu.app/anime/poster_images/41024/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 24,
+      "year": 2018,
+      "genres": [
+        "Isekai"
+      ]
+    },
+    {
+      "id": "kitsu-13593",
+      "title": "Tate no Yuusha no Nariagari",
+      "image": "https://media.kitsu.app/anime/poster_images/13593/large.jpg",
+      "format": "TV",
+      "score": "8.1",
+      "episodes": 25,
+      "year": 2019,
+      "genres": [
+        "Isekai"
+      ]
+    },
+    {
+      "id": "kitsu-7622",
+      "title": "Log Horizon",
+      "image": "https://media.kitsu.app/anime/poster_images/7622/large.jpg",
+      "format": "TV",
+      "score": "8.0",
+      "episodes": 25,
+      "year": 2013,
+      "genres": [
+        "Isekai"
+      ]
+    },
+    {
+      "id": "kitsu-9965",
+      "title": "Overlord",
+      "image": "https://media.kitsu.app/anime/poster_images/9965/large.jpg",
+      "format": "TV",
+      "score": "8.0",
+      "episodes": 13,
+      "year": 2015,
+      "genres": [
+        "Isekai"
+      ]
+    },
+    {
+      "id": "kitsu-1075",
+      "title": "Zero no Tsukaima",
+      "image": "https://media.kitsu.app/anime/poster_images/1075/large.jpg",
+      "format": "TV",
+      "score": "7.2",
+      "episodes": 13,
+      "year": 2006,
+      "genres": [
+        "Isekai"
+      ]
+    }
+  ],
+  "Shounen": [
+    {
+      "id": "kitsu-7442",
+      "title": "Attack on Titan",
+      "image": "https://media.kitsu.app/anime/poster_images/7442/large.jpg",
+      "format": "TV",
+      "score": "8.4",
+      "episodes": 25,
+      "year": 2013,
+      "genres": [
+        "Shounen"
+      ]
+    },
+    {
+      "id": "kitsu-11469",
+      "title": "Boku no Hero Academia",
+      "image": "https://media.kitsu.app/anime/poster_images/11469/large.jpg",
+      "format": "TV",
+      "score": "8.3",
+      "episodes": 13,
+      "year": 2016,
+      "genres": [
+        "Shounen"
+      ]
+    },
+    {
+      "id": "kitsu-12268",
+      "title": "Boku no Hero Academia 2",
+      "image": "https://media.kitsu.app/anime/poster_images/12268/large.jpg",
+      "format": "TV",
+      "score": "8.3",
+      "episodes": 25,
+      "year": 2017,
+      "genres": [
+        "Shounen"
+      ]
+    },
+    {
+      "id": "kitsu-13881",
+      "title": "Boku no Hero Academia 3",
+      "image": "https://media.kitsu.app/anime/poster_images/13881/large.jpg",
+      "format": "TV",
+      "score": "8.3",
+      "episodes": 25,
+      "year": 2018,
+      "genres": [
+        "Shounen"
+      ]
+    },
+    {
+      "id": "kitsu-1376",
+      "title": "Death Note",
+      "image": "https://media.kitsu.app/anime/poster_images/1376/large.jpg",
+      "format": "TV",
+      "score": "8.3",
+      "episodes": 37,
+      "year": 2006,
+      "genres": [
+        "Shounen"
+      ]
+    },
+    {
+      "id": "kitsu-3936",
+      "title": "Fullmetal Alchemist: Brotherhood",
+      "image": "https://media.kitsu.app/anime/poster_images/3936/large.jpg",
+      "format": "TV",
+      "score": "8.3",
+      "episodes": 64,
+      "year": 2009,
+      "genres": [
+        "Shounen"
+      ]
+    },
+    {
+      "id": "kitsu-6448",
+      "title": "Hunter x Hunter (2011)",
+      "image": "https://media.kitsu.app/anime/poster_images/6448/large.jpg",
+      "format": "TV",
+      "score": "8.4",
+      "episodes": 148,
+      "year": 2011,
+      "genres": [
+        "Shounen"
+      ]
+    },
+    {
+      "id": "kitsu-41370",
+      "title": "Kimetsu no Yaiba",
+      "image": "https://media.kitsu.app/anime/poster_images/41370/large.jpg",
+      "format": "TV",
+      "score": "8.6",
+      "episodes": 26,
+      "year": 2019,
+      "genres": [
+        "Shounen"
+      ]
+    },
+    {
+      "id": "kitsu-8671",
+      "title": "Attack on Titan Season 2",
+      "image": "https://media.kitsu.app/anime/poster_images/8671/large.jpg",
+      "format": "TV",
+      "score": "8.4",
+      "episodes": 12,
+      "year": 2017,
+      "genres": [
+        "Shounen"
+      ]
+    },
+    {
+      "id": "kitsu-12",
+      "title": "One Piece",
+      "image": "https://media.kitsu.app/anime/poster_images/12/large.jpg",
+      "format": "TV",
+      "score": "8.4",
+      "episodes": null,
+      "year": 1999,
+      "genres": [
+        "Shounen"
+      ]
+    },
+    {
+      "id": "kitsu-13569",
+      "title": "Attack on Titan Season 3",
+      "image": "https://media.kitsu.app/anime/poster_images/13569/large.jpg",
+      "format": "TV",
+      "score": "8.4",
+      "episodes": 12,
+      "year": 2018,
+      "genres": [
+        "Shounen"
+      ]
+    },
+    {
+      "id": "kitsu-41982",
+      "title": "Attack on Titan Season 3 Part 2",
+      "image": "https://media.kitsu.app/anime/poster_images/41982/large.jpg",
+      "format": "TV",
+      "score": "8.5",
+      "episodes": 10,
+      "year": 2019,
+      "genres": [
+        "Shounen"
+      ]
+    }
+  ],
+  "Shoujo": [
+    {
+      "id": "kitsu-8648",
+      "title": "Akatsuki no Yona",
+      "image": "https://media.kitsu.app/anime/poster_images/8648/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 24,
+      "year": 2014,
+      "genres": [
+        "Shoujo"
+      ]
+    },
+    {
+      "id": "kitsu-7157",
+      "title": "Kamisama Hajimemashita",
+      "image": "https://media.kitsu.app/anime/poster_images/7157/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 13,
+      "year": 2012,
+      "genres": [
+        "Shoujo"
+      ]
+    },
+    {
+      "id": "kitsu-8716",
+      "title": "Kamisama Hajimemashita◎",
+      "image": "https://media.kitsu.app/anime/poster_images/8716/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 12,
+      "year": 2015,
+      "genres": [
+        "Shoujo"
+      ]
+    },
+    {
+      "id": "kitsu-41995",
+      "title": "Fruits Basket (2019)",
+      "image": "https://media.kitsu.app/anime/poster_images/41995/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 25,
+      "year": 2019,
+      "genres": [
+        "Shoujo"
+      ]
+    },
+    {
+      "id": "kitsu-11844",
+      "title": "Orange",
+      "image": "https://media.kitsu.app/anime/poster_images/11844/large.jpg",
+      "format": "TV",
+      "score": "7.6",
+      "episodes": 13,
+      "year": 2016,
+      "genres": [
+        "Shoujo"
+      ]
+    },
+    {
+      "id": "kitsu-10016",
+      "title": "Ore Monogatari!!",
+      "image": "https://media.kitsu.app/anime/poster_images/10016/large.jpg",
+      "format": "TV",
+      "score": "8.0",
+      "episodes": 24,
+      "year": 2015,
+      "genres": [
+        "Shoujo"
+      ]
+    },
+    {
+      "id": "kitsu-3453",
+      "title": "Natsume Yuujinchou",
+      "image": "https://media.kitsu.app/anime/poster_images/3453/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 13,
+      "year": 2008,
+      "genres": [
+        "Shoujo"
+      ]
+    },
+    {
+      "id": "kitsu-777",
+      "title": "Nana",
+      "image": "https://media.kitsu.app/anime/777/poster_image/large-02fd1b083aefd40778a677450e2c23da.jpeg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 47,
+      "year": 2006,
+      "genres": [
+        "Shoujo"
+      ]
+    },
+    {
+      "id": "kitsu-10880",
+      "title": "Kamisama Hajimemashita: Kako-hen",
+      "image": "https://media.kitsu.app/anime/poster_images/10880/large.jpg",
+      "format": "OVA",
+      "score": "8.2",
+      "episodes": 4,
+      "year": 2015,
+      "genres": [
+        "Shoujo"
+      ]
+    },
+    {
+      "id": "kitsu-1833",
+      "title": "Lovely★Complex",
+      "image": "https://media.kitsu.app/anime/1833/poster_image/large-892da306ae6f1ec03daefae58c45138b.jpeg",
+      "format": "TV",
+      "score": "8.1",
+      "episodes": 24,
+      "year": 2007,
+      "genres": [
+        "Shoujo"
+      ]
+    },
+    {
+      "id": "kitsu-99",
+      "title": "Fruits Basket",
+      "image": "https://media.kitsu.app/anime/poster_images/99/large.jpg",
+      "format": "TV",
+      "score": "7.8",
+      "episodes": 26,
+      "year": 2001,
+      "genres": [
+        "Shoujo"
+      ]
+    },
+    {
+      "id": "kitsu-207",
+      "title": "Cardcaptor Sakura",
+      "image": "https://media.kitsu.app/anime/poster_images/207/large.jpg",
+      "format": "TV",
+      "score": "8.1",
+      "episodes": 70,
+      "year": 1998,
+      "genres": [
+        "Shoujo"
+      ]
+    }
+  ],
+  "Seinen": [
+    {
+      "id": "kitsu-10740",
+      "title": "One Punch Man",
+      "image": "https://media.kitsu.app/anime/poster_images/10740/large.jpg",
+      "format": "TV",
+      "score": "8.3",
+      "episodes": 12,
+      "year": 2015,
+      "genres": [
+        "Seinen"
+      ]
+    },
+    {
+      "id": "kitsu-13593",
+      "title": "Tate no Yuusha no Nariagari",
+      "image": "https://media.kitsu.app/anime/poster_images/13593/large.jpg",
+      "format": "TV",
+      "score": "8.1",
+      "episodes": 25,
+      "year": 2019,
+      "genres": [
+        "Seinen"
+      ]
+    },
+    {
+      "id": "kitsu-42632",
+      "title": "Kaguya-sama wa Kokurasetai?: Tensaitachi no Renai Zunousen",
+      "image": "https://media.kitsu.app/anime/poster_images/42632/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 12,
+      "year": 2020,
+      "genres": [
+        "Seinen"
+      ]
+    },
+    {
+      "id": "kitsu-4240",
+      "title": "K-On!",
+      "image": "https://media.kitsu.app/anime/poster_images/4240/large.jpg",
+      "format": "TV",
+      "score": "7.8",
+      "episodes": 13,
+      "year": 2009,
+      "genres": [
+        "Seinen"
+      ]
+    },
+    {
+      "id": "kitsu-41084",
+      "title": "Vinland Saga",
+      "image": "https://media.kitsu.app/anime/poster_images/41084/large.jpg",
+      "format": "TV",
+      "score": "8.3",
+      "episodes": 24,
+      "year": 2019,
+      "genres": [
+        "Seinen"
+      ]
+    },
+    {
+      "id": "kitsu-10464",
+      "title": "ReLIFE",
+      "image": "https://media.kitsu.app/anime/poster_images/10464/large.jpg",
+      "format": "TV",
+      "score": "8.1",
+      "episodes": 13,
+      "year": 2016,
+      "genres": [
+        "Seinen"
+      ]
+    },
+    {
+      "id": "kitsu-40597",
+      "title": "Goblin Slayer",
+      "image": "https://media.kitsu.app/anime/poster_images/40597/large.jpg",
+      "format": "TV",
+      "score": "7.4",
+      "episodes": 12,
+      "year": 2018,
+      "genres": [
+        "Seinen"
+      ]
+    },
+    {
+      "id": "kitsu-41984",
+      "title": "Bungou Stray Dogs 3",
+      "image": "https://media.kitsu.app/anime/poster_images/41984/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 12,
+      "year": 2019,
+      "genres": [
+        "Seinen"
+      ]
+    },
+    {
+      "id": "kitsu-11028",
+      "title": "Drifters",
+      "image": "https://media.kitsu.app/anime/poster_images/11028/large.jpg",
+      "format": "TV",
+      "score": "7.9",
+      "episodes": 12,
+      "year": 2016,
+      "genres": [
+        "Seinen"
+      ]
+    },
+    {
+      "id": "kitsu-5810",
+      "title": "K-On! Movie",
+      "image": "https://media.kitsu.app/anime/poster_images/5810/large.jpg",
+      "format": "MOVIE",
+      "score": "8.2",
+      "episodes": 1,
+      "year": 2011,
+      "genres": [
+        "Seinen"
+      ]
+    },
+    {
+      "id": "kitsu-44382",
+      "title": "Sono Bisque Doll wa Koi wo Suru",
+      "image": "https://media.kitsu.app/anime/44382/poster_image/large-8ffc8ea9b6a1f9e79bc626e03baab167.jpeg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 12,
+      "year": 2022,
+      "genres": [
+        "Seinen"
+      ]
+    },
+    {
+      "id": "kitsu-13521",
+      "title": "Houseki no Kuni (TV)",
+      "image": "https://media.kitsu.app/anime/13521/poster_image/large-a580ed1637cdd022d5a0e963aeb0aa1f.jpeg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 12,
+      "year": 2017,
+      "genres": [
+        "Seinen"
+      ]
+    }
+  ],
+  "Josei": [
+    {
+      "id": "kitsu-6060",
+      "title": "Usagi Drop",
+      "image": "https://media.kitsu.app/anime/poster_images/6060/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 11,
+      "year": 2011,
+      "genres": [
+        "Josei"
+      ]
+    },
+    {
+      "id": "kitsu-6355",
+      "title": "Chihayafuru",
+      "image": "https://media.kitsu.app/anime/poster_images/6355/large.jpg",
+      "format": "TV",
+      "score": "8.1",
+      "episodes": 25,
+      "year": 2011,
+      "genres": [
+        "Josei"
+      ]
+    },
+    {
+      "id": "kitsu-6760",
+      "title": "Kids on the Slope",
+      "image": "https://media.kitsu.app/anime/poster_images/6760/large.jpg",
+      "format": "TV",
+      "score": "8.1",
+      "episodes": 12,
+      "year": 2012,
+      "genres": [
+        "Josei"
+      ]
+    },
+    {
+      "id": "kitsu-1525",
+      "title": "Nodame Cantabile",
+      "image": "https://media.kitsu.app/anime/poster_images/1525/large.jpg",
+      "format": "TV",
+      "score": "8.1",
+      "episodes": 23,
+      "year": 2007,
+      "genres": [
+        "Josei"
+      ]
+    },
+    {
+      "id": "kitsu-7123",
+      "title": "Chihayafuru 2",
+      "image": "https://media.kitsu.app/anime/poster_images/7123/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 25,
+      "year": 2013,
+      "genres": [
+        "Josei"
+      ]
+    },
+    {
+      "id": "kitsu-10051",
+      "title": "Shouwa Genroku Rakugo Shinjuu",
+      "image": "https://media.kitsu.app/anime/poster_images/10051/large.jpg",
+      "format": "TV",
+      "score": "8.1",
+      "episodes": 13,
+      "year": 2016,
+      "genres": [
+        "Josei"
+      ]
+    },
+    {
+      "id": "kitsu-7",
+      "title": "Honey and Clover",
+      "image": "https://media.kitsu.app/anime/poster_images/7/large.jpg",
+      "format": "TV",
+      "score": "8.0",
+      "episodes": 24,
+      "year": 2005,
+      "genres": [
+        "Josei"
+      ]
+    },
+    {
+      "id": "kitsu-5204",
+      "title": "Kuragehime",
+      "image": "https://media.kitsu.app/anime/poster_images/5204/large.jpg",
+      "format": "TV",
+      "score": "8.1",
+      "episodes": 11,
+      "year": 2010,
+      "genres": [
+        "Josei"
+      ]
+    },
+    {
+      "id": "kitsu-7209",
+      "title": "Amnesia",
+      "image": "https://media.kitsu.app/anime/poster_images/7209/large.jpg",
+      "format": "TV",
+      "score": "5.8",
+      "episodes": 12,
+      "year": 2013,
+      "genres": [
+        "Josei"
+      ]
+    },
+    {
+      "id": "kitsu-11210",
+      "title": "Servamp",
+      "image": "https://media.kitsu.app/anime/poster_images/11210/large.jpg",
+      "format": "TV",
+      "score": "7.0",
+      "episodes": 12,
+      "year": 2016,
+      "genres": [
+        "Josei"
+      ]
+    },
+    {
+      "id": "kitsu-42277",
+      "title": "Otome Game no Hametsu Flag shika Nai Akuyaku Reijou ni Tensei shiteshimatta...",
+      "image": "https://media.kitsu.app/anime/poster_images/42277/large.jpg",
+      "format": "TV",
+      "score": "7.6",
+      "episodes": 12,
+      "year": 2020,
+      "genres": [
+        "Josei"
+      ]
+    },
+    {
+      "id": "kitsu-7364",
+      "title": "Karneval (TV)",
+      "image": "https://media.kitsu.app/anime/poster_images/7364/large.jpg",
+      "format": "TV",
+      "score": "6.9",
+      "episodes": 13,
+      "year": 2013,
+      "genres": [
+        "Josei"
+      ]
+    }
+  ],
+  "Martial Arts": [
+    {
+      "id": "kitsu-12",
+      "title": "One Piece",
+      "image": "https://media.kitsu.app/anime/poster_images/12/large.jpg",
+      "format": "TV",
+      "score": "8.4",
+      "episodes": null,
+      "year": 1999,
+      "genres": [
+        "Martial Arts"
+      ]
+    },
+    {
+      "id": "kitsu-42765",
+      "title": "Jujutsu Kaisen",
+      "image": "https://media.kitsu.app/anime/42765/poster_image/large-5ce19551c1a6cf995b378205b9149b5c.jpeg",
+      "format": "TV",
+      "score": "8.6",
+      "episodes": 24,
+      "year": 2020,
+      "genres": [
+        "Martial Arts"
+      ]
+    },
+    {
+      "id": "kitsu-1555",
+      "title": "Naruto: Shippuuden",
+      "image": "https://media.kitsu.app/anime/poster_images/1555/large.jpg",
+      "format": "TV",
+      "score": "8.4",
+      "episodes": 500,
+      "year": 2007,
+      "genres": [
+        "Martial Arts"
+      ]
+    },
+    {
+      "id": "kitsu-11",
+      "title": "Naruto",
+      "image": "https://media.kitsu.app/anime/11/poster_image/large-5e901605066f7f2727f49d01859bbfe4.jpeg",
+      "format": "TV",
+      "score": "8.0",
+      "episodes": 220,
+      "year": 2002,
+      "genres": [
+        "Martial Arts"
+      ]
+    },
+    {
+      "id": "kitsu-7926",
+      "title": "Avatar: The Last Airbender Book 3: Fire",
+      "image": "https://media.kitsu.app/anime/poster_images/7926/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 21,
+      "year": 2007,
+      "genres": [
+        "Martial Arts"
+      ]
+    },
+    {
+      "id": "kitsu-7937",
+      "title": "Avatar: The Last Airbender Book 2: Earth",
+      "image": "https://media.kitsu.app/anime/poster_images/7937/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 20,
+      "year": 2006,
+      "genres": [
+        "Martial Arts"
+      ]
+    },
+    {
+      "id": "kitsu-115",
+      "title": "Hunter x Hunter",
+      "image": "https://media.kitsu.app/anime/poster_images/115/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 62,
+      "year": 1999,
+      "genres": [
+        "Martial Arts"
+      ]
+    },
+    {
+      "id": "kitsu-244",
+      "title": "BLEACH",
+      "image": "https://media.kitsu.app/anime/poster_images/244/large.jpg",
+      "format": "TV",
+      "score": "7.7",
+      "episodes": 366,
+      "year": 2004,
+      "genres": [
+        "Martial Arts"
+      ]
+    },
+    {
+      "id": "kitsu-181",
+      "title": "Samurai Champloo",
+      "image": "https://media.kitsu.app/anime/poster_images/181/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 26,
+      "year": 2004,
+      "genres": [
+        "Martial Arts"
+      ]
+    },
+    {
+      "id": "kitsu-7936",
+      "title": "Avatar: The Last Airbender Book 1: Water",
+      "image": "https://media.kitsu.app/anime/poster_images/7936/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 20,
+      "year": 2005,
+      "genres": [
+        "Martial Arts"
+      ]
+    },
+    {
+      "id": "kitsu-720",
+      "title": "Dragon Ball Z",
+      "image": "https://media.kitsu.app/anime/720/poster_image/large-5cfc7e2756852e708c822df0a9f59871.jpeg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 291,
+      "year": 1989,
+      "genres": [
+        "Martial Arts"
+      ]
+    },
+    {
+      "id": "kitsu-199",
+      "title": "Dragon Ball",
+      "image": "https://media.kitsu.app/anime/poster_images/199/large.jpg",
+      "format": "TV",
+      "score": "8.1",
+      "episodes": 153,
+      "year": 1986,
+      "genres": [
+        "Martial Arts"
+      ]
+    }
+  ],
+  "Super Power": [
+    {
+      "id": "kitsu-7442",
+      "title": "Attack on Titan",
+      "image": "https://media.kitsu.app/anime/poster_images/7442/large.jpg",
+      "format": "TV",
+      "score": "8.4",
+      "episodes": 25,
+      "year": 2013,
+      "genres": [
+        "Super Power"
+      ]
+    },
+    {
+      "id": "kitsu-11469",
+      "title": "Boku no Hero Academia",
+      "image": "https://media.kitsu.app/anime/poster_images/11469/large.jpg",
+      "format": "TV",
+      "score": "8.3",
+      "episodes": 13,
+      "year": 2016,
+      "genres": [
+        "Super Power"
+      ]
+    },
+    {
+      "id": "kitsu-12268",
+      "title": "Boku no Hero Academia 2",
+      "image": "https://media.kitsu.app/anime/poster_images/12268/large.jpg",
+      "format": "TV",
+      "score": "8.3",
+      "episodes": 25,
+      "year": 2017,
+      "genres": [
+        "Super Power"
+      ]
+    },
+    {
+      "id": "kitsu-10740",
+      "title": "One Punch Man",
+      "image": "https://media.kitsu.app/anime/poster_images/10740/large.jpg",
+      "format": "TV",
+      "score": "8.3",
+      "episodes": 12,
+      "year": 2015,
+      "genres": [
+        "Super Power"
+      ]
+    },
+    {
+      "id": "kitsu-13881",
+      "title": "Boku no Hero Academia 3",
+      "image": "https://media.kitsu.app/anime/poster_images/13881/large.jpg",
+      "format": "TV",
+      "score": "8.3",
+      "episodes": 25,
+      "year": 2018,
+      "genres": [
+        "Super Power"
+      ]
+    },
+    {
+      "id": "kitsu-6448",
+      "title": "Hunter x Hunter (2011)",
+      "image": "https://media.kitsu.app/anime/poster_images/6448/large.jpg",
+      "format": "TV",
+      "score": "8.4",
+      "episodes": 148,
+      "year": 2011,
+      "genres": [
+        "Super Power"
+      ]
+    },
+    {
+      "id": "kitsu-8699",
+      "title": "Nanatsu no Taizai",
+      "image": "https://media.kitsu.app/anime/poster_images/8699/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 24,
+      "year": 2014,
+      "genres": [
+        "Super Power"
+      ]
+    },
+    {
+      "id": "kitsu-8671",
+      "title": "Attack on Titan Season 2",
+      "image": "https://media.kitsu.app/anime/poster_images/8671/large.jpg",
+      "format": "TV",
+      "score": "8.4",
+      "episodes": 12,
+      "year": 2017,
+      "genres": [
+        "Super Power"
+      ]
+    },
+    {
+      "id": "kitsu-12",
+      "title": "One Piece",
+      "image": "https://media.kitsu.app/anime/poster_images/12/large.jpg",
+      "format": "TV",
+      "score": "8.4",
+      "episodes": null,
+      "year": 1999,
+      "genres": [
+        "Super Power"
+      ]
+    },
+    {
+      "id": "kitsu-12633",
+      "title": "Nanatsu no Taizai: Imashime no Fukkatsu",
+      "image": "https://media.kitsu.app/anime/poster_images/12633/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 24,
+      "year": 2018,
+      "genres": [
+        "Super Power"
+      ]
+    },
+    {
+      "id": "kitsu-7880",
+      "title": "No Game No Life",
+      "image": "https://media.kitsu.app/anime/poster_images/7880/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 12,
+      "year": 2014,
+      "genres": [
+        "Super Power"
+      ]
+    },
+    {
+      "id": "kitsu-42422",
+      "title": "Attack on Titan: The Final Season",
+      "image": "https://media.kitsu.app/anime/poster_images/42422/large.jpg",
+      "format": "TV",
+      "score": "8.5",
+      "episodes": 16,
+      "year": 2020,
+      "genres": [
+        "Super Power"
+      ]
+    }
+  ],
+  "Adventure": [
+    {
+      "id": "kitsu-7442",
+      "title": "Attack on Titan",
+      "image": "https://media.kitsu.app/anime/poster_images/7442/large.jpg",
+      "format": "TV",
+      "score": "8.4",
+      "episodes": 25,
+      "year": 2013,
+      "genres": [
+        "Adventure"
+      ]
+    },
+    {
+      "id": "kitsu-3936",
+      "title": "Fullmetal Alchemist: Brotherhood",
+      "image": "https://media.kitsu.app/anime/poster_images/3936/large.jpg",
+      "format": "TV",
+      "score": "8.3",
+      "episodes": 64,
+      "year": 2009,
+      "genres": [
+        "Adventure"
+      ]
+    },
+    {
+      "id": "kitsu-6448",
+      "title": "Hunter x Hunter (2011)",
+      "image": "https://media.kitsu.app/anime/poster_images/6448/large.jpg",
+      "format": "TV",
+      "score": "8.4",
+      "episodes": 148,
+      "year": 2011,
+      "genres": [
+        "Adventure"
+      ]
+    },
+    {
+      "id": "kitsu-41370",
+      "title": "Kimetsu no Yaiba",
+      "image": "https://media.kitsu.app/anime/poster_images/41370/large.jpg",
+      "format": "TV",
+      "score": "8.6",
+      "episodes": 26,
+      "year": 2019,
+      "genres": [
+        "Adventure"
+      ]
+    },
+    {
+      "id": "kitsu-8699",
+      "title": "Nanatsu no Taizai",
+      "image": "https://media.kitsu.app/anime/poster_images/8699/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 24,
+      "year": 2014,
+      "genres": [
+        "Adventure"
+      ]
+    },
+    {
+      "id": "kitsu-8671",
+      "title": "Attack on Titan Season 2",
+      "image": "https://media.kitsu.app/anime/poster_images/8671/large.jpg",
+      "format": "TV",
+      "score": "8.4",
+      "episodes": 12,
+      "year": 2017,
+      "genres": [
+        "Adventure"
+      ]
+    },
+    {
+      "id": "kitsu-12",
+      "title": "One Piece",
+      "image": "https://media.kitsu.app/anime/poster_images/12/large.jpg",
+      "format": "TV",
+      "score": "8.4",
+      "episodes": null,
+      "year": 1999,
+      "genres": [
+        "Adventure"
+      ]
+    },
+    {
+      "id": "kitsu-13569",
+      "title": "Attack on Titan Season 3",
+      "image": "https://media.kitsu.app/anime/poster_images/13569/large.jpg",
+      "format": "TV",
+      "score": "8.4",
+      "episodes": 12,
+      "year": 2018,
+      "genres": [
+        "Adventure"
+      ]
+    },
+    {
+      "id": "kitsu-176",
+      "title": "Spirited Away",
+      "image": "https://media.kitsu.app/anime/poster_images/176/large.jpg",
+      "format": "MOVIE",
+      "score": "8.3",
+      "episodes": 1,
+      "year": 2001,
+      "genres": [
+        "Adventure"
+      ]
+    },
+    {
+      "id": "kitsu-41982",
+      "title": "Attack on Titan Season 3 Part 2",
+      "image": "https://media.kitsu.app/anime/poster_images/41982/large.jpg",
+      "format": "TV",
+      "score": "8.5",
+      "episodes": 10,
+      "year": 2019,
+      "genres": [
+        "Adventure"
+      ]
+    },
+    {
+      "id": "kitsu-12633",
+      "title": "Nanatsu no Taizai: Imashime no Fukkatsu",
+      "image": "https://media.kitsu.app/anime/poster_images/12633/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 24,
+      "year": 2018,
+      "genres": [
+        "Adventure"
+      ]
+    },
+    {
+      "id": "kitsu-7880",
+      "title": "No Game No Life",
+      "image": "https://media.kitsu.app/anime/poster_images/7880/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 12,
+      "year": 2014,
+      "genres": [
+        "Adventure"
+      ]
+    }
+  ],
+  "Drama": [
+    {
+      "id": "kitsu-7442",
+      "title": "Attack on Titan",
+      "image": "https://media.kitsu.app/anime/poster_images/7442/large.jpg",
+      "format": "TV",
+      "score": "8.4",
+      "episodes": 25,
+      "year": 2013,
+      "genres": [
+        "Drama"
+      ]
+    },
+    {
+      "id": "kitsu-1376",
+      "title": "Death Note",
+      "image": "https://media.kitsu.app/anime/poster_images/1376/large.jpg",
+      "format": "TV",
+      "score": "8.3",
+      "episodes": 37,
+      "year": 2006,
+      "genres": [
+        "Drama"
+      ]
+    },
+    {
+      "id": "kitsu-11614",
+      "title": "Kimi no Na wa.",
+      "image": "https://media.kitsu.app/anime/poster_images/11614/large.jpg",
+      "format": "MOVIE",
+      "score": "8.3",
+      "episodes": 1,
+      "year": 2016,
+      "genres": [
+        "Drama"
+      ]
+    },
+    {
+      "id": "kitsu-6448",
+      "title": "Hunter x Hunter (2011)",
+      "image": "https://media.kitsu.app/anime/poster_images/6448/large.jpg",
+      "format": "TV",
+      "score": "8.4",
+      "episodes": 148,
+      "year": 2011,
+      "genres": [
+        "Drama"
+      ]
+    },
+    {
+      "id": "kitsu-8671",
+      "title": "Attack on Titan Season 2",
+      "image": "https://media.kitsu.app/anime/poster_images/8671/large.jpg",
+      "format": "TV",
+      "score": "8.4",
+      "episodes": 12,
+      "year": 2017,
+      "genres": [
+        "Drama"
+      ]
+    },
+    {
+      "id": "kitsu-10028",
+      "title": "Koe no Katachi",
+      "image": "https://media.kitsu.app/anime/poster_images/10028/large.jpg",
+      "format": "MOVIE",
+      "score": "8.4",
+      "episodes": 1,
+      "year": 2016,
+      "genres": [
+        "Drama"
+      ]
+    },
+    {
+      "id": "kitsu-13569",
+      "title": "Attack on Titan Season 3",
+      "image": "https://media.kitsu.app/anime/poster_images/13569/large.jpg",
+      "format": "TV",
+      "score": "8.4",
+      "episodes": 12,
+      "year": 2018,
+      "genres": [
+        "Drama"
+      ]
+    },
+    {
+      "id": "kitsu-176",
+      "title": "Spirited Away",
+      "image": "https://media.kitsu.app/anime/poster_images/176/large.jpg",
+      "format": "MOVIE",
+      "score": "8.3",
+      "episodes": 1,
+      "year": 2001,
+      "genres": [
+        "Drama"
+      ]
+    },
+    {
+      "id": "kitsu-41982",
+      "title": "Attack on Titan Season 3 Part 2",
+      "image": "https://media.kitsu.app/anime/poster_images/41982/large.jpg",
+      "format": "TV",
+      "score": "8.5",
+      "episodes": 10,
+      "year": 2019,
+      "genres": [
+        "Drama"
+      ]
+    },
+    {
+      "id": "kitsu-5646",
+      "title": "Steins;Gate",
+      "image": "https://media.kitsu.app/anime/poster_images/5646/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 24,
+      "year": 2011,
+      "genres": [
+        "Drama"
+      ]
+    },
+    {
+      "id": "kitsu-8403",
+      "title": "Shigatsu wa Kimi no Uso",
+      "image": "https://media.kitsu.app/anime/poster_images/8403/large.jpg",
+      "format": "TV",
+      "score": "8.2",
+      "episodes": 22,
+      "year": 2014,
+      "genres": [
+        "Drama"
+      ]
+    },
+    {
+      "id": "kitsu-42422",
+      "title": "Attack on Titan: The Final Season",
+      "image": "https://media.kitsu.app/anime/poster_images/42422/large.jpg",
+      "format": "TV",
+      "score": "8.5",
+      "episodes": 16,
+      "year": 2020,
+      "genres": [
+        "Drama"
+      ]
+    }
+  ]
+}

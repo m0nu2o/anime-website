@@ -22,7 +22,7 @@ const SEASONS = [
 export default async function SeasonalPage({
   searchParams,
 }: {
-  searchParams: Promise<{ season?: string; year?: string }>;
+  searchParams: Promise<{ season?: string; year?: string; page?: string }>;
 }) {
   const params = await searchParams;
   const now = new Date();
@@ -37,8 +37,9 @@ export default async function SeasonalPage({
 
   const currentYear = params.year ? parseInt(params.year, 10) : defaultYear;
   const currentSeason = params.season ? params.season.toLowerCase() : defaultSeason;
+  const currentPage = params.page ? parseInt(params.page, 10) : 1;
 
-  const animeList = await getSeasonalAnime(currentSeason, currentYear, 20);
+  const animeList = await getSeasonalAnime(currentSeason, currentYear, 30);
 
   return (
     <>
@@ -73,9 +74,9 @@ export default async function SeasonalPage({
             })}
           </div>
 
-          {/* Year Selector */}
+          {/* Year Selector (generated from the real current year, newest first) */}
           <div className={styles.yearRow}>
-            {[2026, 2025, 2024, 2023, 2022].map((y) => (
+            {Array.from({ length: 5 }, (_, i) => defaultYear - i).map((y) => (
               <Link
                 key={y}
                 href={`/seasonal?season=${currentSeason}&year=${y}`}
@@ -90,11 +91,50 @@ export default async function SeasonalPage({
         {/* Anime Grid */}
         <h2 className="sr-only">Seasonal Anime Lineup</h2>
         {animeList.length > 0 ? (
-          <div className={styles.grid}>
-            {animeList.map((anime) => (
-              <AnimeCard key={anime.id} anime={anime} />
-            ))}
-          </div>
+          <>
+            <div className={styles.grid}>
+              {animeList.map((anime) => (
+                <AnimeCard key={anime.id} anime={anime} />
+              ))}
+            </div>
+
+            {/* Pagination Controls */}
+            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "16px", marginTop: "32px", marginBottom: "24px" }}>
+              {currentPage > 1 && (
+                <Link
+                  href={`/seasonal?season=${currentSeason}&year=${currentYear}&page=${currentPage - 1}`}
+                  style={{
+                    padding: "8px 18px",
+                    borderRadius: "9999px",
+                    background: "rgba(255, 255, 255, 0.08)",
+                    border: "1px solid rgba(255, 255, 255, 0.15)",
+                    color: "#fff",
+                    fontWeight: 600,
+                    textDecoration: "none",
+                  }}
+                >
+                  ← Previous Page
+                </Link>
+              )}
+              <span style={{ color: "#94a3b8", fontSize: "0.9rem", fontWeight: 600 }}>Page {currentPage}</span>
+              {animeList.length >= 20 && (
+                <Link
+                  href={`/seasonal?season=${currentSeason}&year=${currentYear}&page=${currentPage + 1}`}
+                  style={{
+                    padding: "8px 18px",
+                    borderRadius: "9999px",
+                    background: "rgba(255, 255, 255, 0.08)",
+                    border: "1px solid rgba(255, 255, 255, 0.15)",
+                    color: "#fff",
+                    fontWeight: 600,
+                    textDecoration: "none",
+                  }}
+                >
+                  Next Page →
+                </Link>
+              )}
+            </div>
+          </>
         ) : (
           <div className={styles.emptyState}>
             <h2>No Anime Found For This Season</h2>

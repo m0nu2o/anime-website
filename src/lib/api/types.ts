@@ -1,11 +1,16 @@
 export interface Episode {
   id: string;
-  number: number;
-  seasonNumber: number;
+  /** Real episode number from the provider. null when the provider does not expose one. */
+  number: number | null;
+  seasonNumber?: number | null;
+  /** Raw title from the provider. Empty when the provider has no title for this episode. */
   title: string;
   synopsis?: string;
   thumbnail?: string;
+  /** Raw provider airdate (ISO string or date-only). Absent when the provider does not list one. */
   airdate?: string;
+  airdateTimestamp?: number;
+  status?: "released" | "upcoming" | "unknown";
   length?: number; // minutes
 }
 
@@ -60,23 +65,47 @@ export interface AnimeRelation {
   };
 }
 
+export interface NormalizedEpisodeRecord extends Episode {
+  airdateTimestamp?: number; // Unix ms
+  status: "released" | "upcoming" | "unknown";
+}
+
 export interface AiringSchedule {
   id: string;
   animeId: string;
   animeTitle: string;
   animeImage: string;
-  episodeNumber: number;
+  /** Real episode number from the provider. null when unknown. */
+  episodeNumber: number | null;
+  anilistId?: number;
+  malId?: number;
   airingAt: string; // Day name or ISO string
+  /** Broadcast date in Asia/Tokyo, formatted as YYYY-MM-DD. */
+  airingDate?: string;
   timeString?: string;
-  airingAtTimestamp?: number; // Unix timestamp
+  /** False when the provider supplies a date but no verified broadcast time. */
+  hasExactTime?: boolean;
+  airingAtTimestamp?: number; // Unix timestamp in seconds
   timeUntilAiring?: number; // seconds until airing
   status?: "airing_today" | "upcoming" | "aired";
+  format?: string;
   genres?: string[];
   score?: number;
   studio?: string;
+  source?: string;
 }
 
 export type AnimeProvider = "anilist" | "mal" | "kitsu";
+
+export interface AnimeIdentity {
+  canonicalId: string; // Unified prefixed ID: anilist-XXXX, mal-XXXX, kitsu-XXXX
+  provider: AnimeProvider;
+  anilistId?: number;
+  malId?: number;
+  kitsuId?: string;
+  reanimeId?: string;
+  slug?: string;
+}
 
 export interface AnimeIds {
   id: string; // Unified prefixed ID: anilist-XXXX, mal-XXXX, kitsu-XXXX
@@ -103,8 +132,8 @@ export interface StreamResponse {
   success: boolean;
   provider: string;
   anilistId?: string;
-  dubAvailable: boolean;
-  subAvailable: boolean;
+  dubAvailable: boolean | null;
+  subAvailable: boolean | null;
   sources: StreamSource[];
   subtitles?: { url: string; lang: string }[];
   embedUrls: EmbedSource[];
@@ -157,5 +186,10 @@ export interface Anime {
   recommendations?: Anime[];
   streamingLinks?: StreamingLink[];
   episodesList?: Episode[];
+  nextAiringEpisode?: {
+    episode: number;
+    airingAt?: number;
+    timeUntilAiring?: number;
+  };
 }
 

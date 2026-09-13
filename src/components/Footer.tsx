@@ -2,6 +2,7 @@ import React from "react";
 import Link from "next/link";
 import styles from "./Footer.module.css";
 import { Sparkles, Compass, Film, Shield, Heart } from "lucide-react";
+import BrandLogo from "./BrandLogo";
 
 export default function Footer() {
   return (
@@ -9,8 +10,8 @@ export default function Footer() {
       <div className={`container ${styles.container}`}>
         <div className={styles.topSection}>
           <div className={styles.brandCol}>
-            <Link href="/" className={styles.logo}>
-              NextGen<span className={styles.accent}>Anime</span>
+            <Link href="/" className={styles.logo} aria-label="NextGen Anime — Home">
+              <BrandLogo size="lg" />
             </Link>
             <p className={styles.tagline}>
               The ultimate anime discovery and immersive simulator platform. Powered by real-time community metadata and interactive visual simulations.
