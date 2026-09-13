@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { StreamResponse, StreamSource } from "@/lib/api/types";
 
+export const dynamic = "force-dynamic";
+
 function normalizeTitle(value: string): string {
   return value
     .normalize("NFKD")

@@ -8,15 +8,16 @@ interface ReanimeServerRaw {
 }
 
 const REANIME_BASE_URL = "https://reanime.to";
-const REANIME_TIMEOUT_MS = 4500;
+const REANIME_TIMEOUT_MS = 8000;
 
 // In-memory circuit breaker for ReAnime operational provider
 let failureCount = 0;
 let circuitOpenUntil = 0;
-const MAX_FAILURES = 5;
-const COOLDOWN_MS = 60 * 1000;
+const MAX_FAILURES = 8;
+const COOLDOWN_MS = 30 * 1000;
 
 function isCircuitOpen(): boolean {
+  if (process.env.NEXT_PHASE === "phase-production-build") return false;
   if (Date.now() < circuitOpenUntil) return true;
   if (circuitOpenUntil !== 0) {
     circuitOpenUntil = 0;
@@ -73,7 +74,7 @@ export async function fetchReanimeServers(
         "Accept": "application/json",
       },
       signal: AbortSignal.timeout(REANIME_TIMEOUT_MS),
-      next: { revalidate: 300 },
+      cache: "no-store",
     });
 
     if (!res.ok) {
