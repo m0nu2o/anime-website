@@ -324,12 +324,53 @@ export default function VideoPlayer({
           `/api/anime/stream?title=${encodeURIComponent(cleanTitle)}&episode=${episodeNumber}&dub=${isDub}&malId=${malId || ""}&animeId=${encodeURIComponent(animeId || "")}&anilistId=${anilistId || ""}`
         );
         if (res.ok) {
-          const data = await res.json();
-          if (!isCancelled && requestId === activeRequestIdRef.current && data.success) {
-            setStreamSources(data.sources || []);
-            setEmbedUrls(data.embedUrls || []);
-            const hasDubServer = Boolean(data.dubAvailable && (data.embedUrls || []).some((e: { isDub?: boolean }) => Boolean(e.isDub) === true));
-            const hasSubServer = Boolean(data.subAvailable || (data.embedUrls || []).some((e: { isDub?: boolean }) => !e.isDub));
+          const data = await res.json().catch(() => null);
+          let finalData = data?.success && (data.sources?.length > 0 || data.embedUrls?.length > 0) ? data : null;
+
+          if (!finalData) {
+            // Client-side fallback: directly query ReAnime from browser (bypasses datacenter IP blocks)
+            const cleanAniId = anilistId
+              ? String(anilistId).replace(/^anilist-/, "").trim()
+              : (animeId?.startsWith("anilist-") ? animeId.replace("anilist-", "").trim() : null);
+
+            if (cleanAniId && /^\d+$/.test(cleanAniId)) {
+              try {
+                const cRes = await fetch(`https://reanime.to/api/flix/${cleanAniId}/${episodeNumber}`);
+                if (cRes.ok) {
+                  const cJson = await cRes.json();
+                  if (cJson?.success && Array.isArray(cJson.servers) && cJson.servers.length > 0) {
+                    const embeds = cJson.servers.map((s: { serverName?: string; dataType?: string; dataLink: string }, idx: number) => {
+                      const isServerDub = s.dataType?.toLowerCase() === "dub";
+                      const finalUrl = isServerDub
+                        ? `${s.dataLink}${s.dataLink.includes("?") ? "&" : "?"}a=1`
+                        : s.dataLink;
+                      const serverDisplayName = s.serverName || `HD-${idx + 1}`;
+                      return {
+                        label: `ReAnime ${serverDisplayName} (${(s.dataType || "sub").toUpperCase()})`,
+                        url: finalUrl,
+                        serverType: `reanime_${serverDisplayName.toLowerCase().replace(/\s+/g, "")}`,
+                        isDub: isServerDub,
+                      };
+                    });
+                    finalData = {
+                      success: true,
+                      provider: "ReAnime.to Cloud Engine (HD-1 & HD-2)",
+                      sources: [],
+                      embedUrls: embeds,
+                      dubAvailable: embeds.some((e: { isDub?: boolean }) => e.isDub),
+                      subAvailable: embeds.some((e: { isDub?: boolean }) => !e.isDub),
+                    };
+                  }
+                }
+              } catch {}
+            }
+          }
+
+          if (!isCancelled && requestId === activeRequestIdRef.current && finalData?.success) {
+            setStreamSources(finalData.sources || []);
+            setEmbedUrls(finalData.embedUrls || []);
+            const hasDubServer = Boolean(finalData.dubAvailable && (finalData.embedUrls || []).some((e: { isDub?: boolean }) => Boolean(e.isDub) === true));
+            const hasSubServer = Boolean(finalData.subAvailable || (finalData.embedUrls || []).some((e: { isDub?: boolean }) => !e.isDub));
             setDubAvailable(hasDubServer);
             setSubAvailable(hasSubServer);
 
@@ -362,12 +403,12 @@ export default function VideoPlayer({
             setIsDub(targetIsDub);
 
             // Find first matching embed for active audio preference
-            const matchIdx = (data.embedUrls || []).findIndex((e: { isDub?: boolean }) => Boolean(e.isDub) === targetIsDub);
+            const matchIdx = (finalData.embedUrls || []).findIndex((e: { isDub?: boolean }) => Boolean(e.isDub) === targetIsDub);
             setActiveEmbedIdx(matchIdx >= 0 ? matchIdx : 0);
 
-            if (data.sources && data.sources.length > 0) {
+            if (finalData.sources && finalData.sources.length > 0) {
               setActiveServer("native_hls");
-            } else if (data.embedUrls && data.embedUrls.length > 0) {
+            } else if (finalData.embedUrls && finalData.embedUrls.length > 0) {
               setActiveServer("gogo_embed");
             }
           }
