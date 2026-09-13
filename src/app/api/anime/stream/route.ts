@@ -12,36 +12,57 @@ function normalizeTitle(value: string): string {
     .trim();
 }
 
+interface ResolvedIds {
+  anilistId?: string;
+  malId?: string;
+}
+
 /**
- * Fast resolution of AniList ID from direct ID, MAL ID (via AniList idMal), Kitsu mapping, or AniList search
+ * Fast resolution of AniList ID & MAL ID from direct ID, MAL ID (via AniList idMal), Kitsu mapping, or AniList search
  */
-async function resolveAnilistId(
+async function resolveIds(
   animeId?: string,
   title?: string,
   malId?: string,
   directAnilistId?: string
-): Promise<string | undefined> {
-  // 1. Direct AniList ID or anilist- prefix
-  if (directAnilistId && directAnilistId.trim() !== "") {
-    return String(directAnilistId).trim();
+): Promise<ResolvedIds> {
+  let resolvedAnilistId = directAnilistId?.trim() || undefined;
+  let resolvedMalId = malId?.trim() || undefined;
+
+  if (animeId?.startsWith("mal-")) {
+    resolvedMalId = animeId.replace("mal-", "");
+  } else if (animeId?.startsWith("anilist-")) {
+    resolvedAnilistId = animeId.replace("anilist-", "");
+  } else if (animeId && /^\d+$/.test(animeId)) {
+    resolvedAnilistId = animeId;
   }
 
-  if (animeId && animeId.startsWith("anilist-")) {
-    return animeId.replace("anilist-", "");
-  }
-
-  if (animeId && /^\d+$/.test(animeId)) {
-    return animeId;
-  }
-
-  // 2. Resolve MAL ID (either passed via malId param or mal-XXXX prefix) via AniList GraphQL idMal lookup
-  const targetMalId = malId || (animeId && animeId.startsWith("mal-") ? animeId.replace("mal-", "") : undefined);
-  if (targetMalId && /^\d+$/.test(targetMalId)) {
+  // 1. If we have malId but no anilistId, fetch AniList ID from MAL ID
+  if (resolvedMalId && !resolvedAnilistId && /^\d+$/.test(resolvedMalId)) {
     try {
       const { fetchAniListIdByMalId } = await import("@/lib/api/anilist");
-      const resolved = await fetchAniListIdByMalId(parseInt(targetMalId, 10));
-      if (resolved) {
-        return String(resolved);
+      const aId = await fetchAniListIdByMalId(parseInt(resolvedMalId, 10));
+      if (aId) resolvedAnilistId = String(aId);
+    } catch {}
+  }
+
+  // 2. If we have anilistId but no malId, fetch MAL ID from AniList GraphQL
+  if (resolvedAnilistId && !resolvedMalId && /^\d+$/.test(resolvedAnilistId)) {
+    try {
+      const res = await fetch("https://graphql.anilist.co", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: `query ($id: Int) { Media(id: $id, type: ANIME) { id idMal } }`,
+          variables: { id: parseInt(resolvedAnilistId, 10) },
+        }),
+        signal: AbortSignal.timeout(3000),
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json?.data?.Media?.idMal) {
+          resolvedMalId = String(json.data.Media.idMal);
+        }
       }
     } catch {}
   }
@@ -59,33 +80,34 @@ async function resolveAnilistId(
         const aniMap = data?.data?.find(
           (m: { attributes?: { externalSite?: string; externalId?: string } }) => m.attributes?.externalSite === "anilist/anime"
         );
-        if (aniMap?.attributes?.externalId) {
-          return String(aniMap.attributes.externalId);
+        if (aniMap?.attributes?.externalId && !resolvedAnilistId) {
+          resolvedAnilistId = String(aniMap.attributes.externalId);
         }
         const malMap = data?.data?.find(
           (m: { attributes?: { externalSite?: string; externalId?: string } }) => m.attributes?.externalSite === "myanimelist/anime"
         );
-        if (malMap?.attributes?.externalId) {
-          const { fetchAniListIdByMalId } = await import("@/lib/api/anilist");
-          const resolved = await fetchAniListIdByMalId(parseInt(malMap.attributes.externalId, 10));
-          if (resolved) return String(resolved);
+        if (malMap?.attributes?.externalId && !resolvedMalId) {
+          resolvedMalId = String(malMap.attributes.externalId);
         }
       }
     } catch {}
   }
 
-  // 4. Search AniList directly by title
-  if (title) {
+  // 4. Search AniList directly by title if still missing
+  if (!resolvedAnilistId && title) {
     try {
       const { fetchAniListAnime } = await import("@/lib/api/anilist");
       const results = await fetchAniListAnime({ search: title, perPage: 1 });
       if (results && results.length > 0 && results[0].anilistId) {
-        return String(results[0].anilistId);
+        resolvedAnilistId = String(results[0].anilistId);
+        if (results[0].malId && !resolvedMalId) {
+          resolvedMalId = String(results[0].malId);
+        }
       }
     } catch {}
   }
 
-  return undefined;
+  return { anilistId: resolvedAnilistId, malId: resolvedMalId };
 }
 
 export async function GET(request: NextRequest) {
@@ -93,19 +115,20 @@ export async function GET(request: NextRequest) {
   const title = searchParams.get("title") || "";
   const episode = parseInt(searchParams.get("episode") || "1", 10);
   const isDub = searchParams.get("dub") === "true";
-  const malId = searchParams.get("malId") || undefined;
-  const animeId = searchParams.get("animeId") || undefined;
-  const directAnilistId = searchParams.get("anilistId") || undefined;
+  const rawId = searchParams.get("id");
+  const malIdParam = searchParams.get("malId") || (rawId?.startsWith("mal-") ? rawId.replace("mal-", "") : undefined);
+  const animeId = searchParams.get("animeId") || (rawId && !rawId.startsWith("mal-") ? rawId : undefined);
+  const directAnilistId = searchParams.get("anilistId") || (rawId && /^\d+$/.test(rawId) ? rawId : undefined);
 
-  if (!title && !malId && !animeId && !directAnilistId) {
+  if (!title && !malIdParam && !animeId && !directAnilistId) {
     return NextResponse.json(
       { success: false, error: "title, animeId, or anilistId required" },
       { status: 400 }
     );
   }
 
-  // 1. Resolve AniList ID with provider validation
-  const anilistId = await resolveAnilistId(animeId, title, malId, directAnilistId);
+  // 1. Resolve AniList ID & MAL ID with cross-provider validation
+  const { anilistId, malId } = await resolveIds(animeId, title, malIdParam, directAnilistId);
 
   // 2. Fetch ReAnime servers (HD-1 & HD-2 FlixCloud/MegaCloud) from operational provider
   let embedUrls: { label: string; url: string; serverType: string; isDub: boolean }[] = [];
@@ -124,30 +147,25 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // 3. Fallback to resilient multi-server embed network (VidSrc & 2Embed)
+  // 3. Fallback to resilient multi-server embed network (VidSrc)
   // Ensures video playback works even when datacenter IPs are blocked by third-party Cloudflare
-  if (embedUrls.length === 0 && (anilistId || malId)) {
-    const targetId = anilistId || malId;
-    embedUrls = [
-      {
-        label: "VidSrc Stream HD",
-        url: `https://vidsrc.pm/embed/anime?anilist=${targetId}&ep=${episode}`,
-        serverType: "vidsrc_pm",
-        isDub: false,
-      },
-      {
-        label: "2Embed Cloud Server",
-        url: `https://2embed.cc/embed/anime/${targetId}/${episode}`,
-        serverType: "2embed_cc",
-        isDub: false,
-      },
-    ];
+  // Path format: /embed/anime/{id}/{episode} is universally supported without 400 errors
+  if (embedUrls.length === 0 && (malId || anilistId)) {
+    const primaryId = malId || anilistId;
+    const secondaryId = malId && anilistId && malId !== anilistId ? anilistId : undefined;
 
-    if (malId && malId !== anilistId) {
+    embedUrls.push({
+      label: "VidSrc Stream HD",
+      url: `https://vidsrc.pm/embed/anime/${primaryId}/${episode}`,
+      serverType: "vidsrc_pm",
+      isDub: false,
+    });
+
+    if (secondaryId) {
       embedUrls.push({
         label: "VidSrc Mirror",
-        url: `https://vidsrc.pm/embed/anime?mal=${malId}&ep=${episode}`,
-        serverType: "vidsrc_mal",
+        url: `https://vidsrc.pm/embed/anime/${secondaryId}/${episode}`,
+        serverType: "vidsrc_alt",
         isDub: false,
       });
     }
@@ -162,7 +180,7 @@ export async function GET(request: NextRequest) {
   // 4. Construct clean response — never fabricate download URL or fake playable sources
   const response: StreamResponse = {
     success: hasPlayableSource,
-    provider: hasPlayableSource ? "Multi-Server Streaming Network (VidSrc / 2Embed / ReAnime)" : "ReAnime Fallback",
+    provider: hasPlayableSource ? "Multi-Server Streaming Network (VidSrc / ReAnime)" : "ReAnime Fallback",
     anilistId,
     dubAvailable,
     subAvailable,

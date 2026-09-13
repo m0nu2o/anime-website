@@ -4,7 +4,7 @@ import { getAnimeEpisodes, getAnimeById } from "@/lib/api";
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const animeId = searchParams.get("animeId");
+    const animeId = searchParams.get("animeId") || searchParams.get("id");
     const language = (searchParams.get("language") || "sub").toLowerCase();
 
     if (!animeId) {

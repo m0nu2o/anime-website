@@ -1136,7 +1136,7 @@ export default function VideoPlayer({
                 src={currentEmbed.url}
                 title={`${animeTitle} - Episode ${episodeNumber} - ${currentEmbed.label}`}
                 className={styles.videoFrame}
-                referrerPolicy="no-referrer"
+                referrerPolicy="origin"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
                 allowFullScreen
                 loading="eager"
