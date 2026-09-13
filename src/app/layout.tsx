@@ -41,12 +41,12 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.variable}>
       <head>
-        <link rel="preconnect" href="https://nextgen-anime-proxy.bold-microraptor.workers.dev" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://flixcloud.cc" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://fetch9.flixcloud.cc" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://vault-90.rundowncdn.top" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://vault-93.rundowncdn.top" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://flixcloud.cc" />
         <link rel="dns-prefetch" href="https://fetch9.flixcloud.cc" />
-        <link rel="dns-prefetch" href="https://vault-90.rundowncdn.top" />
-        <link rel="dns-prefetch" href="https://vault-93.rundowncdn.top" />
-        <link rel="dns-prefetch" href="https://reanime.to" />
       </head>
       <body>
         <AuthProvider>

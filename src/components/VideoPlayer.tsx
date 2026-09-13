@@ -73,11 +73,10 @@ const getDownloadLabel = (quality: string): string => {
   return quality;
 };
 
-const EDGE_PROXY_URL =
-  process.env.NEXT_PUBLIC_CLOUDFLARE_WORKER_URL ||
-  "https://nextgen-anime-proxy.bold-microraptor.workers.dev";
+const EDGE_PROXY_URL = process.env.NEXT_PUBLIC_CLOUDFLARE_WORKER_URL || "";
 
 async function queryEdgeFlixServers(targetAniId: string, ep: number) {
+  if (!EDGE_PROXY_URL) return null;
   const cleanId = String(targetAniId).replace(/^anilist-/, "").trim();
   if (!cleanId || !/^\d+$/.test(cleanId)) return null;
 

@@ -34,8 +34,8 @@ export async function fetchReanimeServers(
   try {
     let data: { success?: boolean; servers?: ReanimeServerRaw[] } | null = null;
 
-    // 1. If a Cloudflare Worker or Edge Proxy is configured, use it first (bypasses Cloudflare bot detection)
-    const workerProxy = process.env.CLOUDFLARE_WORKER_URL || process.env.STREAM_PROXY_URL || "https://nextgen-anime-proxy.bold-microraptor.workers.dev";
+    // 1. If a Cloudflare Worker or Edge Proxy is configured, use it first
+    const workerProxy = process.env.CLOUDFLARE_WORKER_URL || process.env.STREAM_PROXY_URL;
     if (workerProxy) {
       try {
         const cleanWorker = workerProxy.replace(/\/+$/, "");
