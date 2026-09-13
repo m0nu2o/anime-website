@@ -6,6 +6,19 @@
  */
 export default {
   async fetch(request, env, ctx) {
+    // Handle CORS preflight
+    if (request.method === "OPTIONS") {
+      return new Response(null, {
+        status: 204,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+          "Access-Control-Allow-Headers": "*",
+          "Access-Control-Max-Age": "86400",
+        },
+      });
+    }
+
     const url = new URL(request.url);
     const targetUrl = url.searchParams.get("url");
 
@@ -26,6 +39,8 @@ export default {
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
           "Accept": "application/json, text/plain, */*",
           "Accept-Language": "en-US,en;q=0.9",
+          "Referer": "https://reanime.to/",
+          "Origin": "https://reanime.to",
         },
       });
 
@@ -35,7 +50,7 @@ export default {
         headers: {
           "Content-Type": response.headers.get("content-type") || "application/json",
           "Access-Control-Allow-Origin": "*",
-          "Cache-Control": "public, max-age=300, s-maxage=300",
+          "Cache-Control": response.status === 200 ? "public, max-age=300, s-maxage=300" : "no-store, no-cache",
         },
       });
     } catch (err) {

@@ -147,47 +147,20 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // 3. Fallback to resilient multi-server embed network (VidSrc)
-  // Ensures video playback works even when datacenter IPs are blocked by third-party Cloudflare
-  // Path format: /embed/anime/{id}/{episode} is universally supported without 400 errors
-  if (embedUrls.length === 0 && (malId || anilistId)) {
-    const primaryId = malId || anilistId;
-    const secondaryId = malId && anilistId && malId !== anilistId ? anilistId : undefined;
-
-    embedUrls.push({
-      label: "VidSrc Stream HD",
-      url: `https://vidsrc.pm/embed/anime/${primaryId}/${episode}`,
-      serverType: "vidsrc_pm",
-      isDub: false,
-    });
-
-    if (secondaryId) {
-      embedUrls.push({
-        label: "VidSrc Mirror",
-        url: `https://vidsrc.pm/embed/anime/${secondaryId}/${episode}`,
-        serverType: "vidsrc_alt",
-        isDub: false,
-      });
-    }
-
-    subAvailable = true;
-    dubAvailable = true;
-  }
-
-  // Real provider stream source verification only (no guessing from voice actor credits)
+  // Real provider stream source verification only (no fake/redirect mirrors)
   const hasPlayableSource = embedUrls.length > 0;
 
-  // 4. Construct clean response — never fabricate download URL or fake playable sources
+  // Construct clean response — include resolved anilistId so client-side edge resolver can fetch FlixCloud directly
   const response: StreamResponse = {
     success: hasPlayableSource,
-    provider: hasPlayableSource ? "Multi-Server Streaming Network (VidSrc / ReAnime)" : "ReAnime Fallback",
+    provider: hasPlayableSource ? "ReAnime Cloud Engine (FlixCloud HD-1 & HD-2)" : "Direct Cloudflare Edge Resolver",
     anilistId,
     dubAvailable,
     subAvailable,
     sources: [],
     embedUrls,
     downloadUrl: undefined,
-    error: hasPlayableSource ? undefined : "No active streaming sources found for this episode",
+    error: hasPlayableSource ? undefined : "Edge resolution required for this episode",
   };
 
   return NextResponse.json(response, {
