@@ -140,7 +140,9 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.json(response, {
     headers: {
-      "Cache-Control": "public, s-maxage=300, stale-while-revalidate=3600",
+      "Cache-Control": hasPlayableSource
+        ? "public, s-maxage=300, stale-while-revalidate=3600"
+        : "no-store, no-cache, must-revalidate",
     },
   });
 }

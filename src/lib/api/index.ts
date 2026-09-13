@@ -491,8 +491,8 @@ export async function getLatestAiringAnime(limit: number = 24): Promise<LatestEp
     }
   }
 
-  // Cross-check ReAnime live stream availability for the top 6 releases in parallel
-  if (releases.length > 0) {
+  // Cross-check ReAnime live stream availability for the top 6 releases in parallel (runtime only)
+  if (releases.length > 0 && process.env.NEXT_PHASE !== "phase-production-build") {
     const toCheck = releases.slice(0, 6);
     try {
       const { fetchReanimeServers } = await import("./reanime");
