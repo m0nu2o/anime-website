@@ -38,14 +38,13 @@ interface VideoPlayerProps {
   nextEpisodeNumber?: number | null;
   malId?: number;
   anilistId?: number;
-  youtubeVideoId?: string;
   videoUrl?: string;
   initialTime?: number;
   onProgress?: (currentTime: number, duration: number) => void;
   onNextEpisode?: () => void;
 }
 
-type ServerType = "native_hls" | "gogo_embed" | "trailer";
+type ServerType = "native_hls" | "gogo_embed";
 
 interface CachedEpisodeData {
   animeId: string;
@@ -113,7 +112,6 @@ export default function VideoPlayer({
   nextEpisodeNumber,
   malId,
   anilistId,
-  youtubeVideoId,
   videoUrl,
   initialTime = 0,
   onProgress,
@@ -320,6 +318,7 @@ export default function VideoPlayer({
   // 1. Fetch real stream sources from our Next.js streaming API
   useEffect(() => {
     let isCancelled = false;
+    const controller = new AbortController();
     const requestId = ++activeRequestIdRef.current;
 
     async function loadStream() {
@@ -389,8 +388,7 @@ export default function VideoPlayer({
         if (data.sources && data.sources.length > 0) {
           setActiveServer("native_hls");
         } else if (data.embedUrls && data.embedUrls.length > 0) {
-          const currentEmbed = data.embedUrls[chosenIdx] || data.embedUrls[0];
-          setActiveServer(currentEmbed.serverType === "trailer" ? "trailer" : "gogo_embed");
+          setActiveServer("gogo_embed");
         }
       }
 
@@ -435,10 +433,16 @@ export default function VideoPlayer({
           }).catch(() => {});
         }
 
-        // Concurrently query serverless route
+        // Concurrently query streaming API
         const res = await fetch(
-          `/api/anime/stream?title=${encodeURIComponent(cleanTitle)}&episode=${episodeNumber}&dub=${isDub}&malId=${malId || ""}&animeId=${encodeURIComponent(animeId || "")}&anilistId=${anilistId || ""}`
-        ).catch(() => null);
+          `/api/anime/stream?title=${encodeURIComponent(cleanTitle)}&episode=${episodeNumber}&dub=${isDub}&malId=${malId || ""}&animeId=${encodeURIComponent(animeId || "")}&anilistId=${anilistId || ""}`,
+          { signal: controller.signal }
+        ).catch((err) => {
+          if (err.name !== "AbortError") {
+            console.warn("[Stream API fetch warning]:", err);
+          }
+          return null;
+        });
 
         if (resolved) return; // Fast-path already handled playback start
 
@@ -486,31 +490,10 @@ export default function VideoPlayer({
             return;
           }
         }
-
-        // Fallback to Official Trailer
-        if (!resolved && youtubeVideoId) {
-          resolved = true;
-          const trailerData = {
-            success: true,
-            provider: "Official PV / Trailer",
-            sources: [],
-            embedUrls: [
-              {
-                label: "Official Trailer",
-                url: `https://www.youtube-nocookie.com/embed/${youtubeVideoId}?autoplay=1`,
-                serverType: "trailer",
-                isDub: false,
-              },
-            ],
-            dubAvailable: false,
-            subAvailable: true,
-            timestamp: Date.now(),
-          };
-          globalStreamCache.set(cacheKey, trailerData);
-          applyStreamData(trailerData);
+      } catch (err: unknown) {
+        if (err instanceof Error && err.name !== "AbortError") {
+          console.warn("Failed to load anime stream:", err);
         }
-      } catch (err) {
-        console.warn("Failed to load anime stream:", err);
       } finally {
         if (!isCancelled && requestId === activeRequestIdRef.current) {
           setIsLoadingStream(false);
@@ -522,48 +505,40 @@ export default function VideoPlayer({
     loadStream();
     return () => {
       isCancelled = true;
+      controller.abort();
     };
-  }, [cleanTitle, episodeNumber, isDub, malId, animeId, anilistId, youtubeVideoId]);
+  }, [cleanTitle, episodeNumber, isDub, malId, animeId, anilistId]);
 
-  // Smart Preload Next Episode in background (loads into instant-access memory cache)
+  // Smart Preload Next Episode metadata in background (loads into instant-access memory cache)
   useEffect(() => {
-    if (!cleanTitle) return;
-    const cleanAniId = anilistId
-      ? String(anilistId).replace(/^anilist-/, "").trim()
-      : (animeId?.startsWith("anilist-") ? animeId.replace("anilist-", "").trim() : null);
+    if (!cleanTitle || !animeId) return;
+    const nextEp = episodeNumber + 1;
+    if (totalEpisodes && nextEp > totalEpisodes) return;
+
+    const controller = new AbortController();
+    const nextCacheKey = `${animeId || cleanTitle}_${nextEp}`;
 
     const timer = setTimeout(async () => {
-      const nextEp = episodeNumber + 1;
-      const nextCacheKey = `${animeId || cleanTitle}_${nextEp}`;
-      if (!globalStreamCache.has(nextCacheKey) && cleanAniId && /^\d+$/.test(cleanAniId)) {
-        queryEdgeFlixServers(cleanAniId, nextEp).then((edgeServers) => {
-          if (edgeServers && edgeServers.length > 0) {
-            const embeds = edgeServers.map((s: { serverName?: string; dataType?: string; dataLink: string }, idx: number) => {
-              const isServerDub = s.dataType?.toLowerCase() === "dub";
-              const finalUrl = isServerDub ? `${s.dataLink}${s.dataLink.includes("?") ? "&" : "?"}a=1` : s.dataLink;
-              const serverDisplayName = s.serverName || `HD-${idx + 1}`;
-              return {
-                label: `ReAnime ${serverDisplayName} (${(s.dataType || "sub").toUpperCase()})`,
-                url: finalUrl,
-                serverType: `reanime_${serverDisplayName.toLowerCase().replace(/\s+/g, "")}`,
-                isDub: isServerDub,
-              };
-            });
-            globalStreamCache.set(nextCacheKey, {
-              success: true,
-              provider: "ReAnime Cloud Engine (FlixCloud HD-1 & HD-2)",
-              sources: [],
-              embedUrls: embeds,
-              dubAvailable: embeds.some((e: { isDub?: boolean }) => Boolean(e.isDub)),
-              subAvailable: embeds.some((e: { isDub?: boolean }) => !e.isDub),
-              timestamp: Date.now(),
-            });
+      if (globalStreamCache.has(nextCacheKey)) return;
+      try {
+        const res = await fetch(
+          `/api/anime/stream?title=${encodeURIComponent(cleanTitle)}&episode=${nextEp}&dub=${isDub}&malId=${malId || ""}&animeId=${encodeURIComponent(animeId || "")}&anilistId=${anilistId || ""}`,
+          { signal: controller.signal }
+        );
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.success && ((data.sources && data.sources.length > 0) || (data.embedUrls && data.embedUrls.length > 0))) {
+            globalStreamCache.set(nextCacheKey, { ...data, timestamp: Date.now() });
           }
-        }).catch(() => {});
-      }
+        }
+      } catch {}
     }, 2000);
-    return () => clearTimeout(timer);
-  }, [animeId, cleanTitle, episodeNumber, anilistId]);
+
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [animeId, cleanTitle, episodeNumber, isDub, malId, anilistId, totalEpisodes]);
 
   // 2. Initialize HLS or direct video playback with complete HLS.js configuration
   useEffect(() => {
@@ -962,10 +937,10 @@ export default function VideoPlayer({
               <button
                 key={originalIdx}
                 onClick={() => {
-                  setActiveServer(embed.serverType === "trailer" ? "trailer" : "gogo_embed");
+                  setActiveServer("gogo_embed");
                   setActiveEmbedIdx(originalIdx);
                 }}
-                className={`${styles.serverPill} ${(activeServer === "gogo_embed" || activeServer === "trailer") && activeEmbedIdx === originalIdx ? styles.serverPillActive : ""}`}
+                className={`${styles.serverPill} ${activeServer === "gogo_embed" && activeEmbedIdx === originalIdx ? styles.serverPillActive : ""}`}
                 title={embed.label}
               >
                 {embed.label}
@@ -1241,7 +1216,7 @@ export default function VideoPlayer({
               </div>
             )}
           </div>
-        ) : (activeServer === "gogo_embed" || activeServer === "trailer") && (embedUrls[activeEmbedIdx] || embedUrls[0]) ? (
+        ) : activeServer === "gogo_embed" && (embedUrls[activeEmbedIdx] || embedUrls[0]) ? (
           (() => {
             const currentEmbed = embedUrls[activeEmbedIdx] || embedUrls[0];
             return (
@@ -1490,8 +1465,6 @@ export default function VideoPlayer({
         <span>
           {activeServer === "native_hls" && streamSources.length > 0
             ? <>Streaming via <strong>Native HLS Player</strong> ({streamSources[0]?.quality || "auto"}). Highest quality.</>
-            : activeServer === "trailer"
-            ? <>Playing <strong>Official Studio Trailer</strong>. Switch to ReAnime HD-1 or HD-2 above for full episodes.</>
             : activeServer === "gogo_embed" && embedUrls[activeEmbedIdx]
             ? <>Loaded <strong>{embedUrls[activeEmbedIdx].label}</strong> (Powered by ReAnime.to streaming engine).</>
             : <>Select a ReAnime streaming server above to watch this episode.</>

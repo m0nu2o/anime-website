@@ -260,7 +260,6 @@ export default async function WatchEpisodePage({
                 episodeNumber={currentEpNum ?? 1}
                 totalEpisodes={totalEpisodes}
                 nextEpisodeNumber={nextEpNumber}
-                youtubeVideoId={anime.youtubeVideoId}
                 malId={anime.malId}
                 anilistId={anime.anilistId}
               />
