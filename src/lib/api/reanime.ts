@@ -29,27 +29,76 @@ export async function fetchReanimeServers(
   }
 
   const cleanAnilistId = String(anilistId).replace(/^anilist-/, "").trim();
-  const url = `${REANIME_BASE_URL}/api/flix/${encodeURIComponent(cleanAnilistId)}/${encodeURIComponent(episode)}`;
+  const targetUrl = `${REANIME_BASE_URL}/api/flix/${encodeURIComponent(cleanAnilistId)}/${encodeURIComponent(episode)}`;
 
   try {
-    const res = await fetch(url, {
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-        "Referer": `${REANIME_BASE_URL}/`,
-        "Origin": REANIME_BASE_URL,
-        "Accept": "application/json",
-      },
-      signal: AbortSignal.timeout(REANIME_TIMEOUT_MS),
-      cache: "no-store",
-    });
+    let data: { success?: boolean; servers?: ReanimeServerRaw[] } | null = null;
 
-    if (!res.ok) {
-      console.warn(`[ReAnime] HTTP ${res.status} ${res.statusText} for anilist-${cleanAnilistId} ep ${episode}`);
-      return { servers: [], hasSub: null, hasDub: null, success: false };
+    // 1. If a Cloudflare Worker or Edge Proxy is configured, use it first (bypasses Cloudflare bot detection)
+    const workerProxy = process.env.CLOUDFLARE_WORKER_URL || process.env.STREAM_PROXY_URL;
+    if (workerProxy) {
+      try {
+        const cleanWorker = workerProxy.replace(/\/+$/, "");
+        const proxyFetchUrl = cleanWorker.includes("?")
+          ? `${cleanWorker}&url=${encodeURIComponent(targetUrl)}`
+          : `${cleanWorker}?url=${encodeURIComponent(targetUrl)}`;
+
+        const pRes = await fetch(proxyFetchUrl, {
+          headers: { "Accept": "application/json" },
+          signal: AbortSignal.timeout(6000),
+          cache: "no-store",
+        });
+        if (pRes.ok) {
+          const pJson = await pRes.json();
+          if (pJson?.success && Array.isArray(pJson?.servers) && pJson.servers.length > 0) {
+            data = pJson;
+          }
+        }
+      } catch (proxyErr) {
+        console.warn("[Cloudflare Worker Proxy] Fetch warning:", proxyErr);
+      }
     }
 
-    const data = await res.json();
+    // 2. Direct fetch with high-reputation browser headers
+    if (!data) {
+      try {
+        const res = await fetch(targetUrl, {
+          headers: {
+            "User-Agent":
+              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+            "Referer": `${REANIME_BASE_URL}/`,
+            "Origin": REANIME_BASE_URL,
+            "Accept": "application/json",
+          },
+          signal: AbortSignal.timeout(REANIME_TIMEOUT_MS),
+          cache: "no-store",
+        });
+
+        if (res.ok) {
+          const directJson = await res.json();
+          if (directJson?.success && Array.isArray(directJson?.servers) && directJson.servers.length > 0) {
+            data = directJson;
+          }
+        }
+      } catch {}
+    }
+
+    // 3. Fallback to free edge proxy (allorigins)
+    if (!data) {
+      try {
+        const alloriginsUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
+        const aoRes = await fetch(alloriginsUrl, {
+          signal: AbortSignal.timeout(5000),
+          cache: "no-store",
+        });
+        if (aoRes.ok) {
+          const aoJson = await aoRes.json();
+          if (aoJson?.success && Array.isArray(aoJson?.servers) && aoJson.servers.length > 0) {
+            data = aoJson;
+          }
+        }
+      } catch {}
+    }
     if (data?.success && Array.isArray(data.servers) && data.servers.length > 0) {
       const rawServers: ReanimeServerRaw[] = data.servers;
 
