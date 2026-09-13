@@ -34,8 +34,12 @@ export async function fetchReanimeServers(
   try {
     let data: { success?: boolean; servers?: ReanimeServerRaw[] } | null = null;
 
-    // 1. If a Cloudflare Worker or Edge Proxy is configured, use it first
-    const workerProxy = process.env.CLOUDFLARE_WORKER_URL || process.env.STREAM_PROXY_URL;
+    // 1. If a Cloudflare Worker or Edge Proxy is configured, use it first (bypasses Cloudflare datacenter IP block)
+    const workerProxy =
+      process.env.CLOUDFLARE_WORKER_URL ||
+      process.env.STREAM_PROXY_URL ||
+      "https://tblbvrgzoovujszpztvr.supabase.co/functions/v1/anime-proxy";
+
     if (workerProxy) {
       try {
         const cleanWorker = workerProxy.replace(/\/+$/, "");
@@ -55,7 +59,7 @@ export async function fetchReanimeServers(
           }
         }
       } catch (proxyErr) {
-        console.warn("[Cloudflare Worker Proxy] Fetch warning:", proxyErr);
+        console.warn("[Edge Proxy] Fetch warning:", proxyErr);
       }
     }
 
@@ -83,22 +87,7 @@ export async function fetchReanimeServers(
       } catch {}
     }
 
-    // 3. Fallback to free edge proxy (allorigins)
-    if (!data) {
-      try {
-        const alloriginsUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
-        const aoRes = await fetch(alloriginsUrl, {
-          signal: AbortSignal.timeout(5000),
-          cache: "no-store",
-        });
-        if (aoRes.ok) {
-          const aoJson = await aoRes.json();
-          if (aoJson?.success && Array.isArray(aoJson?.servers) && aoJson.servers.length > 0) {
-            data = aoJson;
-          }
-        }
-      } catch {}
-    }
+
     if (data?.success && Array.isArray(data.servers) && data.servers.length > 0) {
       const rawServers: ReanimeServerRaw[] = data.servers;
 
