@@ -96,6 +96,16 @@ async function queryEdgeFlixServers(targetAniId: string, ep: number) {
   return null;
 }
 
+const globalStreamCache = new Map<string, {
+  success: boolean;
+  provider: string;
+  sources?: { url: string; quality: string; isM3U8: boolean }[];
+  embedUrls: { label: string; url: string; serverType: string; isDub: boolean }[];
+  dubAvailable: boolean | null;
+  subAvailable: boolean | null;
+  timestamp: number;
+}>();
+
 export default function VideoPlayer({
   animeId = "",
   animeTitle = "Anime Episode",
@@ -321,24 +331,67 @@ export default function VideoPlayer({
       setEmbedUrls([]);
       setActiveServer(null);
 
-      // Check preloaded cache first for instant switch
-      if (typeof window !== "undefined") {
-        const winWithCache = window as unknown as { __nextEpisodeCache?: CachedEpisodeData };
-        const cached = winWithCache.__nextEpisodeCache;
-        if (cached && cached.animeId === animeId && cached.episode === episodeNumber && cached.data?.success) {
-          if (!isCancelled && requestId === activeRequestIdRef.current) {
-            setStreamSources(cached.data.sources || []);
-            setEmbedUrls(cached.data.embedUrls || []);
-            setActiveEmbedIdx(0);
-            if (cached.data.sources && cached.data.sources.length > 0) {
-              setActiveServer("native_hls");
-            } else if (cached.data.embedUrls && cached.data.embedUrls.length > 0) {
-              setActiveServer("gogo_embed");
+      // Fast in-memory cache lookup for 0ms instant switch
+      const cacheKey = `${animeId || cleanTitle}_${episodeNumber}`;
+      const memoryCached = globalStreamCache.get(cacheKey);
+      if (memoryCached && memoryCached.success && ((memoryCached.embedUrls && memoryCached.embedUrls.length > 0) || (memoryCached.sources && memoryCached.sources.length > 0))) {
+        if (!isCancelled && requestId === activeRequestIdRef.current) {
+          applyStreamData(memoryCached);
+          setIsLoadingStream(false);
+          setIsBuffering(false);
+          return;
+        }
+      }
+
+      function applyStreamData(data: {
+        sources?: { url: string; quality: string; isM3U8: boolean }[];
+        embedUrls?: { label: string; url: string; serverType?: string; isDub?: boolean }[];
+        dubAvailable?: boolean | null;
+        subAvailable?: boolean | null;
+      }) {
+        setStreamSources(data.sources || []);
+        setEmbedUrls(data.embedUrls || []);
+        const hasDubServer = Boolean(data.dubAvailable && (data.embedUrls || []).some((e) => Boolean(e.isDub) === true));
+        const hasSubServer = Boolean(data.subAvailable || (data.embedUrls || []).some((e) => !e.isDub));
+        setDubAvailable(hasDubServer);
+        setSubAvailable(hasSubServer);
+
+        const savedPref = typeof window !== "undefined" ? localStorage.getItem("preferredLanguage") : null;
+        let targetIsDub = false;
+        if (savedPref === "dub") {
+          if (hasDubServer) {
+            targetIsDub = true;
+            showStatus("🎤 Playing English Dub", "success");
+          } else {
+            targetIsDub = false;
+            if (hasSubServer) {
+              showStatus("🎬 English Dub not available. Playing Sub instead.", "warning");
             }
-            setIsLoadingStream(false);
-            setIsBuffering(false);
-            return;
+            try { localStorage.setItem("preferredLanguage", "sub"); } catch {}
           }
+        } else if (savedPref === "sub") {
+          targetIsDub = false;
+          if (hasSubServer) {
+            showStatus("📝 Playing Japanese with English Subtitles", "success");
+          } else if (hasDubServer) {
+            targetIsDub = true;
+            showStatus("🎤 Sub unavailable. Playing English Dub instead.", "warning");
+          }
+        } else {
+          targetIsDub = hasDubServer && !hasSubServer;
+        }
+
+        setIsDub(targetIsDub);
+
+        const matchIdx = (data.embedUrls || []).findIndex((e) => Boolean(e.isDub) === targetIsDub);
+        const chosenIdx = matchIdx >= 0 ? matchIdx : 0;
+        setActiveEmbedIdx(chosenIdx);
+
+        if (data.sources && data.sources.length > 0) {
+          setActiveServer("native_hls");
+        } else if (data.embedUrls && data.embedUrls.length > 0) {
+          const currentEmbed = data.embedUrls[chosenIdx] || data.embedUrls[0];
+          setActiveServer(currentEmbed.serverType === "trailer" ? "trailer" : "gogo_embed");
         }
       }
 
@@ -347,27 +400,48 @@ export default function VideoPlayer({
           ? String(anilistId).replace(/^anilist-/, "").trim()
           : (animeId?.startsWith("anilist-") ? animeId.replace("anilist-", "").trim() : null);
 
-        // Fetch Next.js API route
-        const resPromise = fetch(
+        let resolved = false;
+
+        // Fast-path: query edge proxy immediately if cleanAniId is available (~200ms)
+        if (cleanAniId && /^\d+$/.test(cleanAniId)) {
+          queryEdgeFlixServers(cleanAniId, episodeNumber).then((edgeServers) => {
+            if (!isCancelled && requestId === activeRequestIdRef.current && edgeServers && edgeServers.length > 0 && !resolved) {
+              resolved = true;
+              const embeds = edgeServers.map((s: { serverName?: string; dataType?: string; dataLink: string }, idx: number) => {
+                const isServerDub = s.dataType?.toLowerCase() === "dub";
+                const finalUrl = isServerDub ? `${s.dataLink}${s.dataLink.includes("?") ? "&" : "?"}a=1` : s.dataLink;
+                const serverDisplayName = s.serverName || `HD-${idx + 1}`;
+                return {
+                  label: `ReAnime ${serverDisplayName} (${(s.dataType || "sub").toUpperCase()})`,
+                  url: finalUrl,
+                  serverType: `reanime_${serverDisplayName.toLowerCase().replace(/\s+/g, "")}`,
+                  isDub: isServerDub,
+                };
+              });
+
+              const fastData = {
+                success: true,
+                provider: "ReAnime Cloud Engine (FlixCloud HD-1 & HD-2)",
+                sources: [],
+                embedUrls: embeds,
+                dubAvailable: embeds.some((e: { isDub?: boolean }) => Boolean(e.isDub)),
+                subAvailable: embeds.some((e: { isDub?: boolean }) => !e.isDub),
+                timestamp: Date.now(),
+              };
+              globalStreamCache.set(cacheKey, fastData);
+              applyStreamData(fastData);
+              setIsLoadingStream(false);
+              setIsBuffering(false);
+            }
+          }).catch(() => {});
+        }
+
+        // Concurrently query serverless route
+        const res = await fetch(
           `/api/anime/stream?title=${encodeURIComponent(cleanTitle)}&episode=${episodeNumber}&dub=${isDub}&malId=${malId || ""}&animeId=${encodeURIComponent(animeId || "")}&anilistId=${anilistId || ""}`
         ).catch(() => null);
 
-        // If AniList ID is already known on client, query edge worker proxy concurrently for blazing-fast edge resolution
-        const edgePromise = (cleanAniId && /^\d+$/.test(cleanAniId))
-          ? queryEdgeFlixServers(cleanAniId, episodeNumber)
-          : Promise.resolve(null);
-
-        const [res, edgeServers] = await Promise.all([resPromise, edgePromise]);
-
-        let finalData: {
-          success?: boolean;
-          provider?: string;
-          sources?: { url: string; quality: string; isM3U8: boolean }[];
-          embedUrls?: { label: string; url: string; serverType: string; isDub?: boolean }[];
-          dubAvailable?: boolean | null;
-          subAvailable?: boolean | null;
-        } | null = null;
-        let resolvedFromEdge = false;
+        if (resolved) return; // Fast-path already handled playback start
 
         if (res && res.ok) {
           const data = await res.json().catch(() => null);
@@ -375,46 +449,21 @@ export default function VideoPlayer({
             cleanAniId = String(data.anilistId).replace(/^anilist-/, "").trim();
           }
           if (data?.success && ((data.sources && data.sources.length > 0) || (data.embedUrls && data.embedUrls.length > 0))) {
-            finalData = data;
+            resolved = true;
+            globalStreamCache.set(cacheKey, { ...data, timestamp: Date.now() });
+            applyStreamData(data);
+            return;
           }
         }
 
-        // Check edge proxy concurrent result
-        if (edgeServers && edgeServers.length > 0) {
-          const embeds = edgeServers.map((s: { serverName?: string; dataType?: string; dataLink: string }, idx: number) => {
-            const isServerDub = s.dataType?.toLowerCase() === "dub";
-            const finalUrl = isServerDub
-              ? `${s.dataLink}${s.dataLink.includes("?") ? "&" : "?"}a=1`
-              : s.dataLink;
-            const serverDisplayName = s.serverName || `HD-${idx + 1}`;
-            return {
-              label: `ReAnime ${serverDisplayName} (${(s.dataType || "sub").toUpperCase()})`,
-              url: finalUrl,
-              serverType: `reanime_${serverDisplayName.toLowerCase().replace(/\s+/g, "")}`,
-              isDub: isServerDub,
-            };
-          });
-
-          finalData = {
-            success: true,
-            provider: "ReAnime Cloud Engine (FlixCloud HD-1 & HD-2)",
-            sources: [],
-            embedUrls: embeds,
-            dubAvailable: embeds.some((e: { isDub?: boolean }) => e.isDub),
-            subAvailable: embeds.some((e: { isDub?: boolean }) => !e.isDub),
-          };
-          resolvedFromEdge = true;
-        }
-
-        // If still no sources, but anilistId was resolved from API, query edge proxy now
-        if (!finalData && cleanAniId && /^\d+$/.test(cleanAniId) && !resolvedFromEdge) {
-          const delayedEdgeServers = await queryEdgeFlixServers(cleanAniId, episodeNumber);
-          if (delayedEdgeServers && delayedEdgeServers.length > 0) {
-            const embeds = delayedEdgeServers.map((s: { serverName?: string; dataType?: string; dataLink: string }, idx: number) => {
+        // If server route had no playable streams, query edge proxy now with resolved anilistId
+        if (!resolved && cleanAniId && /^\d+$/.test(cleanAniId)) {
+          const edgeServers = await queryEdgeFlixServers(cleanAniId, episodeNumber);
+          if (edgeServers && edgeServers.length > 0) {
+            resolved = true;
+            const embeds = edgeServers.map((s: { serverName?: string; dataType?: string; dataLink: string }, idx: number) => {
               const isServerDub = s.dataType?.toLowerCase() === "dub";
-              const finalUrl = isServerDub
-                ? `${s.dataLink}${s.dataLink.includes("?") ? "&" : "?"}a=1`
-                : s.dataLink;
+              const finalUrl = isServerDub ? `${s.dataLink}${s.dataLink.includes("?") ? "&" : "?"}a=1` : s.dataLink;
               const serverDisplayName = s.serverName || `HD-${idx + 1}`;
               return {
                 label: `ReAnime ${serverDisplayName} (${(s.dataType || "sub").toUpperCase()})`,
@@ -424,20 +473,25 @@ export default function VideoPlayer({
               };
             });
 
-            finalData = {
+            const finalData = {
               success: true,
               provider: "ReAnime Cloud Engine (FlixCloud HD-1 & HD-2)",
               sources: [],
               embedUrls: embeds,
-              dubAvailable: embeds.some((e: { isDub?: boolean }) => e.isDub),
+              dubAvailable: embeds.some((e: { isDub?: boolean }) => Boolean(e.isDub)),
               subAvailable: embeds.some((e: { isDub?: boolean }) => !e.isDub),
+              timestamp: Date.now(),
             };
+            globalStreamCache.set(cacheKey, finalData);
+            applyStreamData(finalData);
+            return;
           }
         }
 
-        // Fallback to Official Trailer/PV embed if available and no streams
-        if ((!finalData || (!finalData.sources?.length && !finalData.embedUrls?.length)) && youtubeVideoId) {
-          finalData = {
+        // Fallback to Official Trailer
+        if (!resolved && youtubeVideoId) {
+          resolved = true;
+          const trailerData = {
             success: true,
             provider: "Official PV / Trailer",
             sources: [],
@@ -451,56 +505,10 @@ export default function VideoPlayer({
             ],
             dubAvailable: false,
             subAvailable: true,
+            timestamp: Date.now(),
           };
-        }
-
-        if (!isCancelled && requestId === activeRequestIdRef.current && finalData?.success) {
-          setStreamSources(finalData.sources || []);
-          setEmbedUrls(finalData.embedUrls || []);
-          const hasDubServer = Boolean(finalData.dubAvailable && (finalData.embedUrls || []).some((e: { isDub?: boolean }) => Boolean(e.isDub) === true));
-          const hasSubServer = Boolean(finalData.subAvailable || (finalData.embedUrls || []).some((e: { isDub?: boolean }) => !e.isDub));
-          setDubAvailable(hasDubServer);
-          setSubAvailable(hasSubServer);
-
-          // Determine active language: respect user saved preference or fallback
-          const savedPref = typeof window !== "undefined" ? localStorage.getItem("preferredLanguage") : null;
-          let targetIsDub = false;
-          if (savedPref === "dub") {
-            if (hasDubServer) {
-              targetIsDub = true;
-              showStatus("🎤 Playing English Dub", "success");
-            } else {
-              targetIsDub = false;
-              if (hasSubServer) {
-                showStatus("🎬 English Dub not available. Playing Sub instead.", "warning");
-              }
-              try { localStorage.setItem("preferredLanguage", "sub"); } catch {}
-            }
-          } else if (savedPref === "sub") {
-            targetIsDub = false;
-            if (hasSubServer) {
-              showStatus("📝 Playing Japanese with English Subtitles", "success");
-            } else if (hasDubServer) {
-              targetIsDub = true;
-              showStatus("🎤 Sub unavailable. Playing English Dub instead.", "warning");
-            }
-          } else {
-            targetIsDub = hasDubServer && !hasSubServer;
-          }
-
-          setIsDub(targetIsDub);
-
-          // Find first matching embed for active audio preference
-          const matchIdx = (finalData.embedUrls || []).findIndex((e: { isDub?: boolean }) => Boolean(e.isDub) === targetIsDub);
-          const chosenIdx = matchIdx >= 0 ? matchIdx : 0;
-          setActiveEmbedIdx(chosenIdx);
-
-          if (finalData.sources && finalData.sources.length > 0) {
-            setActiveServer("native_hls");
-          } else if (finalData.embedUrls && finalData.embedUrls.length > 0) {
-            const currentEmbed = finalData.embedUrls[chosenIdx] || finalData.embedUrls[0];
-            setActiveServer(currentEmbed.serverType === "trailer" ? "trailer" : "gogo_embed");
-          }
+          globalStreamCache.set(cacheKey, trailerData);
+          applyStreamData(trailerData);
         }
       } catch (err) {
         console.warn("Failed to load anime stream:", err);
@@ -518,30 +526,45 @@ export default function VideoPlayer({
     };
   }, [cleanTitle, episodeNumber, isDub, malId, animeId, anilistId, youtubeVideoId]);
 
-  // Smart Preload Next Episode in background
+  // Smart Preload Next Episode in background (loads into instant-access memory cache)
   useEffect(() => {
-    if (!animeId || !cleanTitle) return;
-    const nextEp = episodeNumber + 1;
+    if (!cleanTitle) return;
+    const cleanAniId = anilistId
+      ? String(anilistId).replace(/^anilist-/, "").trim()
+      : (animeId?.startsWith("anilist-") ? animeId.replace("anilist-", "").trim() : null);
+
     const timer = setTimeout(async () => {
-      try {
-        const res = await fetch(
-          `/api/anime/stream?title=${encodeURIComponent(cleanTitle)}&episode=${nextEp}&dub=${isDub}&malId=${malId || ""}&animeId=${encodeURIComponent(animeId || "")}&anilistId=${anilistId || ""}`
-        );
-        if (res.ok) {
-          const data = await res.json();
-          if (typeof window !== "undefined") {
-            const winWithCache = window as unknown as { __nextEpisodeCache?: CachedEpisodeData };
-            winWithCache.__nextEpisodeCache = {
-              animeId,
-              episode: nextEp,
-              data,
-            };
+      const nextEp = episodeNumber + 1;
+      const nextCacheKey = `${animeId || cleanTitle}_${nextEp}`;
+      if (!globalStreamCache.has(nextCacheKey) && cleanAniId && /^\d+$/.test(cleanAniId)) {
+        queryEdgeFlixServers(cleanAniId, nextEp).then((edgeServers) => {
+          if (edgeServers && edgeServers.length > 0) {
+            const embeds = edgeServers.map((s: { serverName?: string; dataType?: string; dataLink: string }, idx: number) => {
+              const isServerDub = s.dataType?.toLowerCase() === "dub";
+              const finalUrl = isServerDub ? `${s.dataLink}${s.dataLink.includes("?") ? "&" : "?"}a=1` : s.dataLink;
+              const serverDisplayName = s.serverName || `HD-${idx + 1}`;
+              return {
+                label: `ReAnime ${serverDisplayName} (${(s.dataType || "sub").toUpperCase()})`,
+                url: finalUrl,
+                serverType: `reanime_${serverDisplayName.toLowerCase().replace(/\s+/g, "")}`,
+                isDub: isServerDub,
+              };
+            });
+            globalStreamCache.set(nextCacheKey, {
+              success: true,
+              provider: "ReAnime Cloud Engine (FlixCloud HD-1 & HD-2)",
+              sources: [],
+              embedUrls: embeds,
+              dubAvailable: embeds.some((e: { isDub?: boolean }) => Boolean(e.isDub)),
+              subAvailable: embeds.some((e: { isDub?: boolean }) => !e.isDub),
+              timestamp: Date.now(),
+            });
           }
-        }
-      } catch {}
-    }, 4000);
+        }).catch(() => {});
+      }
+    }, 2000);
     return () => clearTimeout(timer);
-  }, [animeId, cleanTitle, episodeNumber, isDub, malId, anilistId]);
+  }, [animeId, cleanTitle, episodeNumber, anilistId]);
 
   // 2. Initialize HLS or direct video playback with complete HLS.js configuration
   useEffect(() => {

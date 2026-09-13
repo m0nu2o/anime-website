@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef, useMemo, useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { Canvas, useFrame, extend } from '@react-three/fiber';
 import { Effects } from '@react-three/drei';
 import { EffectComposer, RenderPass, UnrealBloomPass } from 'three-stdlib';
@@ -417,6 +418,9 @@ export default function AnimeAmbientBackground() {
     };
   }, []);
 
+  const pathname = usePathname();
+  const isWatchPage = Boolean(pathname?.startsWith('/watch'));
+
   if (fxMode === "off" || reducedMotion || !isVisible) {
     return (
       <div 
@@ -443,7 +447,8 @@ export default function AnimeAmbientBackground() {
   };
 
   const currentOpacity = customOpacity !== null ? customOpacity : (opacityMap[fxMode as keyof typeof opacityMap] || 0.60);
-  const currentBloom = bloomStrengthMap[fxMode as keyof typeof bloomStrengthMap] || 1.0;
+  const currentBloom = isWatchPage ? 0.45 : (bloomStrengthMap[fxMode as keyof typeof bloomStrengthMap] || 1.0);
+  const effectiveQuality = isWatchPage && quality === "high" ? "medium" : quality;
 
   return (
     <div 
@@ -463,12 +468,12 @@ export default function AnimeAmbientBackground() {
       <Canvas 
         eventSource={containerRef as unknown as React.RefObject<HTMLElement>}
         eventPrefix="client"
-        dpr={dpr} 
+        dpr={isWatchPage ? 1 : dpr} 
         camera={{ position: [0, 0, 115], fov: 50 }}
         gl={{ antialias: false, powerPreference: "high-performance", alpha: true }}
       >
         <fog attach="fog" args={['#050508', 90, 240]} />
-        <ParticleSwarm quality={quality} theme={theme} />
+        <ParticleSwarm quality={effectiveQuality} theme={theme} />
         <Effects disableGamma>
           <unrealBloomPass threshold={0.05} strength={currentBloom} radius={0.35} />
         </Effects>
