@@ -165,6 +165,7 @@ export default function VideoPlayer({
   // Stream data from API
   const [streamSources, setStreamSources] = useState<{ url: string; quality: string; isM3U8: boolean }[]>([]);
   const [embedUrls, setEmbedUrls] = useState<{ label: string; url: string; serverType?: string; isDub?: boolean }[]>([]);
+  const [externalStreamLink, setExternalStreamLink] = useState<{ site: string; url: string; title?: string } | null>(null);
   const [activeEmbedIdx, setActiveEmbedIdx] = useState(0);
   const availableDownloadSources = streamSources.filter(
     (s) => s.url && (s.url.startsWith("http://") || s.url.startsWith("https://")) && !s.url.includes("placeholder") && !s.url.includes("trailer")
@@ -327,6 +328,7 @@ export default function VideoPlayer({
       // Clear previous episode sources immediately to prevent race conditions or cross-episode leaks
       setStreamSources([]);
       setEmbedUrls([]);
+      setExternalStreamLink(null);
       setActiveServer(null);
 
       // Fast in-memory cache lookup for 0ms instant switch
@@ -346,9 +348,11 @@ export default function VideoPlayer({
         embedUrls?: { label: string; url: string; serverType?: string; isDub?: boolean }[];
         dubAvailable?: boolean | null;
         subAvailable?: boolean | null;
+        externalStreamLink?: { site: string; url: string; title?: string } | null;
       }) {
         setStreamSources(data.sources || []);
         setEmbedUrls(data.embedUrls || []);
+        setExternalStreamLink(data.externalStreamLink || null);
         const hasDubServer = Boolean(data.dubAvailable && (data.embedUrls || []).some((e) => Boolean(e.isDub) === true));
         const hasSubServer = Boolean(data.subAvailable || (data.embedUrls || []).some((e) => !e.isDub));
         setDubAvailable(hasDubServer);
@@ -450,6 +454,9 @@ export default function VideoPlayer({
           const data = await res.json().catch(() => null);
           if (data?.anilistId && !cleanAniId) {
             cleanAniId = String(data.anilistId).replace(/^anilist-/, "").trim();
+          }
+          if (data?.externalStreamLink) {
+            setExternalStreamLink(data.externalStreamLink);
           }
           if (data?.success && ((data.sources && data.sources.length > 0) || (data.embedUrls && data.embedUrls.length > 0))) {
             resolved = true;
@@ -1234,12 +1241,35 @@ export default function VideoPlayer({
           })()
         ) : (
           <>
-            {/* No verified source: honest empty state, no fake play button */}
+            {/* No verified source: honest empty state with AniList official link fallback */}
             {!isLoadingStream && filteredEmbeds.length === 0 && streamSources.length === 0 && (
               <div className={styles.placeholderFrame}>
                 <div className={styles.notice}>
-                  <h3>Streaming unavailable</h3>
-                  <p>No verified stream source was found for this episode. Please try again later.</p>
+                  <h3>Streaming Unavailable</h3>
+                  <p>
+                    {externalStreamLink ? (
+                      <>
+                        No direct player stream was found for this episode on our edge mirrors.
+                        You can watch this episode officially on <strong>{externalStreamLink.site}</strong>.
+                      </>
+                    ) : (
+                      "No verified stream source was found for this episode. Please check back later."
+                    )}
+                  </p>
+                  {externalStreamLink && (
+                    <div style={{ marginTop: "16px" }}>
+                      <a
+                        href={externalStreamLink.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={styles.autoplayResumeBtn}
+                        style={{ display: "inline-flex", alignItems: "center", gap: "8px", textDecoration: "none" }}
+                      >
+                        <Film size={16} />
+                        <span>Watch on {externalStreamLink.site}</span>
+                      </a>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

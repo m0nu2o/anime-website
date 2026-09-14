@@ -744,6 +744,48 @@
   color: var(--text-muted, #94a3b8);
 }
 
+.badgesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin-top: 10px;
+}
+
+.badgeCard {
+  background: var(--glass-elevated-bg, rgba(16, 16, 26, 0.75));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 18px 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  backdrop-filter: blur(16px);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.badgeCard:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.badgeIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.badgeInfo {
+  flex: 1;
+}
+
+.badgeLocked {
+  filter: grayscale(0.4);
+}
+
 @media (max-width: 768px) {
   .identityCard {
     margin-top: -60px;

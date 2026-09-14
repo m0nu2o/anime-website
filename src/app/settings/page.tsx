@@ -173,11 +173,11 @@ export default function SettingsPage() {
 
           <div className={styles.settingRow}>
             <div>
-              <div className={styles.settingLabel}>Default Stream Quality</div>
-              <div className={styles.settingDesc}>Target resolution when initializing video playback.</div>
+              <div className={styles.settingLabel}>Video Resolution Preference</div>
+              <div className={styles.settingDesc}>Default player resolution when supported by provider (with adaptive fallback).</div>
             </div>
             <select value={quality} onChange={handleQualityChange} className={styles.select}>
-              <option value="1080p">1080p FHD</option>
+              <option value="1080p">1080p FHD (Provider Supported)</option>
               <option value="720p">720p HD</option>
               <option value="auto">Auto (Adaptive)</option>
             </select>

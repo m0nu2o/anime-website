@@ -133,7 +133,7 @@ export default function WatchlistPage() {
                       largeCover: item.anime_image || "/placeholder-cover.svg",
                     },
                     score: item.anime_score,
-                    format: item.anime_format as any,
+                    format: item.anime_format || undefined,
                   };
                   return (
                     <AnimeCard

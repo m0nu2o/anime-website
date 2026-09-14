@@ -846,10 +846,6 @@ export async function getAnimeEpisodes(
 ): Promise<import("./types").Episode[]> {
   const cached = animeObj || getFromCache(animeId);
   const resolvedTitle = title || cached?.title?.english || cached?.title?.romaji;
-  const isFinished = Boolean(
-    cached?.status?.toLowerCase().includes("finish") ||
-    cached?.status?.toLowerCase().includes("complete")
-  );
   const latestAiredEpisode = cached?.nextAiringEpisode?.episode
     ? cached.nextAiringEpisode.episode - 1
     : undefined;
@@ -931,27 +927,9 @@ export async function getAnimeEpisodes(
     }
   }
 
-  // 4. If series is finished/completed, all episodes are confirmed released
-  if (isFinished) {
-    for (const ep of mergedMap.values()) {
-      ep.status = "released";
-    }
-  }
-
-  // 5. Fallback supporting check: if latestAiredEpisode is confirmed, episodes <= latestAiredEpisode are released
-  if (typeof latestAiredEpisode === "number" && latestAiredEpisode > 0) {
-    for (const ep of mergedMap.values()) {
-      if (typeof ep.number === "number") {
-        if (ep.number <= latestAiredEpisode) {
-          ep.status = "released";
-        } else if (ep.number > latestAiredEpisode && ep.status !== "released") {
-          ep.status = "upcoming";
-        }
-      }
-    }
-  }
-
-  return Array.from(mergedMap.values()).sort((a, b) => (a.number ?? 0) - (b.number ?? 0));
+  const rawSorted = Array.from(mergedMap.values()).sort((a, b) => (a.number ?? 0) - (b.number ?? 0));
+  const { normalizeEpisodeReleaseStatuses } = await import("./episodesCanonical");
+  return normalizeEpisodeReleaseStatuses(cached, rawSorted);
 }
 
 export async function getAnimeStreamingLinks(animeId: string): Promise<import("./types").StreamingLink[]> {
@@ -1222,4 +1200,6 @@ export async function getStudioAnime(studioId: string): Promise<Anime[]> {
   results.forEach(cacheAnime);
   return results;
 }
+
+export { calculateLatestReleasedEpisode, normalizeEpisodeReleaseStatuses } from "./episodesCanonical";
 

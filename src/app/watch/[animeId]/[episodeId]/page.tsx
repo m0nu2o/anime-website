@@ -5,7 +5,9 @@ import Navbar from "@/components/Navbar";
 import BackButton from "@/components/BackButton";
 import VideoPlayer from "@/components/VideoPlayer";
 import AnimeCard from "@/components/AnimeCard";
-import { getAnimeById, getAnimeEpisodes, getAnimeRelations, getAnimeRecommendations } from "@/lib/api";
+import { getAnimeById, getAnimeEpisodes, getAnimeRecommendations } from "@/lib/api";
+import { getFranchiseGraph, FranchiseEntry } from "@/lib/api/franchise";
+import { calculateLatestReleasedEpisode, normalizeEpisodeReleaseStatuses } from "@/lib/api/episodesCanonical";
 import { ChevronLeft, ChevronRight, Play, Calendar, Film, Lock, GitBranch, Sparkles } from "lucide-react";
 import styles from "./page.module.css";
 import WatchlistStatusSelect from "@/components/WatchlistStatusSelect";
@@ -38,25 +40,27 @@ export default async function WatchEpisodePage({
     notFound();
   }
 
-  const [episodes, relations, recommendations] = await Promise.all([
+  const [rawEpisodes, franchiseEntries, recommendations] = await Promise.all([
     getAnimeEpisodes(anime.id, anime.title.english || anime.title.romaji, anime),
-    getAnimeRelations(anime.id),
+    getFranchiseGraph(
+      anime.id,
+      anime.title.english || anime.title.romaji || "Anime",
+      anime.anilistId,
+      anime.year,
+      anime.format
+    ),
     getAnimeRecommendations(anime.id, 6),
   ]);
 
-  const now = Date.now();
+  const episodes = normalizeEpisodeReleaseStatuses(anime, rawEpisodes);
   const isFinished = anime.status?.toLowerCase().includes("finish") || anime.status?.toLowerCase().includes("complete");
-  const latestFromAiring = anime.nextAiringEpisode?.episode ? anime.nextAiringEpisode.episode - 1 : undefined;
+  const latestReleasedNumber = calculateLatestReleasedEpisode(anime, episodes);
 
   // Filter released episodes strictly
   const releasedEpisodes = episodes
     .filter((ep) => {
       if (ep.number === null || ep.number === undefined) return false;
-      if (ep.status === "released") return true;
-      if (ep.status === "upcoming") return false;
-      if (ep.airdateTimestamp) return ep.airdateTimestamp <= now;
-      if (typeof latestFromAiring === "number" && ep.number <= latestFromAiring) return true;
-      return isFinished;
+      return ep.status === "released";
     })
     .sort((a, b) => (a.number ?? 0) - (b.number ?? 0));
 
@@ -64,97 +68,19 @@ export default async function WatchEpisodePage({
   const parsedEp = parseInt(resolved.episodeId, 10);
   const currentEpNum = Number.isFinite(parsedEp) && parsedEp > 0 ? parsedEp : 1;
 
-  const latestReleasedEp = releasedEpisodes.length > 0 ? releasedEpisodes[releasedEpisodes.length - 1] : null;
-  const latestReleasedNumber = latestReleasedEp?.number || latestFromAiring || (isFinished && declaredTotal ? declaredTotal : 1);
-
   const currentEp = episodes.find((e) => e.number === currentEpNum);
   // Unreleased guard: cannot play episodes past latest released number for an ongoing show
-  const isCurrentEpisodeUpcoming = currentEp?.status === "upcoming" || (!isFinished && currentEp?.status !== "released" && currentEpNum > latestReleasedNumber);
+  const isCurrentEpisodeUpcoming = !isFinished && (currentEp?.status === "upcoming" || currentEpNum > latestReleasedNumber);
 
-  function parseSeasonAndPart(rawTitle: string, role?: string, year?: number) {
-    const t = rawTitle.trim();
-    let seasonNumber = 1;
-    let seasonLabel = "Season 1";
-
-    if (/\bfinal\s+season\b/i.test(t)) {
-      seasonLabel = "Final Season";
-      seasonNumber = 90;
-    } else {
-      const sMatch = t.match(/\bseason\s*(\d+)\b/i)
-        || t.match(/\b(\d+)(?:st|nd|rd|th)\s+season\b/i)
-        || t.match(/\bS(\d+)\b/);
-      if (sMatch) {
-        seasonNumber = parseInt(sMatch[1], 10);
-        seasonLabel = `Season ${seasonNumber}`;
-      } else if (role === "sequel") {
-        seasonNumber = 2;
-        seasonLabel = "Season 2";
-      } else if (role === "prequel") {
-        seasonNumber = 0;
-        seasonLabel = "Prequel";
-      } else if (/\bmovie\b/i.test(t)) {
-        seasonLabel = "Movie";
-        seasonNumber = 95;
-      } else if (/\bova\b/i.test(t)) {
-        seasonLabel = "OVA";
-        seasonNumber = 96;
-      }
-    }
-
-    let partNumber: number | null = null;
-    let partLabel: string | null = null;
-    const pMatch = t.match(/\bpart\s*(\d+)\b/i)
-      || t.match(/\bcour\s*(\d+)\b/i)
-      || t.match(/\bpart\s*([ivx]+)\b/i);
-
-    if (pMatch) {
-      const val = pMatch[1];
-      if (/^[ivx]+$/i.test(val)) {
-        const romanMap: Record<string, number> = { i: 1, ii: 2, iii: 3, iv: 4, v: 5 };
-        partNumber = romanMap[val.toLowerCase()] || 1;
-      } else {
-        partNumber = parseInt(val, 10);
-      }
-      partLabel = `Part ${partNumber}`;
-    } else if (/\bthe\s+final\s+chapters\b/i.test(t)) {
-      partNumber = 3;
-      partLabel = "Final Chapters";
-    }
-
-    return { seasonLabel, seasonNumber, partLabel, partNumber, year };
-  }
-
-  const currentTitleRaw = anime.title.english || anime.title.romaji || anime.title.native || "Anime";
-  const currentSeasonInfo = parseSeasonAndPart(currentTitleRaw, undefined, anime.year);
-  const currentSeasonLabel = currentSeasonInfo.seasonLabel;
-  const currentPartLabel = currentSeasonInfo.partLabel;
-
-  const validRoles = ["prequel", "sequel", "parent", "side_story", "alternative_version"];
-  const franchiseEntries = [
-    {
-      id: anime.id,
-      title: currentTitleRaw,
-      ...currentSeasonInfo,
-      isCurrent: true,
-    },
-    ...relations
-      .filter(r => validRoles.includes(r.role?.toLowerCase()))
-      .map(r => {
-        const parsed = parseSeasonAndPart(r.anime.title, r.role, r.anime.year);
-        return {
-          id: r.anime.id,
-          title: r.anime.title,
-          ...parsed,
-          isCurrent: false,
-        };
-      })
-  ];
+  const currentEntry = franchiseEntries.find(e => e.id === anime.id) || franchiseEntries.find(e => e.isCurrent) || franchiseEntries[0];
+  const currentSeasonLabel = currentEntry?.seasonLabel || "Season 1";
+  const currentPartLabel = currentEntry?.partLabel || null;
 
   interface SeasonGroup {
     seasonLabel: string;
     seasonNumber: number;
     year?: number;
-    parts: typeof franchiseEntries;
+    parts: FranchiseEntry[];
   }
 
   const seasonMap = new Map<string, SeasonGroup>();

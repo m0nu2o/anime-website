@@ -138,6 +138,7 @@ export interface StreamResponse {
   subtitles?: { url: string; lang: string }[];
   embedUrls: EmbedSource[];
   downloadUrl?: string;
+  externalStreamLink?: { site: string; url: string; title?: string };
   error?: string;
 }
 

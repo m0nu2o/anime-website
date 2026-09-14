@@ -149,6 +149,59 @@ export async function GET(request: NextRequest) {
 
   // Real provider stream source verification only (no fake/redirect mirrors)
   const hasPlayableSource = embedUrls.length > 0;
+  let externalStreamLink: { site: string; url: string; title?: string } | undefined;
+
+  // Fallback to official external streaming links only when ReAnime has no playable sources
+  if (!hasPlayableSource && anilistId) {
+    try {
+      const parsedId = parseInt(anilistId, 10);
+      if (!isNaN(parsedId)) {
+        const alRes = await fetch("https://graphql.anilist.co", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            query: `query ($id: Int) {
+              Media(id: $id) {
+                streamingEpisodes { title url site }
+                externalLinks { url site type }
+              }
+            }`,
+            variables: { id: parsedId },
+          }),
+          signal: AbortSignal.timeout(3000),
+        });
+        if (alRes.ok) {
+          const alJson = await alRes.json();
+          const media = alJson?.data?.Media;
+          const streamEps = media?.streamingEpisodes;
+          if (Array.isArray(streamEps) && streamEps.length > 0) {
+            const epMatch = streamEps.find((se: { title?: string }) => {
+              const m = se.title?.match(/Episode\s*(\d+)/i) || se.title?.match(/^(\d+)\b/);
+              return m && parseInt(m[1], 10) === episode;
+            });
+            if (epMatch?.url) {
+              externalStreamLink = {
+                site: epMatch.site || "Crunchyroll",
+                url: epMatch.url,
+                title: epMatch.title,
+              };
+            }
+          }
+          if (!externalStreamLink && Array.isArray(media?.externalLinks)) {
+            const officialStream = media.externalLinks.find(
+              (l: { type?: string; url?: string }) => l.type === "STREAMING" && l.url
+            );
+            if (officialStream) {
+              externalStreamLink = {
+                site: officialStream.site || "Official Streaming Partner",
+                url: officialStream.url,
+              };
+            }
+          }
+        }
+      }
+    } catch {}
+  }
 
   // Construct clean response — include resolved anilistId so client-side edge resolver can fetch FlixCloud directly
   const response: StreamResponse = {
@@ -160,7 +213,12 @@ export async function GET(request: NextRequest) {
     sources: [],
     embedUrls,
     downloadUrl: undefined,
-    error: hasPlayableSource ? undefined : "Edge resolution required for this episode",
+    externalStreamLink,
+    error: hasPlayableSource
+      ? undefined
+      : externalStreamLink
+      ? "EXTERNAL_STREAM_AVAILABLE"
+      : "Edge resolution required for this episode",
   };
 
   return NextResponse.json(response, {

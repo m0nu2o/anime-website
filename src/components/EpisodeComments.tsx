@@ -125,22 +125,36 @@ export default function EpisodeComments({ animeId, episode }: EpisodeCommentsPro
   const handleLike = async (commentId: string, currentLikes: number) => {
     if (likedComments.has(commentId)) return; // Prevent duplicate like
 
+    const prevLiked = new Set(likedComments);
     const nextLiked = new Set(likedComments);
     nextLiked.add(commentId);
     setLikedComments(nextLiked);
-    try {
-      localStorage.setItem("likedComments", JSON.stringify(Array.from(nextLiked)));
-    } catch {}
 
     const nextLikes = currentLikes + 1;
     setComments((prev) =>
       prev.map((c) => (c.id === commentId ? { ...c, likes: nextLikes } : c))
     );
+
+    try {
+      localStorage.setItem("likedComments", JSON.stringify(Array.from(nextLiked)));
+    } catch {}
+
     if (!user) return;
     try {
-      await supabase.rpc("increment_comment_likes", { row_id: commentId });
+      const { error } = await supabase.rpc("increment_comment_likes", { row_id: commentId });
+      if (error) {
+        throw error;
+      }
     } catch (err) {
-      console.warn("Failed to like comment:", err);
+      console.warn("Failed to increment comment likes, rolling back:", err);
+      // Rollback optimistic update on failure
+      setLikedComments(prevLiked);
+      try {
+        localStorage.setItem("likedComments", JSON.stringify(Array.from(prevLiked)));
+      } catch {}
+      setComments((prev) =>
+        prev.map((c) => (c.id === commentId ? { ...c, likes: currentLikes } : c))
+      );
     }
   };
 

@@ -16,6 +16,9 @@ interface AuthContextType {
   closeAuthModal: () => void;
   signInWithEmail: (email: string, password: string) => Promise<{ error?: string }>;
   signUpWithEmail: (email: string, password: string, username: string) => Promise<{ error?: string }>;
+  resetPassword: (email: string) => Promise<{ error?: string }>;
+  updatePassword: (newPassword: string) => Promise<{ error?: string }>;
+  uploadAvatar: (file: File) => Promise<{ url?: string; error?: string }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -30,6 +33,9 @@ const AuthContext = createContext<AuthContextType>({
   closeAuthModal: () => {},
   signInWithEmail: async () => ({}),
   signUpWithEmail: async () => ({}),
+  resetPassword: async () => ({}),
+  updatePassword: async () => ({}),
+  uploadAvatar: async () => ({}),
   signOut: async () => {},
   refreshProfile: async () => {},
 });
@@ -46,12 +52,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       let p = await getProfile(currentUser.id);
       if (!p) {
         // Create initial profile if none exists
-        const defaultUsername = currentUser.email?.split("@")[0] || `user_${currentUser.id.slice(0, 6)}`;
+        const defaultUsername =
+          currentUser.user_metadata?.username ||
+          currentUser.email?.split("@")[0] ||
+          `user_${currentUser.id.slice(0, 6)}`;
         p = await upsertProfile({
           id: currentUser.id,
           username: defaultUsername,
           display_name: defaultUsername,
-          avatar_url: `https://api.dicebear.com/7.x/bottts/svg?seed=${currentUser.id}`,
         });
       }
       setProfile(p);
@@ -61,7 +69,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    // Initial session
+    // Initial session check
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -94,7 +102,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signInWithEmail = async (email: string, password: string) => {
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) return { error: error.message };
+      if (error) {
+        return { error: error.message };
+      }
       closeAuthModal();
       return {};
     } catch (err: unknown) {
@@ -105,26 +115,82 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUpWithEmail = async (email: string, password: string, username: string) => {
     try {
+      const cleanUsername = username.trim() || email.split("@")[0];
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: { username },
+          data: { username: cleanUsername, display_name: cleanUsername },
+          emailRedirectTo: typeof window !== "undefined" ? `${window.location.origin}/auth/callback` : undefined,
         },
       });
-      if (error) return { error: error.message };
+      if (error) {
+        return { error: error.message };
+      }
       if (data.user) {
         await upsertProfile({
           id: data.user.id,
-          username: username.trim() || `user_${data.user.id.slice(0, 6)}`,
-          display_name: username.trim() || `user_${data.user.id.slice(0, 6)}`,
-          avatar_url: `https://api.dicebear.com/7.x/bottts/svg?seed=${data.user.id}`,
+          username: cleanUsername,
+          display_name: cleanUsername,
         });
       }
       closeAuthModal();
       return {};
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Sign up failed";
+      return { error: msg };
+    }
+  };
+
+  const resetPassword = async (email: string) => {
+    try {
+      const redirectTo = typeof window !== "undefined" ? `${window.location.origin}/reset-password` : undefined;
+      const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+      if (error) return { error: error.message };
+      return {};
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Password reset request failed";
+      return { error: msg };
+    }
+  };
+
+  const updatePassword = async (newPassword: string) => {
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) return { error: error.message };
+      return {};
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to update password";
+      return { error: msg };
+    }
+  };
+
+  const uploadAvatar = async (file: File): Promise<{ url?: string; error?: string }> => {
+    if (!user) return { error: "Must be signed in to upload an avatar" };
+    try {
+      const ext = file.name.split(".").pop() || "png";
+      const randomId = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID().slice(0, 8) : "upload";
+      const filePath = `${user.id}/avatar_${randomId}.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) return { error: uploadError.message };
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("avatars")
+        .getPublicUrl(filePath);
+
+      await upsertProfile({
+        id: user.id,
+        avatar_url: publicUrl,
+      });
+
+      await refreshProfile();
+      return { url: publicUrl };
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Avatar upload failed";
       return { error: msg };
     }
   };
@@ -154,6 +220,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         closeAuthModal,
         signInWithEmail,
         signUpWithEmail,
+        resetPassword,
+        updatePassword,
+        uploadAvatar,
         signOut,
         refreshProfile,
       }}

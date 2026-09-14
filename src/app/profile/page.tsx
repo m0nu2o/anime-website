@@ -83,7 +83,7 @@ function getJoinedYear(value?: string): string {
 }
 
 export default function ProfilePage() {
-  const { user, profile, refreshProfile, openAuthModal } = useAuth();
+  const { user, profile, refreshProfile, openAuthModal, uploadAvatar } = useAuth();
   const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
   const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -177,19 +177,36 @@ export default function ProfilePage() {
     }
 
     setAvatarLoading(true);
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        setEditAvatar(reader.result);
-        showToast("Avatar image loaded!");
-      }
-      setAvatarLoading(false);
-    };
-    reader.onerror = () => {
-      showToast("Failed to read image file.");
-      setAvatarLoading(false);
-    };
-    reader.readAsDataURL(file);
+    if (user) {
+      uploadAvatar(file)
+        .then((res) => {
+          setAvatarLoading(false);
+          if (res.error) {
+            showToast(res.error);
+          } else if (res.url) {
+            setEditAvatar(res.url);
+            showToast("Avatar uploaded to cloud storage!");
+          }
+        })
+        .catch(() => {
+          setAvatarLoading(false);
+          showToast("Failed to upload avatar to cloud.");
+        });
+    } else {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === "string") {
+          setEditAvatar(reader.result);
+          showToast("Avatar preview loaded!");
+        }
+        setAvatarLoading(false);
+      };
+      reader.onerror = () => {
+        showToast("Failed to read image file.");
+        setAvatarLoading(false);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleRemoveAvatar = () => {
@@ -262,6 +279,63 @@ export default function ProfilePage() {
     if (watchlistFilter === "all") return watchlist;
     return watchlist.filter((w) => w.status === watchlistFilter);
   }, [watchlist, watchlistFilter]);
+
+  const achievements = useMemo(() => [
+    {
+      id: "pioneer",
+      title: "Pioneer",
+      description: "Registered an account and joined the NextGen Anime community.",
+      unlocked: Boolean(user),
+      progress: user ? "Completed" : "Sign in to unlock",
+      icon: Shield,
+      color: "#8b5cf6",
+    },
+    {
+      id: "first_step",
+      title: "First Step",
+      description: "Added your first anime to your personal tracking watchlist.",
+      unlocked: watchlist.length >= 1,
+      progress: `${Math.min(watchlist.length, 1)}/1 anime`,
+      icon: Bookmark,
+      color: "#3b82f6",
+    },
+    {
+      id: "curator",
+      title: "Anime Curator",
+      description: "Built a curated collection with 5 or more favorites.",
+      unlocked: favorites.length >= 5,
+      progress: `${Math.min(favorites.length, 5)}/5 favorites`,
+      icon: Heart,
+      color: "#ec4899",
+    },
+    {
+      id: "marathoner",
+      title: "Marathon Finisher",
+      description: "Completed watching at least one entire anime series.",
+      unlocked: completedCount >= 1,
+      progress: `${Math.min(completedCount, 1)}/1 series`,
+      icon: CheckCircle2,
+      color: "#10b981",
+    },
+    {
+      id: "binge_master",
+      title: "Episode Crusher",
+      description: "Watched and tracked 10 or more anime episodes.",
+      unlocked: totalEpisodesWatched >= 10,
+      progress: `${Math.min(totalEpisodesWatched, 10)}/10 episodes`,
+      icon: Flame,
+      color: "#f59e0b",
+    },
+    {
+      id: "critic",
+      title: "Anime Critic",
+      description: "Rated and scored 3 or more tracked anime titles.",
+      unlocked: scoredItems.length >= 3,
+      progress: `${Math.min(scoredItems.length, 3)}/3 ratings`,
+      icon: Star,
+      color: "#eab308",
+    },
+  ], [user, watchlist, favorites, completedCount, totalEpisodesWatched, scoredItems]);
 
   const currentBanner = editBanner || PRESET_BANNERS[0].url;
   const currentAvatar = editAvatar || profile?.avatar_url;
@@ -682,15 +756,49 @@ export default function ProfilePage() {
 
           {activeTab === "badges" && (
             <div className={styles.badgesGrid}>
-              <div className={styles.badgeCard}>
-                <div className={styles.badgeIcon}>
-                  <Award size={24} style={{ color: "#ec4899" }} />
-                </div>
-                <div className={styles.badgeInfo}>
-                  <h4>Achievements unavailable</h4>
-                  <p>Profile achievement data is not available.</p>
-                </div>
-              </div>
+              {achievements.map((ach) => {
+                const IconComponent = ach.icon;
+                return (
+                  <div
+                    key={ach.id}
+                    className={`${styles.badgeCard} ${!ach.unlocked ? styles.badgeLocked : ""}`}
+                    style={!ach.unlocked ? { opacity: 0.6 } : undefined}
+                  >
+                    <div
+                      className={styles.badgeIcon}
+                      style={{
+                        background: ach.unlocked ? `${ach.color}22` : "rgba(255,255,255,0.05)",
+                        border: `1px solid ${ach.unlocked ? ach.color : "rgba(255,255,255,0.1)"}`,
+                      }}
+                    >
+                      <IconComponent
+                        size={24}
+                        style={{ color: ach.unlocked ? ach.color : "var(--text-muted)" }}
+                      />
+                    </div>
+                    <div className={styles.badgeInfo}>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
+                        <h4 style={{ margin: 0 }}>{ach.title}</h4>
+                        <span
+                          style={{
+                            fontSize: "0.75rem",
+                            fontWeight: 700,
+                            padding: "2px 8px",
+                            borderRadius: "9999px",
+                            background: ach.unlocked ? "rgba(16, 185, 129, 0.2)" : "rgba(255,255,255,0.06)",
+                            color: ach.unlocked ? "#34d399" : "var(--text-muted)",
+                          }}
+                        >
+                          {ach.unlocked ? "Unlocked" : ach.progress}
+                        </span>
+                      </div>
+                      <p style={{ margin: "6px 0 0 0", fontSize: "0.85rem", color: "var(--text-muted)" }}>
+                        {ach.description}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
