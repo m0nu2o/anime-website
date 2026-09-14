@@ -175,7 +175,8 @@ export async function GET(request: NextRequest) {
           const media = alJson?.data?.Media;
           const streamEps = media?.streamingEpisodes;
           if (Array.isArray(streamEps) && streamEps.length > 0) {
-            const epMatch = streamEps.find((se: { title?: string }) => {
+            const epMatch = streamEps.find((se: { title?: string; url?: string }) => {
+              if (!se.url) return false;
               const m = se.title?.match(/Episode\s*(\d+)/i) || se.title?.match(/^(\d+)\b/);
               return m && parseInt(m[1], 10) === episode;
             });
@@ -187,23 +188,19 @@ export async function GET(request: NextRequest) {
               };
             }
           }
-          if (!externalStreamLink && Array.isArray(media?.externalLinks)) {
-            const officialStream = media.externalLinks.find(
-              (l: { type?: string; url?: string }) => l.type === "STREAMING" && l.url
-            );
-            if (officialStream) {
-              externalStreamLink = {
-                site: officialStream.site || "Official Streaming Partner",
-                url: officialStream.url,
-              };
-            }
-          }
         }
       }
     } catch {}
   }
 
-  // Construct clean response — include resolved anilistId so client-side edge resolver can fetch FlixCloud directly
+  // Determine streaming state
+  const streamState = hasPlayableSource
+    ? "PLAYABLE"
+    : externalStreamLink
+    ? "EXTERNAL_STREAM_AVAILABLE"
+    : "NO_VERIFIED_SOURCE";
+
+  // Construct clean response
   const response: StreamResponse = {
     success: hasPlayableSource,
     provider: hasPlayableSource ? "ReAnime Cloud Engine (FlixCloud HD-1 & HD-2)" : "Direct Cloudflare Edge Resolver",
@@ -218,7 +215,7 @@ export async function GET(request: NextRequest) {
       ? undefined
       : externalStreamLink
       ? "EXTERNAL_STREAM_AVAILABLE"
-      : "Edge resolution required for this episode",
+      : "NO_VERIFIED_SOURCE",
   };
 
   return NextResponse.json(response, {

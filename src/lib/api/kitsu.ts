@@ -278,7 +278,7 @@ async function resolveKitsuIdFromMapping(animeId: string): Promise<string | null
         : null;
       return kitsuEntry?.id ? String(kitsuEntry.id) : null;
     }
-    if (animeId.startsWith("anilist-")) {
+    if (animeId.startsWith("anilist-") || /^\d+$/.test(animeId)) {
       const anilistId = animeId.replace("anilist-", "");
       if (!/^\d+$/.test(anilistId)) return null;
       const res = await fetchWithTimeout(
@@ -300,8 +300,7 @@ async function resolveKitsuIdFromMapping(animeId: string): Promise<string | null
 export async function fetchKitsuEpisodes(
   animeId: string,
   searchTitle?: string,
-  animeStatus?: string,
-  latestAiredEpisode?: number
+  animeStatus?: string
 ): Promise<import("./types").Episode[]> {
   try {
     let cleanId = animeId.replace("kitsu-", "");
@@ -365,82 +364,9 @@ export async function fetchKitsuEpisodes(
       ? (animeStatus.toLowerCase().includes("finish") || animeStatus.toLowerCase().includes("complete"))
       : false;
 
-    // 1. Find the highest episode number that has a confirmed past airdate
-    let maxReleasedEpNum = 0;
-    for (const ep of episodesData) {
-      const rawNumber = ep.attributes?.number ?? ep.attributes?.relativeNumber;
-      const number = typeof rawNumber === "number" && rawNumber > 0 ? rawNumber : null;
-      const airdateStr = ep.attributes?.airdate;
-      if (airdateStr && number) {
-        let ts = NaN;
-        if (/^\d{4}-\d{2}-\d{2}$/.test(airdateStr)) {
-          ts = Date.parse(`${airdateStr}T00:00:00+09:00`);
-        } else {
-          ts = Date.parse(airdateStr);
-        }
-        if (!isNaN(ts) && ts <= now && number > maxReleasedEpNum) {
-          maxReleasedEpNum = number;
-        }
-      }
-    }
-
-    // 2. If caller provided latestAiredEpisode from AniList nextAiringEpisode or anime metadata
-    if (typeof latestAiredEpisode === "number" && latestAiredEpisode > 0) {
-      if (latestAiredEpisode > maxReleasedEpNum) {
-        maxReleasedEpNum = latestAiredEpisode;
-      }
-    }
-
-    // 3. Fallback: if maxReleasedEpNum is still 0 and anime is not finished, query AniList nextAiringEpisode via mapping
-    if (maxReleasedEpNum === 0 && !isFinished) {
-      try {
-        let targetAniListId: number | null = null;
-        if (animeId.startsWith("anilist-")) {
-          const parsed = parseInt(animeId.replace("anilist-", ""), 10);
-          if (!isNaN(parsed)) targetAniListId = parsed;
-        } else {
-          const mapRes = await fetchWithTimeout(`${KITSU_API_URL}/anime/${cleanId}/mappings`, {}, 3000);
-          if (mapRes.ok) {
-            const mapJson = await mapRes.json();
-            if (Array.isArray(mapJson?.data)) {
-              const alMapping = mapJson.data.find(
-                (m: { attributes?: { externalSite?: string; externalId?: string } }) =>
-                  m.attributes?.externalSite === "anilist/anime"
-              );
-              if (alMapping?.attributes?.externalId) {
-                const parsed = parseInt(alMapping.attributes.externalId, 10);
-                if (!isNaN(parsed)) targetAniListId = parsed;
-              }
-            }
-          }
-        }
-
-        if (targetAniListId) {
-          const alRes = await fetchWithTimeout(
-            "https://graphql.anilist.co",
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                query: `query ($id: Int) { Media(id: $id) { nextAiringEpisode { episode } } }`,
-                variables: { id: targetAniListId },
-              }),
-            },
-            3000
-          );
-          if (alRes.ok) {
-            const alJson = await alRes.json();
-            const nextEp = alJson?.data?.Media?.nextAiringEpisode?.episode;
-            if (typeof nextEp === "number" && nextEp > 1) {
-              maxReleasedEpNum = nextEp - 1;
-            }
-          }
-        }
-      } catch {}
-    }
-
     return episodesData.map((ep) => {
-      const rawNumber = ep.attributes?.number ?? ep.attributes?.relativeNumber;
+      // Prioritize relativeNumber for season-accurate episode numbering, falling back to number
+      const rawNumber = ep.attributes?.relativeNumber ?? ep.attributes?.number;
       const number = typeof rawNumber === "number" && rawNumber > 0 ? rawNumber : null;
       const airdateStr = ep.attributes?.airdate || undefined;
       
@@ -457,12 +383,10 @@ export async function fetchKitsuEpisodes(
       }
 
       let status: "released" | "upcoming" | "unknown" = "unknown";
-      if (typeof airdateTimestamp === "number" && !isNaN(airdateTimestamp)) {
+      if (typeof airdateTimestamp === "number" && !isNaN(airdateTimestamp) && airdateTimestamp > 0) {
         status = airdateTimestamp <= now ? "released" : "upcoming";
       } else if (isFinished) {
         status = "released";
-      } else if (number !== null && maxReleasedEpNum > 0) {
-        status = number <= maxReleasedEpNum ? "released" : "upcoming";
       }
 
       return {

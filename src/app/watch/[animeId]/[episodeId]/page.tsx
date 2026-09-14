@@ -66,11 +66,22 @@ export default async function WatchEpisodePage({
 
   const declaredTotal = typeof anime.episodes === "number" && anime.episodes > 0 ? anime.episodes : null;
   const parsedEp = parseInt(resolved.episodeId, 10);
-  const currentEpNum = Number.isFinite(parsedEp) && parsedEp > 0 ? parsedEp : 1;
+  if (!Number.isFinite(parsedEp) || parsedEp <= 0) {
+    notFound();
+  }
+  const currentEpNum = parsedEp;
+
+  // Direct URL Protection: Episode must exist in the canonical episode list.
+  // Never create phantom episodes, never query ReAnime or show Crunchyroll popup for non-existent episodes.
+  if (episodes.length > 0 && !episodes.some((e) => e.number === currentEpNum)) {
+    notFound();
+  } else if (episodes.length === 0 && currentEpNum !== 1) {
+    notFound();
+  }
 
   const currentEp = episodes.find((e) => e.number === currentEpNum);
-  // Unreleased guard: cannot play episodes past latest released number for an ongoing show
-  const isCurrentEpisodeUpcoming = !isFinished && (currentEp?.status === "upcoming" || currentEpNum > latestReleasedNumber);
+  // Canonical episode status is the single source of truth
+  const isCurrentEpisodeUpcoming = currentEp?.status === "upcoming";
 
   const currentEntry = franchiseEntries.find(e => e.id === anime.id) || franchiseEntries.find(e => e.isCurrent) || franchiseEntries[0];
   const currentSeasonLabel = currentEntry?.seasonLabel || "Season 1";
@@ -126,7 +137,7 @@ export default async function WatchEpisodePage({
 
   const prevEpNumber = currentEpIndex > 0
     ? releasedEpisodes[currentEpIndex - 1].number
-    : (currentEpIndex === -1 && currentEpNum > 1 && currentEpNum - 1 <= latestReleasedNumber ? currentEpNum - 1 : null);
+    : (currentEpIndex === -1 && releasedEpisodes.length > 0 ? releasedEpisodes[releasedEpisodes.length - 1].number : null);
 
   const nextEpNumber = (currentEpIndex >= 0 && currentEpIndex < releasedEpisodes.length - 1)
     ? releasedEpisodes[currentEpIndex + 1].number

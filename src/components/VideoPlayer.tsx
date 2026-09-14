@@ -1241,34 +1241,35 @@ export default function VideoPlayer({
           })()
         ) : (
           <>
-            {/* No verified source: honest empty state with AniList official link fallback */}
+            {/* Streaming State Handling: EXTERNAL_STREAM_AVAILABLE vs NO_VERIFIED_SOURCE */}
             {!isLoadingStream && filteredEmbeds.length === 0 && streamSources.length === 0 && (
               <div className={styles.placeholderFrame}>
                 <div className={styles.notice}>
-                  <h3>Streaming Unavailable</h3>
-                  <p>
-                    {externalStreamLink ? (
-                      <>
-                        No direct player stream was found for this episode on our edge mirrors.
-                        You can watch this episode officially on <strong>{externalStreamLink.site}</strong>.
-                      </>
-                    ) : (
-                      "No verified stream source was found for this episode. Please check back later."
-                    )}
-                  </p>
-                  {externalStreamLink && (
-                    <div style={{ marginTop: "16px" }}>
-                      <a
-                        href={externalStreamLink.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={styles.autoplayResumeBtn}
-                        style={{ display: "inline-flex", alignItems: "center", gap: "8px", textDecoration: "none" }}
-                      >
-                        <Film size={16} />
-                        <span>Watch on {externalStreamLink.site}</span>
-                      </a>
-                    </div>
+                  {externalStreamLink ? (
+                    <>
+                      <h3>Watch officially on {externalStreamLink.site}</h3>
+                      <p>
+                        No direct player stream was found for Episode {episodeNumber} on our edge mirrors.
+                        You can stream this episode officially on <strong>{externalStreamLink.site}</strong>.
+                      </p>
+                      <div style={{ marginTop: "16px" }}>
+                        <a
+                          href={externalStreamLink.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={styles.autoplayResumeBtn}
+                          style={{ display: "inline-flex", alignItems: "center", gap: "8px", textDecoration: "none" }}
+                        >
+                          <Film size={16} />
+                          <span>Watch on {externalStreamLink.site}</span>
+                        </a>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <h3>Streaming Unavailable</h3>
+                      <p>No verified stream source was found for this episode. Please check back later.</p>
+                    </>
                   )}
                 </div>
               </div>

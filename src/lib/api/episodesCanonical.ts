@@ -1,98 +1,120 @@
 import type { Anime, Episode } from "./types";
 
+export type CanonicalEpisodeStatus = "released" | "upcoming" | "unknown";
+
+/**
+ * Normalizes an airdate string into a Unix millisecond timestamp.
+ * Dates without timestamps (YYYY-MM-DD) are parsed in Japan Standard Time (UTC+9).
+ */
+export function parseAirdateToTimestamp(airdateStr?: string | null): number | undefined {
+  if (!airdateStr) return undefined;
+  const str = airdateStr.trim();
+  if (!str) return undefined;
+
+  // Pattern: YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+    const ts = Date.parse(`${str}T00:00:00+09:00`);
+    return !isNaN(ts) ? ts : undefined;
+  }
+
+  const ts = Date.parse(str);
+  return !isNaN(ts) ? ts : undefined;
+}
+
+/**
+ * Resolves canonical episode status based strictly on verified timestamps and media state.
+ *
+ * Rules:
+ * 1. If anime status is completed/finished: all verified episodes of this anime have released.
+ * 2. If episode has a reliable timestamp <= now: RELEASED.
+ * 3. If episode has a reliable timestamp > now: UPCOMING.
+ * 4. Missing / unreliable timestamp: UNKNOWN.
+ *    (UNKNOWN must not be converted into UPCOMING or RELEASED).
+ */
+export function resolveEpisodeStatusFromObservation(
+  airdateTimestamp: number | undefined,
+  isAnimeFinished: boolean,
+  hasStreamingRecord: boolean = false
+): CanonicalEpisodeStatus {
+  if (isAnimeFinished) {
+    return "released";
+  }
+
+  const now = Date.now();
+
+  if (typeof airdateTimestamp === "number" && !isNaN(airdateTimestamp) && airdateTimestamp > 0) {
+    if (airdateTimestamp <= now) {
+      return "released";
+    } else {
+      return "upcoming";
+    }
+  }
+
+  // If AniList streamingEpisodes has an exact streaming record, it has released
+  if (hasStreamingRecord) {
+    return "released";
+  }
+
+  // Missing or unreliable timestamp on an ongoing show: UNKNOWN
+  return "unknown";
+}
+
 /**
  * Accurately determines the latest verified released episode number for an anime.
+ * Strict rule: MAX(real episode number WHERE status === "released") based on actual verified records.
+ * NEVER uses nextAiringEpisode.episode - 1 as historical release authority.
  */
 export function calculateLatestReleasedEpisode(
   anime: Partial<Anime> | null | undefined,
   episodes: Episode[] = []
 ): number {
-  const now = Date.now();
   const status = anime?.status?.toLowerCase() || "";
   const isFinished = status.includes("finish") || status.includes("complete");
   const declaredTotal = typeof anime?.episodes === "number" && anime.episodes > 0 ? anime.episodes : null;
 
-  // 1. If completed and we know the total episodes, all declared episodes have released
-  if (isFinished && declaredTotal) {
-    return declaredTotal;
-  }
-
-  // 2. Check episodes with verified past airdateTimestamp or airdate
-  let maxAiredByTimestamp = 0;
-  for (const ep of episodes) {
-    if (typeof ep.number !== "number" || ep.number <= 0) continue;
-
-    // Explicit airdateTimestamp
-    if (ep.airdateTimestamp && ep.airdateTimestamp <= now) {
-      if (ep.number > maxAiredByTimestamp) {
-        maxAiredByTimestamp = ep.number;
-      }
-    } else if (ep.airdate) {
-      // Parse airdate string (e.g. YYYY-MM-DD)
-      let ts = NaN;
-      if (/^\d{4}-\d{2}-\d{2}$/.test(ep.airdate)) {
-        ts = Date.parse(`${ep.airdate}T00:00:00+09:00`); // JST broadcast
-      } else {
-        ts = Date.parse(ep.airdate);
-      }
-      if (!isNaN(ts) && ts <= now && ep.number > maxAiredByTimestamp) {
-        maxAiredByTimestamp = ep.number;
-      }
-    }
-  }
-
-  // 3. Check AniList nextAiringEpisode
-  let latestFromNextAiring: number | undefined;
-  if (anime?.nextAiringEpisode?.episode) {
-    const nextEp = anime.nextAiringEpisode.episode;
-    const airingAt = anime.nextAiringEpisode.airingAt; // Unix seconds
-    if (airingAt && airingAt * 1000 <= now) {
-      // It has already aired!
-      latestFromNextAiring = nextEp;
-    } else {
-      // Next episode airs in the future, so (nextEp - 1) is the latest released episode
-      latestFromNextAiring = Math.max(0, nextEp - 1);
-    }
-  }
-
-  // If completed anime, return max between episodes length, declaredTotal, or maxAired
+  // 1. For a finished anime, all episodes belonging to this season have released
   if (isFinished) {
     const maxNumberInList = episodes.reduce(
       (max, ep) => (typeof ep.number === "number" && ep.number > max ? ep.number : max),
       0
     );
-    return declaredTotal || maxNumberInList || maxAiredByTimestamp || 1;
+    return declaredTotal || maxNumberInList || 1;
   }
 
-  // Ongoing anime:
-  // Take highest confirmed signal
-  const candidate = Math.max(
-    maxAiredByTimestamp,
-    latestFromNextAiring || 0
-  );
-
-  if (candidate > 0) {
-    return candidate;
-  }
-
-  // If ongoing but no airing timestamp found, but episodes have "released" status:
-  const maxReleasedStatus = episodes.reduce((max, ep) => {
-    if (ep.status === "released" && typeof ep.number === "number" && ep.number > max) {
-      return ep.number;
+  // 2. For ongoing anime: MAX(real episode number WHERE status === "released")
+  let maxReleased = 0;
+  for (const ep of episodes) {
+    if (typeof ep.number === "number" && ep.number > 0) {
+      if (ep.status === "released") {
+        if (ep.number > maxReleased) {
+          maxReleased = ep.number;
+        }
+      }
     }
-    return max;
-  }, 0);
+  }
 
-  return maxReleasedStatus > 0 ? maxReleasedStatus : 1;
+  if (maxReleased > 0) {
+    return maxReleased;
+  }
+
+  // If episode 1 exists in the list and anime has started broadcasting
+  const ep1 = episodes.find((e) => e.number === 1);
+  if (ep1 && ep1.status !== "upcoming") {
+    return 1;
+  }
+
+  return 0;
 }
 
 /**
- * Normalizes episode status strictly:
- * - If anime is completed: all episodes <= total (or in list) are 'released'.
- * - If verified airdateTimestamp <= now: 'released'.
- * - If verified airdateTimestamp > now: 'upcoming'.
- * - If episode number <= latestReleasedEpisode: 'released'.
- * - If episode number > latestReleasedEpisode: 'upcoming'.
+ * Normalizes canonical episode list and strictly enforces season boundaries.
+ *
+ * Season boundary:
+ * When a season has declared total episodes (e.g. 12), the episode list MUST STOP at 12.
+ * Any records beyond the declared total are filtered out to prevent phantom/mismatched episodes.
+ *
+ * Episode status:
+ * Each episode is assigned exactly one canonical state: "released" | "upcoming" | "unknown".
  */
 export function normalizeEpisodeReleaseStatuses(
   anime: Partial<Anime> | null | undefined,
@@ -101,32 +123,45 @@ export function normalizeEpisodeReleaseStatuses(
   const now = Date.now();
   const status = anime?.status?.toLowerCase() || "";
   const isFinished = status.includes("finish") || status.includes("complete");
-  const latestReleased = calculateLatestReleasedEpisode(anime, episodes);
+  const declaredTotal = typeof anime?.episodes === "number" && anime.episodes > 0 ? anime.episodes : null;
 
-  return episodes.map((ep) => {
-    if (typeof ep.number !== "number" || ep.number <= 0) {
-      return { ...ep, status: ep.status || "unknown" };
+  // Discard phantom episodes that exceed the declared season episode count
+  const boundedEpisodes = declaredTotal
+    ? episodes.filter((ep) => typeof ep.number === "number" && ep.number > 0 && ep.number <= declaredTotal)
+    : episodes.filter((ep) => typeof ep.number === "number" && ep.number > 0);
+
+  // If anime has nextAiringEpisode, we can use its scheduled timestamp to confirm that specific episode is upcoming
+  const nextAiringNumber = anime?.nextAiringEpisode?.episode;
+  const nextAiringTime = anime?.nextAiringEpisode?.airingAt ? anime.nextAiringEpisode.airingAt * 1000 : undefined;
+
+  return boundedEpisodes.map((ep) => {
+    let airdateTimestamp = ep.airdateTimestamp;
+    if (!airdateTimestamp && ep.airdate) {
+      airdateTimestamp = parseAirdateToTimestamp(ep.airdate);
     }
 
-    // 1. If finished, all episodes are released
+    // If this episode is the scheduled nextAiringEpisode, enrich timestamp if missing
+    if (nextAiringNumber && ep.number === nextAiringNumber && nextAiringTime && !airdateTimestamp) {
+      airdateTimestamp = nextAiringTime;
+    }
+
+    let canonicalStatus: CanonicalEpisodeStatus = "unknown";
+
     if (isFinished) {
-      return { ...ep, status: "released" as const };
+      canonicalStatus = "released";
+    } else if (typeof airdateTimestamp === "number" && !isNaN(airdateTimestamp) && airdateTimestamp > 0) {
+      canonicalStatus = airdateTimestamp <= now ? "released" : "upcoming";
+    } else if (ep.status === "released") {
+      canonicalStatus = "released";
+    } else if (ep.status === "upcoming") {
+      // Only keep upcoming if there is a verified future signal
+      canonicalStatus = nextAiringNumber && ep.number === nextAiringNumber ? "upcoming" : "unknown";
     }
 
-    // 2. If episode has exact airdate timestamp
-    if (ep.airdateTimestamp) {
-      if (ep.airdateTimestamp <= now) {
-        return { ...ep, status: "released" as const };
-      } else {
-        return { ...ep, status: "upcoming" as const };
-      }
-    }
-
-    // 3. Fallback to latestReleased calculation
-    if (ep.number <= latestReleased) {
-      return { ...ep, status: "released" as const };
-    } else {
-      return { ...ep, status: "upcoming" as const };
-    }
+    return {
+      ...ep,
+      airdateTimestamp,
+      status: canonicalStatus,
+    };
   });
 }

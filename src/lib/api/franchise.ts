@@ -191,19 +191,36 @@ export async function getFranchiseGraph(
             relatedNodes.push(edge);
           }
 
-          // Separate into TV series (Main Story seasons), Movies, and Specials/OVAs
+          // Separate into Main Story TV seasons, Movies, and Specials/OVAs/Spin-offs
           const tvNodes: typeof relatedNodes = [];
           const movieNodes: typeof relatedNodes = [];
           const specialNodes: typeof relatedNodes = [];
 
           for (const item of relatedNodes) {
             const fmt = item.node.format?.toUpperCase() || "";
+            const rel = item.relationType;
+
+            // Movies
             if (fmt === "MOVIE") {
               movieNodes.push(item);
-            } else if (fmt === "OVA" || fmt === "ONA" || fmt === "SPECIAL") {
+              continue;
+            }
+
+            // Explicit specials / OVAs / ONAs
+            if (fmt === "OVA" || fmt === "ONA" || fmt === "SPECIAL") {
               specialNodes.push(item);
-            } else {
+              continue;
+            }
+
+            // Relation graph protection: SPIN_OFF, SIDE_STORY, ALTERNATIVE, SUMMARY are not mainline seasons
+            const isMainlineRelation = rel === "CURRENT" || rel === "PREQUEL" || rel === "SEQUEL" || rel === "PARENT";
+            const titleStr = item.node.title?.english || item.node.title?.romaji || "";
+            const hasExplicitSeasonInTitle = /\bseason\s*\d+\b/i.test(titleStr) || /\b\d+(?:st|nd|rd|th)\s+season\b/i.test(titleStr);
+
+            if (isMainlineRelation || hasExplicitSeasonInTitle) {
               tvNodes.push(item);
+            } else {
+              specialNodes.push(item);
             }
           }
 

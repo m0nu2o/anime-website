@@ -846,9 +846,7 @@ export async function getAnimeEpisodes(
 ): Promise<import("./types").Episode[]> {
   const cached = animeObj || getFromCache(animeId);
   const resolvedTitle = title || cached?.title?.english || cached?.title?.romaji;
-  const latestAiredEpisode = cached?.nextAiringEpisode?.episode
-    ? cached.nextAiringEpisode.episode - 1
-    : undefined;
+  const declaredTotal = typeof cached?.episodes === "number" && cached.episodes > 0 ? cached.episodes : null;
 
   // Resolve provider IDs
   let malId = cached?.malId;
@@ -868,7 +866,7 @@ export async function getAnimeEpisodes(
   const { fetchAniListStreamingEpisodes } = await import("./anilist");
 
   const [kitsuResult, jikanResult, anilistResult] = await Promise.allSettled([
-    fetchKitsuEpisodes(animeId, resolvedTitle, cached?.status, latestAiredEpisode),
+    fetchKitsuEpisodes(animeId, resolvedTitle, cached?.status),
     malId ? fetchJikanEpisodes(malId) : Promise.resolve([]),
     anilistId ? fetchAniListStreamingEpisodes(anilistId) : Promise.resolve([]),
   ]);
@@ -880,16 +878,23 @@ export async function getAnimeEpisodes(
   // Merge episodes by canonical episode number
   const mergedMap = new Map<number, import("./types").Episode>();
 
+  // Season boundary check: only allow episodes <= declaredTotal when declaredTotal is known
+  const isValidEpisodeNumber = (num?: number | null): num is number => {
+    if (typeof num !== "number" || num <= 0) return false;
+    if (declaredTotal && num > declaredTotal) return false;
+    return true;
+  };
+
   // 1. Seed with Jikan episodes (accurate numbers, titles, and air dates)
   for (const ep of jikanEpisodes) {
-    if (typeof ep.number === "number" && ep.number > 0) {
+    if (isValidEpisodeNumber(ep.number)) {
       mergedMap.set(ep.number, { ...ep });
     }
   }
 
   // 2. Merge Kitsu episodes (enriches thumbnails, descriptions, and air dates)
   for (const ep of kitsuEpisodes) {
-    if (typeof ep.number === "number" && ep.number > 0) {
+    if (isValidEpisodeNumber(ep.number)) {
       const existing = mergedMap.get(ep.number);
       if (!existing) {
         mergedMap.set(ep.number, { ...ep });
@@ -901,10 +906,8 @@ export async function getAnimeEpisodes(
           existing.airdate = ep.airdate;
           existing.airdateTimestamp = ep.airdateTimestamp;
         }
-        if (ep.status === "released" || existing.status === "released") {
+        if (ep.status === "released") {
           existing.status = "released";
-        } else if (ep.status === "upcoming" && existing.status === "upcoming") {
-          existing.status = "upcoming";
         }
       }
     }
@@ -912,17 +915,15 @@ export async function getAnimeEpisodes(
 
   // 3. Merge AniList streaming episodes (confirms released stream status)
   for (const ep of anilistEpisodes) {
-    if (typeof ep.number === "number" && ep.number > 0) {
+    if (isValidEpisodeNumber(ep.number)) {
       const existing = mergedMap.get(ep.number);
       if (!existing) {
-        mergedMap.set(ep.number, { ...ep });
+        mergedMap.set(ep.number, { ...ep, status: "released" });
       } else {
         if (ep.thumbnail && (!existing.thumbnail || existing.thumbnail.includes("placeholder"))) {
           existing.thumbnail = ep.thumbnail;
         }
-        if (ep.status === "released") {
-          existing.status = "released";
-        }
+        existing.status = "released";
       }
     }
   }

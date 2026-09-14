@@ -30,6 +30,11 @@ export async function GET(req: NextRequest) {
       ? upcomingList.length 
       : (declaredTotalEpisodes !== null && declaredTotalEpisodes > releasedCount ? declaredTotalEpisodes - releasedCount : 0);
 
+    const isFinished = anime?.status?.toLowerCase().includes("finish") || anime?.status?.toLowerCase().includes("complete");
+    const cacheHeader = isFinished
+      ? "public, s-maxage=86400, stale-while-revalidate=43200"
+      : "public, s-maxage=60, stale-while-revalidate=300";
+
     return NextResponse.json({
       animeId,
       episodes: effectiveEpisodes,
@@ -39,13 +44,17 @@ export async function GET(req: NextRequest) {
       dubAvailable: null,
       subAvailable: null,
       currentLanguage: language,
+    }, {
+      headers: {
+        "Cache-Control": cacheHeader,
+      },
     });
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : String(error);
     console.error("Failed to fetch episodes:", msg);
     return NextResponse.json(
       { error: "Failed to fetch episodes", details: msg },
-      { status: 500 }
+      { status: 500, headers: { "Cache-Control": "no-store" } }
     );
   }
 }
