@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { Anime } from "@/lib/api/types";
 import AnimeCard from "@/components/AnimeCard";
@@ -72,6 +72,19 @@ export default function HomeExploreSections({
   seasonalAnime,
   latestReleases,
 }: HomeExploreSectionsProps) {
+  // 0. Latest Releases Audio Filter State (All, Sub, Dub)
+  const [releaseAudioFilter, setReleaseAudioFilter] = useState<"all" | "sub" | "dub">("all");
+  const filteredReleases = useMemo(() => {
+    if (!latestReleases || latestReleases.length === 0) return [];
+    if (releaseAudioFilter === "sub") {
+      return latestReleases.filter((item) => item.hasSub !== false);
+    }
+    if (releaseAudioFilter === "dub") {
+      return latestReleases.filter((item) => item.hasDub === true);
+    }
+    return latestReleases;
+  }, [latestReleases, releaseAudioFilter]);
+
   // 1. Top 10 Period Tab & State
   const [leaderboardPeriod, setLeaderboardPeriod] = useState<"trending" | "airing" | "popular">("trending");
   const [leaderboardList, setLeaderboardList] = useState<LeaderboardItem[]>(() => {
@@ -210,20 +223,47 @@ export default function HomeExploreSections({
               Latest Released Episodes
             </h2>
           </div>
-          <Link href="/calendar" className={styles.headerAction}>
-            <span>Broadcast Schedule</span>
-            <ArrowRight size={14} />
-          </Link>
+          <div className={styles.headerRightGroup}>
+            <div className={styles.audioFilterPills}>
+              <button
+                type="button"
+                className={`${styles.audioPill} ${releaseAudioFilter === "all" ? styles.audioPillActive : ""}`}
+                onClick={() => setReleaseAudioFilter("all")}
+              >
+                All Releases
+              </button>
+              <button
+                type="button"
+                className={`${styles.audioPill} ${releaseAudioFilter === "sub" ? styles.audioPillActive : ""}`}
+                onClick={() => setReleaseAudioFilter("sub")}
+              >
+                <Subtitles size={12} />
+                Subbed
+              </button>
+              <button
+                type="button"
+                className={`${styles.audioPill} ${releaseAudioFilter === "dub" ? styles.audioPillActive : ""}`}
+                onClick={() => setReleaseAudioFilter("dub")}
+              >
+                <Headphones size={12} />
+                English Dub
+              </button>
+            </div>
+            <Link href="/calendar" className={styles.headerAction}>
+              <span>Broadcast Schedule</span>
+              <ArrowRight size={14} />
+            </Link>
+          </div>
         </div>
 
-        {latestReleases && latestReleases.length > 0 ? (
+        {filteredReleases && filteredReleases.length > 0 ? (
           <div className={styles.episodesGrid}>
-            {latestReleases.map((item) => (
+            {filteredReleases.map((item) => (
               <Link 
                 key={item.id} 
-                href={`/watch/${item.animeId}/${item.episode}`} 
+                href={releaseAudioFilter === "dub" ? `/watch/${item.animeId}/${item.episode}?dub=true` : `/watch/${item.animeId}/${item.episode}`} 
                 className={styles.episodeCard}
-                title={`Watch ${item.title} Episode ${item.episode}`}
+                title={`Watch ${item.title} Episode ${item.episode}${releaseAudioFilter === "dub" ? " (English Dub)" : ""}`}
               >
                 <div className={styles.cardImageContainer}>
                   <img src={item.image} alt={item.title} className={styles.cardImage} loading="lazy" />
@@ -260,7 +300,21 @@ export default function HomeExploreSections({
           </div>
         ) : (
           <div className={styles.emptyEpisodes}>
-            <span>No newly aired episodes are indexed right now.</span>
+            <span>
+              {releaseAudioFilter === "dub"
+                ? "No newly aired episodes with English Dub found in this broadcast window. Switch back to All Releases to view all simulcasts."
+                : "No newly aired episodes are indexed right now."}
+            </span>
+            {releaseAudioFilter === "dub" && (
+              <button
+                type="button"
+                className={styles.headerAction}
+                style={{ marginTop: 12, cursor: "pointer", background: "rgba(255, 255, 255, 0.1)" }}
+                onClick={() => setReleaseAudioFilter("all")}
+              >
+                View All Releases
+              </button>
+            )}
           </div>
         )}
       </section>

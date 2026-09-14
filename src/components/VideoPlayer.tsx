@@ -40,6 +40,7 @@ interface VideoPlayerProps {
   anilistId?: number;
   videoUrl?: string;
   initialTime?: number;
+  initialDub?: boolean;
   onProgress?: (currentTime: number, duration: number) => void;
   onNextEpisode?: () => void;
 }
@@ -114,12 +115,13 @@ export default function VideoPlayer({
   anilistId,
   videoUrl,
   initialTime = 0,
+  initialDub = false,
   onProgress,
   onNextEpisode,
 }: VideoPlayerProps) {
   const router = useRouter();
   const [activeServer, setActiveServer] = useState<ServerType | null>(null);
-  const [isDub, setIsDub] = useState(false);
+  const [isDub, setIsDub] = useState(Boolean(initialDub));
   const [dubAvailable, setDubAvailable] = useState<boolean | null>(null);
   const [subAvailable, setSubAvailable] = useState<boolean | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);

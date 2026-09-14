@@ -434,6 +434,21 @@ export async function getTopAiringAnime(limit: number = 10): Promise<Anime[]> {
   return getPopularAnime(limit);
 }
 
+const DUB_KEYWORDS = [
+  "one piece", "solo leveling", "jujutsu", "demon slayer", "bleach", "my hero academia",
+  "boku no hero", "kaiju", "wind breaker", "slime", "tensura", "mushoku", "chainsaw",
+  "frieren", "shangri-la", "black clover", "attack on titan", "shingeki", "naruto",
+  "boruto", "dragon ball", "dr. stone", "danmachi", "blue lock", "dandadan", "re:zero",
+  "spy x family", "tower of god", "overlord", "shield hero", "konosuba", "tokyo ghoul",
+  "hunter x hunter", "vinland", "hell's paradise", "jigokuraku", "delicious in dungeon", "dungeon meshi"
+];
+
+function checkKnownDubbedFranchise(title: string): boolean {
+  if (!title) return false;
+  const lower = title.toLowerCase();
+  return DUB_KEYWORDS.some((kw) => lower.includes(kw));
+}
+
 export async function getLatestAiringAnime(limit: number = 24): Promise<LatestEpisodeRelease[]> {
   interface InternalRelease {
     release: LatestEpisodeRelease;
@@ -467,6 +482,7 @@ export async function getLatestAiringAnime(limit: number = 24): Promise<LatestEp
           const releasedAt = item.airingAtTimestamp ? item.airingAtTimestamp * 1000 : null;
           if (releasedAt !== null && releasedAt > now) continue;
 
+          const hasKnownDub = checkKnownDubbedFranchise(item.animeTitle);
           releases.push({
             release: {
               id: `${item.animeId}-ep${item.episodeNumber}`,
@@ -478,8 +494,8 @@ export async function getLatestAiringAnime(limit: number = 24): Promise<LatestEp
               score: item.score,
               releasedAt: releasedAt ?? undefined,
               timeAgo: toTimeAgo(releasedAt),
-              hasSub: null,
-              hasDub: null,
+              hasSub: true,
+              hasDub: hasKnownDub ? true : null,
             },
             releasedAt,
           });
@@ -491,9 +507,9 @@ export async function getLatestAiringAnime(limit: number = 24): Promise<LatestEp
     }
   }
 
-  // Cross-check ReAnime live stream availability for the top 6 releases in parallel (runtime only)
+  // Cross-check ReAnime live stream availability for up to 10 releases in parallel (runtime only)
   if (releases.length > 0 && process.env.NEXT_PHASE !== "phase-production-build") {
-    const toCheck = releases.slice(0, 6);
+    const toCheck = releases.slice(0, 10);
     try {
       const { fetchReanimeServers } = await import("./reanime");
       await Promise.allSettled(
@@ -502,8 +518,8 @@ export async function getLatestAiringAnime(limit: number = 24): Promise<LatestEp
           const cleanId = item.release.animeId.replace(/^anilist-/, "");
           const reanimeRes = await fetchReanimeServers(cleanId, item.release.episode, false);
           if (reanimeRes.success) {
-            item.release.hasSub = reanimeRes.hasSub;
-            item.release.hasDub = reanimeRes.hasDub;
+            if (reanimeRes.hasSub !== null) item.release.hasSub = reanimeRes.hasSub;
+            if (reanimeRes.hasDub !== null) item.release.hasDub = reanimeRes.hasDub;
           }
         })
       );
@@ -924,6 +940,32 @@ export async function getAnimeEpisodes(
           existing.thumbnail = ep.thumbnail;
         }
         existing.status = "released";
+      }
+    }
+  }
+
+  // 4. Fill in any missing canonical episodes up to the verified release count or declared total
+  const nextAiring = cached?.nextAiringEpisode?.episode;
+  const nextAiringTime = cached?.nextAiringEpisode?.airingAt ? cached.nextAiringEpisode.airingAt * 1000 : undefined;
+  const isAiringInFuture = typeof nextAiringTime === "number" && nextAiringTime > Date.now();
+  const latestFromAiring = nextAiring && nextAiring > 1 && isAiringInFuture ? nextAiring - 1 : 0;
+  
+  const currentMaxInMap = mergedMap.size > 0 ? Math.max(...Array.from(mergedMap.keys())) : 0;
+  const expectedTotal = declaredTotal 
+    ? declaredTotal 
+    : Math.max(latestFromAiring, currentMaxInMap);
+
+  if (expectedTotal > 0) {
+    for (let epNum = 1; epNum <= expectedTotal; epNum++) {
+      if (!mergedMap.has(epNum)) {
+        mergedMap.set(epNum, {
+          id: `${animeId}-ep${epNum}`,
+          number: epNum,
+          title: `Episode ${epNum}`,
+          synopsis: `Episode ${epNum} of ${resolvedTitle || "Anime"}.`,
+          thumbnail: cached?.images?.cover || cached?.images?.largeCover || "/placeholder-cover.svg",
+          status: epNum <= latestFromAiring ? "released" : "upcoming",
+        });
       }
     }
   }

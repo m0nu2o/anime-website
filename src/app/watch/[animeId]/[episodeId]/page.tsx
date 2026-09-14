@@ -14,6 +14,9 @@ import WatchlistStatusSelect from "@/components/WatchlistStatusSelect";
 import FavoriteButton from "@/components/FavoriteButton";
 import EpisodeComments from "@/components/EpisodeComments";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function generateMetadata({
   params,
 }: {
@@ -30,10 +33,14 @@ export async function generateMetadata({
 
 export default async function WatchEpisodePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ animeId: string; episodeId: string }>;
+  searchParams?: Promise<{ dub?: string }>;
 }) {
   const resolved = await params;
+  const sParams = await searchParams;
+  const isDubRequested = sParams?.dub === "true" || sParams?.dub === "1";
   const anime = await getAnimeById(resolved.animeId);
 
   if (!anime) {
@@ -199,6 +206,7 @@ export default async function WatchEpisodePage({
                 nextEpisodeNumber={nextEpNumber}
                 malId={anime.malId}
                 anilistId={anime.anilistId}
+                initialDub={isDubRequested}
               />
             )}
 

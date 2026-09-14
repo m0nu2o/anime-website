@@ -1,4 +1,5 @@
 import { Anime } from "./types";
+import { getGenreByNameOrSlug } from "./genres";
 
 const KITSU_API_URL = "https://kitsu.io/api/edge";
 
@@ -343,7 +344,7 @@ export async function fetchKitsuEpisodes(
     let nextUrl: string | null = `${KITSU_API_URL}/anime/${encodeURIComponent(cleanId)}/episodes?page[limit]=20&sort=number`;
     let requestCount = 0;
 
-    while (nextUrl && requestCount < 50) {
+    while (nextUrl && requestCount < 15) {
       const res = await fetchWithTimeout(nextUrl);
       if (!res.ok) break;
       const data = await res.json();
@@ -732,7 +733,9 @@ export async function fetchKitsuAdvanced(params: {
       url += `&filter[text]=${encodeURIComponent(params.search.trim())}`;
     }
     if (params.genre && params.genre !== "all") {
-      url += `&filter[categories]=${encodeURIComponent(params.genre.toLowerCase())}`;
+      const genreMeta = getGenreByNameOrSlug(params.genre);
+      const categorySlug = genreMeta?.kitsuSlug || genreMeta?.slug || params.genre.toLowerCase();
+      url += `&filter[categories]=${encodeURIComponent(categorySlug)}`;
     }
     if (params.format && params.format !== "all") {
       url += `&filter[subtype]=${encodeURIComponent(params.format.toLowerCase())}`;

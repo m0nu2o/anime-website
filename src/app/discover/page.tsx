@@ -92,8 +92,47 @@ export default async function DiscoverPage({
         </div>
 
         {/* Filter Bar */}
+        {/* Modern Interactive Genre Chips Bar */}
+        <div className={styles.genreBarContainer}>
+          <div className={styles.genreBarHeader}>
+            <span className={styles.genreBarLabel}>
+              <Sparkles size={14} className={styles.sparkleIcon} />
+              EXPLORE BY GENRE
+            </span>
+            {currentGenre !== "all" && (
+              <Link
+                href={`/discover?genre=all${currentSearch ? `&q=${encodeURIComponent(currentSearch)}` : ""}${currentFormat !== "all" ? `&format=${currentFormat}` : ""}${currentStatus !== "all" ? `&status=${currentStatus}` : ""}${currentScore !== "all" ? `&score=${currentScore}` : ""}${currentSort !== "popularity" ? `&sort=${currentSort}` : ""}`}
+                className={styles.clearGenreLink}
+              >
+                Reset Genre ({currentGenre.toUpperCase()}) ✕
+              </Link>
+            )}
+          </div>
+          <div className={styles.genreChipsGrid}>
+            {GENRES.map((g) => {
+              const val = g.toLowerCase();
+              const isActive = currentGenre.toLowerCase() === val;
+              const href = `/discover?genre=${encodeURIComponent(val)}${currentSearch ? `&q=${encodeURIComponent(currentSearch)}` : ""}${currentFormat !== "all" ? `&format=${currentFormat}` : ""}${currentStatus !== "all" ? `&status=${currentStatus}` : ""}${currentScore !== "all" ? `&score=${currentScore}` : ""}${currentSort !== "popularity" ? `&sort=${currentSort}` : ""}`;
+
+              return (
+                <Link
+                  key={g}
+                  href={href}
+                  className={`${styles.genreChip} ${isActive ? styles.genreChipActive : ""}`}
+                >
+                  {g}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Filter Bar */}
         <div className={styles.filterSection}>
           <form method="GET" action="/discover" className={styles.filterForm}>
+            {/* Hidden active genre to preserve across form submit */}
+            <input type="hidden" name="genre" value={currentGenre} />
+
             {/* Search */}
             <div className={styles.searchBox}>
               <input
@@ -104,13 +143,6 @@ export default async function DiscoverPage({
                 className={styles.filterInput}
               />
             </div>
-
-            {/* Genre */}
-            <select name="genre" defaultValue={currentGenre} className={styles.filterSelect}>
-              {GENRES.map((g) => (
-                <option key={g} value={g.toLowerCase()}>Genre: {g}</option>
-              ))}
-            </select>
 
             {/* Format */}
             <select name="format" defaultValue={currentFormat} className={styles.filterSelect}>
