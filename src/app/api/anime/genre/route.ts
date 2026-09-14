@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getGenreByNameOrSlug } from "@/lib/api/genres";
+import catalogData from "@/lib/api/genreCatalog.json";
 
 interface GenreMeta {
   name: string;
@@ -188,13 +190,19 @@ export async function GET(req: NextRequest) {
     console.warn(`Live Kitsu genre fetch for "${meta.name}" (${meta.slug}) failed, using verified catalog fallback:`, err);
   }
 
+  // Robust verified static catalog fallback
+  const catalogMap = catalogData as Record<string, any[]>;
+  const catalogItems = catalogMap[meta.name] || catalogMap["Action"] || [];
+  const startIndex = (page - 1) * limit;
+  const slicedCatalog = catalogItems.slice(startIndex, startIndex + limit);
+
   return NextResponse.json({
     success: true,
-    source: "kitsu",
+    source: "catalog",
     stale: true,
     genre: meta.name,
     page,
-    hasMore: false,
-    data: [],
+    hasMore: startIndex + limit < catalogItems.length,
+    data: slicedCatalog,
   });
 }

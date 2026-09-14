@@ -263,7 +263,7 @@ export default function ProfilePage() {
   const watchingCount = watchlist.filter((w) => w.status === "watching").length;
   const planningCount = watchlist.filter((w) => w.status === "planning").length;
   const totalEpisodesWatched = watchlist.reduce((acc, curr) => acc + (curr.progress || 0), 0);
-  const totalDaysWatched = "Unavailable";
+  const totalDaysWatched = totalEpisodesWatched > 0 ? ((totalEpisodesWatched * 24) / 1440).toFixed(1) : "0.0";
   const scoredItems = watchlist.filter((w) => typeof w.score === "number" && w.score > 0);
   const meanScore = scoredItems.length > 0
     ? (scoredItems.reduce((acc, curr) => acc + (curr.score || 0), 0) / scoredItems.length).toFixed(1)

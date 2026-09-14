@@ -3,6 +3,7 @@ import Navbar from "@/components/Navbar";
 import BackButton from "@/components/BackButton";
 import AnimeCard from "@/components/AnimeCard";
 import { discoverAnime } from "@/lib/api";
+import { GENRE_NAMES } from "@/lib/api/genres";
 import { Compass, Filter, Sparkles, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import styles from "./page.module.css";
@@ -12,32 +13,7 @@ export const metadata = {
   description: "Filter and browse thousands of anime titles by genre, format, release year, and popularity.",
 };
 
-const GENRES = [
-  "All",
-  "Action",
-  "Adventure",
-  "Comedy",
-  "Drama",
-  "Fantasy",
-  "Horror",
-  "Mystery",
-  "Romance",
-  "Sci-Fi",
-  "Slice of Life",
-  "Sports",
-  "Supernatural",
-  "Suspense",
-  "Isekai",
-  "Shounen",
-  "Shoujo",
-  "Seinen",
-  "Josei",
-  "Mecha",
-  "Music",
-  "Psychological",
-  "Martial Arts",
-  "Super Power"
-];
+const GENRES = ["All", ...GENRE_NAMES];
 const FORMATS = ["All", "TV", "Movie", "OVA", "ONA", "Special"];
 const STATUSES = ["All", "current", "finished", "upcoming"];
 const SCORES = [
