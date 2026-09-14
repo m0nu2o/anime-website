@@ -523,7 +523,7 @@
   background: var(--primary, #f43f5e);
   border-color: var(--primary, #f43f5e);
   color: #fff;
-  box-shadow: 0 0 10px rgba(244, 63, 94, 0.4);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--primary, #f43f5e) 40%, transparent);
 }
 
 .partSelectPills {
@@ -571,10 +571,10 @@
 }
 
 .activePartPill {
-  background: rgba(99, 102, 241, 0.25);
-  border-color: rgba(99, 102, 241, 0.6);
-  color: #818cf8;
-  box-shadow: 0 0 8px rgba(99, 102, 241, 0.3);
+  background: color-mix(in srgb, var(--primary, #6366f1) 20%, transparent);
+  border-color: color-mix(in srgb, var(--primary, #6366f1) 50%, transparent);
+  color: var(--primary, #818cf8);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--primary, #6366f1) 25%, transparent);
 }
 
 .sidebarCardsList {

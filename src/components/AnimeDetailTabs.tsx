@@ -24,6 +24,7 @@ import AnimeRelationsGraph from "./AnimeRelationsGraph";
 import AnimeReviews from "./AnimeReviews";
 import styles from "./AnimeDetailTabs.module.css";
 import { Anime, Episode, Character, StaffPerson, AnimeRelation, StreamingLink } from "@/lib/api/types";
+import { parseCleanSeasonInfo } from "@/lib/api/franchise";
 
 interface AnimeDetailTabsProps {
   anime: Anime;
@@ -63,10 +64,11 @@ export default function AnimeDetailTabs({
 
   // Franchise multi-season extraction & chronological order
   const seasons: SeasonOption[] = React.useMemo(() => {
+    const currentParsed = parseCleanSeasonInfo(title, 1);
     const current: SeasonOption = {
       id: anime.id,
       title: title,
-      shortLabel: "Season 1",
+      shortLabel: currentParsed.seasonLabel,
       year: anime.year,
       episodes: anime.episodes,
       isCurrent: true,
@@ -76,14 +78,9 @@ export default function AnimeDetailTabs({
     const seasonRelations = relations.filter(r => validRoles.includes(r.role?.toLowerCase()));
 
     const relatedSeasons: SeasonOption[] = seasonRelations.map((r, idx) => {
-      let shortLabel = `Season ${idx + 2}`;
-      const lower = r.anime.title.toLowerCase();
-      if (lower.includes("season 2") || lower.includes("2nd season")) shortLabel = "Season 2";
-      else if (lower.includes("season 3") || lower.includes("3rd season")) shortLabel = "Season 3";
-      else if (lower.includes("season 4") || lower.includes("final season") || lower.includes("4th season")) shortLabel = "Final Season";
-      else if (r.role === "prequel") shortLabel = "Prequel";
-      else if (r.role === "sequel") shortLabel = `Season ${idx + 2}`;
-      else if (r.role === "side_story") shortLabel = "Side Story";
+      const parsed = parseCleanSeasonInfo(r.anime.title, idx + 2);
+      let shortLabel = parsed.seasonLabel;
+      if (r.role === "side_story") shortLabel = "Side Story";
       else if (r.anime.format === "MOVIE") shortLabel = "Movie";
 
       return {

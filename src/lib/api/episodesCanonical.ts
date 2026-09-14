@@ -93,6 +93,19 @@ export function calculateLatestReleasedEpisode(
     }
   }
 
+  // 3. For ongoing anime with nextAiringEpisode scheduled in the future:
+  // Episodes before nextAiringEpisode have already aired.
+  const nextAiringNumber = anime?.nextAiringEpisode?.episode;
+  const nextAiringTime = anime?.nextAiringEpisode?.airingAt ? anime.nextAiringEpisode.airingAt * 1000 : undefined;
+  const isAiringInFuture = typeof nextAiringTime === "number" && nextAiringTime > Date.now();
+
+  if (nextAiringNumber && nextAiringNumber > 1 && isAiringInFuture) {
+    const calculatedFromAiring = nextAiringNumber - 1;
+    if (calculatedFromAiring > maxReleased) {
+      maxReleased = declaredTotal ? Math.min(calculatedFromAiring, declaredTotal) : calculatedFromAiring;
+    }
+  }
+
   if (maxReleased > 0) {
     return maxReleased;
   }
@@ -130,9 +143,10 @@ export function normalizeEpisodeReleaseStatuses(
     ? episodes.filter((ep) => typeof ep.number === "number" && ep.number > 0 && ep.number <= declaredTotal)
     : episodes.filter((ep) => typeof ep.number === "number" && ep.number > 0);
 
-  // If anime has nextAiringEpisode, we can use its scheduled timestamp to confirm that specific episode is upcoming
+  // If anime has nextAiringEpisode, we can use its scheduled timestamp to confirm broadcast boundaries
   const nextAiringNumber = anime?.nextAiringEpisode?.episode;
   const nextAiringTime = anime?.nextAiringEpisode?.airingAt ? anime.nextAiringEpisode.airingAt * 1000 : undefined;
+  const isAiringInFuture = typeof nextAiringTime === "number" && nextAiringTime > now;
 
   return boundedEpisodes.map((ep) => {
     let airdateTimestamp = ep.airdateTimestamp;
@@ -153,6 +167,14 @@ export function normalizeEpisodeReleaseStatuses(
       canonicalStatus = airdateTimestamp <= now ? "released" : "upcoming";
     } else if (ep.status === "released") {
       canonicalStatus = "released";
+    } else if (nextAiringNumber && isAiringInFuture && typeof ep.number === "number" && ep.number > 0) {
+      // If next airing episode is episode N (e.g. 13) in the future:
+      // Episodes 1 <= number < N have already aired!
+      if (ep.number < nextAiringNumber) {
+        canonicalStatus = "released";
+      } else {
+        canonicalStatus = "upcoming";
+      }
     } else if (ep.status === "upcoming") {
       // Only keep upcoming if there is a verified future signal
       canonicalStatus = nextAiringNumber && ep.number === nextAiringNumber ? "upcoming" : "unknown";
