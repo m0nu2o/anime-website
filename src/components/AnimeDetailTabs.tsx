@@ -381,13 +381,13 @@ export default function AnimeDetailTabs({
                 <h4>Ready to Stream?</h4>
                 {firstReleasedEpisode ? (
                   <>
-                    <p>Start Episode {firstReleasedEpisode.number} now with multi-server playback and subtitle options.</p>
+                    <p>Start watching from Episode {firstReleasedEpisode.number}.</p>
                     <Link href={`/watch/${anime.id}/${firstReleasedEpisode.number}`} className={styles.startWatchingBtn}>
                       <Play size={16} fill="#fff" /> Watch Episode {firstReleasedEpisode.number}
                     </Link>
                   </>
                 ) : (
-                  <p>Episodes are not yet available from verified provider records.</p>
+                  <p>No episodes available yet.</p>
                 )}
               </div>
             </div>
@@ -532,7 +532,7 @@ export default function AnimeDetailTabs({
               <div className={styles.emptyCard}>
                 <Clock size={36} className={styles.emptyIcon} />
                 <h3>Loading {activeSeason.shortLabel} Episodes...</h3>
-                <p>Retrieving authentic episode metadata and stream sync.</p>
+                <p>Loading episodes…</p>
               </div>
             ) : displayedEpisodes.length > 0 ? (
               <div className={styles.episodesGrid}>
@@ -583,11 +583,9 @@ export default function AnimeDetailTabs({
                           <Play size={22} fill="#fff" />
                         </div>
                         <span className={styles.epNumPill}>EP {ep.number ?? "—"}</span>
-                        <span className={styles.epLangBadge}>{preferredLanguage.toUpperCase()}</span>
                       </div>
                       <div className={styles.epDetails}>
                         <h4 className={styles.epCardTitle}>{ep.title}</h4>
-                        {ep.airdate && <span className={styles.epAirdate}>{ep.airdate}</span>}
                         {ep.length && <span className={styles.epDuration}>{ep.length} mins</span>}
                       </div>
                     </Link>
@@ -598,9 +596,9 @@ export default function AnimeDetailTabs({
               <div className={styles.emptyCard}>
                 <Film size={36} className={styles.emptyIcon} />
                 <h3>No Episodes Found</h3>
-                <p>Launch the direct episode stream viewer below:</p>
+                <p>Try watching Episode 1 directly:</p>
                 <Link href={`/watch/${activeSeasonId}/1`} className={styles.startWatchingBtn}>
-                  Launch Episode 1 Stream
+                  Watch Episode 1
                 </Link>
               </div>
             )}
@@ -637,7 +635,7 @@ export default function AnimeDetailTabs({
               <div className={styles.emptyCard}>
                 <Users size={36} className={styles.emptyIcon} />
                 <h3>Character List Not Available</h3>
-                <p>Cast metadata for this anime is being updated from network records.</p>
+                <p>Character information is not available for this title.</p>
               </div>
             )}
 

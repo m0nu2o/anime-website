@@ -121,7 +121,7 @@ function SearchContent() {
         </span>
         <h1 className={styles.title}>Search Anime</h1>
         <p className={styles.subtitle}>
-          Discover your next favorite anime across tens of thousands of verified titles with instant search.
+          Search anime by title, genre, or keyword.
         </p>
 
         {/* Search Bar */}

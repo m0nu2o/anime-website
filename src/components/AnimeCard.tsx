@@ -20,6 +20,24 @@ interface AnimeCardProps {
   variant?: "standard" | "compact" | "horizontal";
 }
 
+/** Normalize status text to clean, human-readable labels */
+function formatStatus(raw?: string): string | null {
+  if (!raw) return null;
+  const s = raw.toUpperCase().replace(/[_\s]+/g, "_");
+  switch (s) {
+    case "FINISHED": return "Finished";
+    case "RELEASING":
+    case "CURRENTLY_AIRING": return "Airing";
+    case "NOT_YET_RELEASED":
+    case "UPCOMING": return "Upcoming";
+    case "CANCELLED": return "Cancelled";
+    case "HIATUS": return "On Hiatus";
+    default: {
+      return raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase().replace(/_/g, " ");
+    }
+  }
+}
+
 export default function AnimeCard({
   anime,
   priority = false,
@@ -58,10 +76,8 @@ export default function AnimeCard({
       if (!user) syncStatus();
     };
     window.removeEventListener("guest_watchlist_updated", handleUpdate);
-    // no-op cleanup retained for structure
   }, [user, anime.id]);
 
-  // Click outside to close card status menu
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
@@ -82,6 +98,7 @@ export default function AnimeCard({
         .replace(/\b(In|The|Of|And|At|By|For|With|A|An|To)\b/gi, (w, _, offset) => offset === 0 ? w : w.toLowerCase())
     : rawTitle;
   const score = anime.score ? (anime.score > 10 ? (anime.score / 10).toFixed(1) : anime.score.toFixed(1)) : null;
+  const displayStatus = formatStatus(anime.status);
 
   const handleStatusSelect = async (e: React.MouseEvent, targetStatus: WatchlistStatus) => {
     e.preventDefault();
@@ -137,9 +154,14 @@ export default function AnimeCard({
 
   const activeCategory = WATCHLIST_CATEGORIES.find((c) => c.value === status);
 
+  const metaParts: string[] = [];
+  if (anime.year) metaParts.push(String(anime.year));
+  if (anime.episodes) metaParts.push(`${anime.episodes} ep`);
+  if (displayStatus) metaParts.push(displayStatus);
+
   if (variant === "horizontal") {
     return (
-      <Link href={`/anime/${anime.id}`} className={`${styles.card} ${styles.cardHorizontal} sheen-effect`} aria-label={title}>
+      <Link href={`/anime/${anime.id}`} className={`${styles.card} ${styles.cardHorizontal}`} aria-label={title}>
         <div className={styles.imageContainerHorizontal}>
           <img
             src={imgSrc}
@@ -150,7 +172,7 @@ export default function AnimeCard({
           />
           {score && (
             <span className={styles.scoreBadgeHorizontal}>
-              <Star size={10} fill="#facc15" color="#facc15" />
+              <Star size={9} fill="#facc15" color="#facc15" />
               <span>{score}</span>
             </span>
           )}
@@ -160,9 +182,7 @@ export default function AnimeCard({
             {title}
           </h4>
           <div className={styles.metaHorizontal}>
-            <span>{anime.format || "TV"}</span>
-            {anime.year && <span>• {anime.year}</span>}
-            {anime.episodes && <span>• {anime.episodes} EP</span>}
+            {metaParts.join(" · ")}
           </div>
         </div>
       </Link>
@@ -170,7 +190,7 @@ export default function AnimeCard({
   }
 
   return (
-    <Link href={`/anime/${anime.id}`} className={`${styles.card} sheen-effect`} aria-label={title}>
+    <Link href={`/anime/${anime.id}`} className={styles.card} aria-label={title}>
       <div className={styles.imageContainer}>
         <img
           src={imgSrc}
@@ -181,46 +201,30 @@ export default function AnimeCard({
         />
         <div className={styles.overlayGradient} />
 
-        {/* Badges Overlay */}
-        <div className={styles.topBadges}>
-          {score && (
-            <span className={styles.scoreBadge}>
-              <Star size={11} fill="#facc15" color="#facc15" />
-              <span>{score}</span>
-            </span>
-          )}
-          {anime.format && <span className={styles.formatBadge}>{anime.format}</span>}
-        </div>
+        {/* Score — top-left, always visible */}
+        {score && (
+          <span className={styles.scoreBadge}>
+            <Star size={10} fill="#facc15" color="#facc15" />
+            <span>{score}</span>
+          </span>
+        )}
 
-        {/* Quick Favorite Heart Button */}
-        <div className={styles.cardFavWrapper} onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
-          <FavoriteButton
-            anime={anime}
-            variant="icon"
-            onToggle={(fav) => onFavoriteToggle?.(anime.id, fav)}
-          />
-        </div>
-
-        {/* Quick Watchlist Status Button & Menu */}
+        {/* Watchlist — top-right, always visible */}
         <div ref={menuRef} onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
           <button
             type="button"
             className={`${styles.watchlistBtn} ${status ? styles.activeWatchlist : ""}`}
             onClick={handleButtonClick}
-            aria-label={status ? `Watchlist: ${activeCategory?.label}` : "Set Watchlist Status"}
-            title={status ? `Watchlist: ${activeCategory?.label}` : "Add to Watchlist"}
+            aria-label={status ? `Watchlist: ${activeCategory?.label}` : "Add to watchlist"}
+            title={status ? activeCategory?.label : "Add to watchlist"}
             disabled={loading}
             style={
               activeCategory
-                ? {
-                    background: activeCategory.color,
-                    borderColor: activeCategory.color,
-                    boxShadow: `0 0 14px ${activeCategory.color}88`,
-                  }
+                ? { background: activeCategory.color, borderColor: activeCategory.color }
                 : {}
             }
           >
-            {status ? <Check size={15} /> : <Bookmark size={15} />}
+            {status ? <Check size={14} /> : <Bookmark size={14} />}
           </button>
 
           {showMenu && (
@@ -244,14 +248,8 @@ export default function AnimeCard({
               {status && (
                 <button
                   type="button"
-                  className={styles.cardStatusItem}
+                  className={`${styles.cardStatusItem} ${styles.cardStatusRemove}`}
                   onClick={handleRemove}
-                  style={{
-                    color: "#f87171",
-                    borderTop: "1px solid rgba(255,255,255,0.08)",
-                    marginTop: "2px",
-                    paddingTop: "6px",
-                  }}
                 >
                   <Trash2 size={12} />
                   <span>Remove</span>
@@ -260,6 +258,15 @@ export default function AnimeCard({
             </div>
           )}
         </div>
+
+        {/* Favorite — hover-revealed */}
+        <div className={styles.hoverActions} onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+          <FavoriteButton
+            anime={anime}
+            variant="icon"
+            onToggle={(fav) => onFavoriteToggle?.(anime.id, fav)}
+          />
+        </div>
       </div>
 
       <div className={styles.content}>
@@ -267,9 +274,7 @@ export default function AnimeCard({
           {title}
         </h3>
         <div className={styles.meta}>
-          <span>{anime.year || "TBA"}</span>
-          {anime.episodes && <span>• {anime.episodes} EP</span>}
-          {anime.status && <span>• {anime.status}</span>}
+          {metaParts.join(" · ")}
         </div>
       </div>
     </Link>

@@ -484,9 +484,6 @@ export default function WatchEpisodeSelector({
                   <span className={styles.listTitle}>
                     {ep.title || `Episode ${epNum}`}
                   </span>
-                  {ep.airdate && (
-                    <span className={styles.listAirdate}>Aired: {ep.airdate}</span>
-                  )}
                 </div>
               </Link>
             );

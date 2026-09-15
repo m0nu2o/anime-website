@@ -1,3 +1,7 @@
+/* ══════════════════════════════════════════════
+   AnimeCard — Clean, premium card design
+   ══════════════════════════════════════════════ */
+
 .card {
   display: flex;
   flex-direction: column;
@@ -5,32 +9,33 @@
   height: 100%;
   width: 100%;
   text-decoration: none;
-  border-radius: var(--radius-lg, 14px);
+  border-radius: 12px;
   overflow: hidden;
-  background: #11131e;
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
-  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+  background: #0f1119;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1),
+              box-shadow 0.22s ease,
+              border-color 0.22s ease;
   will-change: transform;
-  backface-visibility: hidden;
-  isolation: isolate;
-  contain: paint;
+  contain: layout paint;
   outline: none;
 }
 
 .card:hover,
 .card:focus-visible {
-  transform: translateY(-4px);
-  border-color: rgba(255, 255, 255, 0.22);
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.72), 0 0 0 1px rgba(255, 255, 255, 0.12);
+  transform: translateY(-3px);
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.55);
 }
 
+/* ── Poster Container ── */
 .imageContainer {
   position: relative;
   width: 100%;
-  aspect-ratio: 2 / 3;
+  aspect-ratio: 3 / 4;
   overflow: hidden;
-  background: #11131e;
+  background: #0c0e17;
 }
 
 .poster {
@@ -38,11 +43,11 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .card:hover .poster {
-  transform: scale(1.08);
+  transform: scale(1.04);
 }
 
 .overlayGradient {
@@ -50,160 +55,111 @@
   inset: 0;
   background: linear-gradient(
     to bottom,
-    rgba(0, 0, 0, 0.3) 0%,
-    transparent 35%,
-    transparent 70%,
-    rgba(17, 19, 30, 0.5) 100%
+    rgba(0, 0, 0, 0.35) 0%,
+    transparent 30%,
+    transparent 100%
   );
   pointer-events: none;
 }
 
-.topBadges {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  z-index: 2;
-}
-
+/* ── Score Badge — Top-Left ── */
 .scoreBadge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 2;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   padding: 3px 7px;
   font-size: 0.72rem;
   font-weight: 800;
   color: #fef08a;
-  background: rgba(10, 10, 16, 0.78);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border-radius: 6px;
-  border: 1px solid rgba(250, 204, 21, 0.35);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+  line-height: 1;
 }
 
-.formatBadge {
-  padding: 3px 7px;
-  font-size: 0.68rem;
-  font-weight: 800;
-  color: var(--text-main, #fff);
-  background: rgba(10, 10, 16, 0.78);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-radius: 6px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
-}
-
-.cardFavWrapper {
-  position: absolute;
-  top: 10px;
-  right: 48px;
-  z-index: 3;
-}
-
+/* ── Watchlist Button — Top-Right ── */
 .watchlistBtn {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 8px;
+  right: 8px;
   z-index: 3;
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(10, 10, 16, 0.75);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   color: #fff;
   cursor: pointer;
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background 0.2s ease, border-color 0.2s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+  opacity: 0;
+}
+
+.card:hover .watchlistBtn,
+.card:focus-within .watchlistBtn,
+.activeWatchlist {
+  opacity: 1;
 }
 
 .watchlistBtn:hover {
-  transform: scale(1.12);
-  background: var(--primary);
-  border-color: var(--primary);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
+  transform: scale(1.1);
+  background: var(--primary, #f43f5e);
+  border-color: var(--primary, #f43f5e);
 }
 
 .activeWatchlist {
-  background: var(--primary);
-  border-color: var(--primary);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
+  opacity: 1;
+  border-color: transparent;
 }
 
-.content {
-  padding: 10px 12px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  background: #11131e;
-  flex: 1;
+/* ── Favorite — Hover Reveal ── */
+.hoverActions {
+  position: absolute;
+  top: 8px;
+  right: 44px;
+  z-index: 3;
+  opacity: 0;
+  transition: opacity 0.15s ease;
 }
 
-.title {
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: var(--text-main, #f8fafc);
-  line-height: 1.3;
-  min-height: 2.6em;
-  margin: 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  transition: color 0.2s ease;
+.card:hover .hoverActions,
+.card:focus-within .hoverActions {
+  opacity: 1;
 }
 
-.card:hover .title {
-  color: var(--accent, #38bdf8);
-}
-
-.meta {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.76rem;
-  font-weight: 500;
-  color: #cbd5e1;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
+/* ── Status Dropdown Menu ── */
 .cardStatusMenu {
   position: absolute;
-  top: 44px;
+  top: 42px;
   right: 8px;
   background: #0f111a;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 10px;
-  padding: 5px;
+  padding: 4px;
   z-index: 50;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.85);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
   min-width: 140px;
   max-width: calc(100% - 16px);
   max-height: calc(100% - 52px);
   overflow-y: auto;
   overscroll-behavior: contain;
-  animation: menuIn 0.15s ease-out;
+  animation: menuIn 0.12s ease-out;
 }
 
 @keyframes menuIn {
-  from { opacity: 0; transform: translateY(-4px); }
+  from { opacity: 0; transform: translateY(-3px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
@@ -215,23 +171,30 @@
   border-radius: 6px;
   border: none;
   background: transparent;
-  color: #e2e8f0;
+  color: #d1d5db;
   font-size: 0.76rem;
   font-weight: 600;
   cursor: pointer;
   text-align: left;
-  transition: all 0.15s ease;
+  transition: background 0.12s ease;
   width: 100%;
 }
 
 .cardStatusItem:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.08);
   color: #fff;
 }
 
 .cardStatusItemActive {
-  background: rgba(99, 102, 241, 0.25) !important;
+  background: rgba(99, 102, 241, 0.2) !important;
   color: #fff !important;
+}
+
+.cardStatusRemove {
+  color: #f87171;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  margin-top: 2px;
+  padding-top: 6px;
 }
 
 .cardStatusDot {
@@ -241,64 +204,106 @@
   flex-shrink: 0;
 }
 
-/* Horizontal Variant for Sidebars and Lists */
+/* ── Card Content ── */
+.content {
+  padding: 10px 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: #0f1119;
+  flex: 1;
+}
+
+.title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #e8ecf0;
+  line-height: 1.3;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.15s ease;
+}
+
+.card:hover .title {
+  color: #fff;
+}
+
+.meta {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #7a8494;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ══════════════════════════════════════════════
+   Horizontal Variant
+   ══════════════════════════════════════════════ */
+
 .cardHorizontal {
   flex-direction: row !important;
   height: auto !important;
   align-items: center;
   gap: 12px;
   padding: 8px;
-  border-radius: var(--radius-md, 10px);
+  border-radius: 10px;
 }
 
 .imageContainerHorizontal {
   position: relative;
-  width: 64px;
-  height: 84px;
+  width: 60px;
+  height: 80px;
   flex-shrink: 0;
   border-radius: 6px;
   overflow: hidden;
-  background: #11131e;
+  background: #0c0e17;
 }
 
 .posterHorizontal {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s ease;
+  transition: transform 0.25s ease;
 }
 
 .card:hover .posterHorizontal {
-  transform: scale(1.06);
+  transform: scale(1.05);
 }
 
 .scoreBadgeHorizontal {
   position: absolute;
-  bottom: 4px;
-  right: 4px;
+  bottom: 3px;
+  right: 3px;
   display: inline-flex;
   align-items: center;
   gap: 2px;
   padding: 1px 4px;
-  font-size: 0.65rem;
+  font-size: 0.62rem;
   font-weight: 800;
   color: #fef08a;
-  background: rgba(10, 10, 16, 0.85);
+  background: rgba(0, 0, 0, 0.75);
   border-radius: 3px;
+  line-height: 1;
 }
 
 .contentHorizontal {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
   min-width: 0;
   flex: 1;
 }
 
 .titleHorizontal {
   font-size: 0.86rem;
-  font-weight: 700;
-  color: var(--text-main);
+  font-weight: 600;
+  color: #e8ecf0;
   line-height: 1.25;
   white-space: nowrap;
   overflow: hidden;
@@ -307,9 +312,34 @@
 }
 
 .metaHorizontal {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.75rem;
-  color: var(--text-muted);
+  font-size: 0.74rem;
+  color: #7a8494;
+}
+
+/* ══════════════════════════════════════════════
+   Responsive
+   ══════════════════════════════════════════════ */
+
+@media (max-width: 480px) {
+  .scoreBadge {
+    font-size: 0.68rem;
+    padding: 2px 5px;
+  }
+
+  .watchlistBtn {
+    width: 26px;
+    height: 26px;
+  }
+
+  .content {
+    padding: 8px 8px 10px;
+  }
+
+  .title {
+    font-size: 0.82rem;
+  }
+
+  .meta {
+    font-size: 0.7rem;
+  }
 }

@@ -13,8 +13,6 @@ import {
   Clock, 
   Layers, 
   ArrowRight, 
-  Headphones,
-  Subtitles,
   Loader2,
   ChevronDown
 } from "lucide-react";
@@ -72,18 +70,7 @@ export default function HomeExploreSections({
   seasonalAnime,
   latestReleases,
 }: HomeExploreSectionsProps) {
-  // 0. Latest Releases Audio Filter State (All, Sub, Dub)
-  const [releaseAudioFilter, setReleaseAudioFilter] = useState<"all" | "sub" | "dub">("all");
-  const filteredReleases = useMemo(() => {
-    if (!latestReleases || latestReleases.length === 0) return [];
-    if (releaseAudioFilter === "sub") {
-      return latestReleases.filter((item) => item.hasSub !== false);
-    }
-    if (releaseAudioFilter === "dub") {
-      return latestReleases.filter((item) => item.hasDub === true);
-    }
-    return latestReleases;
-  }, [latestReleases, releaseAudioFilter]);
+
 
   // 1. Top 10 Period Tab & State
   const [leaderboardPeriod, setLeaderboardPeriod] = useState<"trending" | "airing" | "popular">("trending");
@@ -224,31 +211,6 @@ export default function HomeExploreSections({
             </h2>
           </div>
           <div className={styles.headerRightGroup}>
-            <div className={styles.audioFilterPills}>
-              <button
-                type="button"
-                className={`${styles.audioPill} ${releaseAudioFilter === "all" ? styles.audioPillActive : ""}`}
-                onClick={() => setReleaseAudioFilter("all")}
-              >
-                All Releases
-              </button>
-              <button
-                type="button"
-                className={`${styles.audioPill} ${releaseAudioFilter === "sub" ? styles.audioPillActive : ""}`}
-                onClick={() => setReleaseAudioFilter("sub")}
-              >
-                <Subtitles size={12} />
-                Subbed
-              </button>
-              <button
-                type="button"
-                className={`${styles.audioPill} ${releaseAudioFilter === "dub" ? styles.audioPillActive : ""}`}
-                onClick={() => setReleaseAudioFilter("dub")}
-              >
-                <Headphones size={12} />
-                English Dub
-              </button>
-            </div>
             <Link href="/calendar" className={styles.headerAction}>
               <span>Broadcast Schedule</span>
               <ArrowRight size={14} />
@@ -256,14 +218,14 @@ export default function HomeExploreSections({
           </div>
         </div>
 
-        {filteredReleases && filteredReleases.length > 0 ? (
+        {latestReleases && latestReleases.length > 0 ? (
           <div className={styles.episodesGrid}>
-            {filteredReleases.map((item) => (
+            {latestReleases.map((item) => (
               <Link 
                 key={item.id} 
-                href={releaseAudioFilter === "dub" ? `/watch/${item.animeId}/${item.episode}?dub=true` : `/watch/${item.animeId}/${item.episode}`} 
+                href={`/watch/${item.animeId}/${item.episode}`} 
                 className={styles.episodeCard}
-                title={`Watch ${item.title} Episode ${item.episode}${releaseAudioFilter === "dub" ? " (English Dub)" : ""}`}
+                title={`Watch ${item.title} Episode ${item.episode}`}
               >
                 <div className={styles.cardImageContainer}>
                   <img src={item.image} alt={item.title} className={styles.cardImage} loading="lazy" />
@@ -275,17 +237,10 @@ export default function HomeExploreSections({
                   <div className={styles.episodeTag}>
                     <span>EP {item.episode ?? "—"}</span>
                   </div>
-                  <div className={styles.audioBadges}>
-                    {item.hasSub === true && <span className={styles.subTag}><Subtitles size={10} /> SUB</span>}
-                    {item.hasDub === true && <span className={styles.dubTag}><Headphones size={10} /> DUB</span>}
-                  </div>
                 </div>
-
                 <div className={styles.cardDetails}>
                   <h3 className={styles.cardTitle}>{item.title}</h3>
                   <div className={styles.cardMeta}>
-                    <span className={styles.timeAgo}>{item.timeAgo}</span>
-                    <span className={styles.dot}>•</span>
                     <span className={styles.format}>{item.format || "TV"}</span>
                     {item.score && (
                       <>
@@ -300,21 +255,7 @@ export default function HomeExploreSections({
           </div>
         ) : (
           <div className={styles.emptyEpisodes}>
-            <span>
-              {releaseAudioFilter === "dub"
-                ? "No newly aired episodes with English Dub found in this broadcast window. Switch back to All Releases to view all simulcasts."
-                : "No newly aired episodes are indexed right now."}
-            </span>
-            {releaseAudioFilter === "dub" && (
-              <button
-                type="button"
-                className={styles.headerAction}
-                style={{ marginTop: 12, cursor: "pointer", background: "rgba(255, 255, 255, 0.1)" }}
-                onClick={() => setReleaseAudioFilter("all")}
-              >
-                View All Releases
-              </button>
-            )}
+            <span>No newly aired episodes are indexed right now.</span>
           </div>
         )}
       </section>

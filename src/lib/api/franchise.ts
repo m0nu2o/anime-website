@@ -170,53 +170,72 @@ export async function getFranchiseGraph(
         }
       `;
 
-      const queue: number[] = [resolvedAnilistId];
       const visited = new Set<number>([resolvedAnilistId]);
       const allNodesMap = new Map<number, { node: AniListRelationNode; relationType: string }>();
-      const MAX_DISCOVERED = 20;
 
-      while (queue.length > 0 && visited.size <= MAX_DISCOVERED) {
-        const currentId = queue.shift()!;
-        const res = await fetch("https://graphql.anilist.co", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query, variables: { id: currentId } }),
-          next: { revalidate: 3600 },
+      // Step 1: Fetch root anime node
+      const fetchNode = async (id: number) => {
+        try {
+          const res = await fetch("https://graphql.anilist.co", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ query, variables: { id } }),
+            next: { revalidate: 3600 },
+            signal: AbortSignal.timeout(3500),
+          });
+          if (!res.ok) return null;
+          const json = await res.json();
+          return json?.data?.Media || null;
+        } catch {
+          return null;
+        }
+      };
+
+      const rootMedia = await fetchNode(resolvedAnilistId);
+      if (rootMedia) {
+        allNodesMap.set(rootMedia.id, {
+          node: rootMedia,
+          relationType: "CURRENT"
         });
 
-        if (!res.ok) continue;
-        const json = await res.json();
-        const media = json?.data?.Media;
-        if (!media) continue;
+        const nextIdsToFetch: number[] = [];
 
-        if (!allNodesMap.has(media.id)) {
-          allNodesMap.set(media.id, {
-            node: media,
-            relationType: media.id === resolvedAnilistId ? "CURRENT" : "MAINLINE"
-          });
-        }
-
-        for (const edge of media.relations?.edges || []) {
+        for (const edge of rootMedia.relations?.edges || []) {
           const node = edge.node;
           if (!node?.id || node.type !== "ANIME") continue;
           const fmt = node.format?.toUpperCase();
           if (fmt === "MANGA" || fmt === "NOVEL" || fmt === "ONE_SHOT") continue;
-
-          // Exclude unreleased phantom entries with no episodes and no start date
-          if (node.status === "NOT_YET_RELEASED" && !node.episodes && !node.startDate?.year) {
-            continue;
-          }
+          if (node.status === "NOT_YET_RELEASED" && !node.episodes && !node.startDate?.year) continue;
 
           const rel = edge.relationType;
           if (!allNodesMap.has(node.id)) {
             allNodesMap.set(node.id, { node, relationType: rel });
           }
 
-          // Traverse prequels and sequels of TV series to discover complete chronological timeline
           if ((rel === "PREQUEL" || rel === "SEQUEL") && (fmt === "TV" || fmt === "TV_SHORT" || !fmt)) {
-            if (!visited.has(node.id) && visited.size < MAX_DISCOVERED) {
+            if (!visited.has(node.id) && nextIdsToFetch.length < 4) {
               visited.add(node.id);
-              queue.push(node.id);
+              nextIdsToFetch.push(node.id);
+            }
+          }
+        }
+
+        // Step 2: Fetch immediate prequels/sequels concurrently in parallel
+        if (nextIdsToFetch.length > 0) {
+          const secondaryResults = await Promise.all(nextIdsToFetch.map(fetchNode));
+          for (const media of secondaryResults) {
+            if (!media) continue;
+            if (!allNodesMap.has(media.id)) {
+              allNodesMap.set(media.id, { node: media, relationType: "MAINLINE" });
+            }
+            for (const edge of media.relations?.edges || []) {
+              const node = edge.node;
+              if (!node?.id || node.type !== "ANIME") continue;
+              const fmt = node.format?.toUpperCase();
+              if (fmt === "MANGA" || fmt === "NOVEL" || fmt === "ONE_SHOT") continue;
+              if (!allNodesMap.has(node.id)) {
+                allNodesMap.set(node.id, { node, relationType: edge.relationType });
+              }
             }
           }
         }

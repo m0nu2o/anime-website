@@ -52,7 +52,7 @@ export default function FavoritesPage() {
       <div className={`container ${styles.favoritesPage}`}>
         <div className={styles.header}>
           <div className={styles.badge}>
-            <Heart size={14} /> Curated Collection
+            <Heart size={14} /> Your Collection
           </div>
           <h1 className={styles.title}>My Favorites</h1>
           <p className={styles.subtitle}>

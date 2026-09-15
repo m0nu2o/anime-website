@@ -271,7 +271,7 @@ export default async function WatchEpisodePage({
                 ))
               ) : (
                 <div className={styles.emptySidebarNotice}>
-                  Recommendations are being calculated for this anime.
+                  No recommendations available for this title.
                 </div>
               )}
             </div>
