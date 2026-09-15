@@ -1030,11 +1030,69 @@ export async function getAnimeStreamingLinks(animeId: string): Promise<import(".
 }
 
 export async function getAnimeCharacters(animeId: string): Promise<import("./types").Character[]> {
+  const cached = getFromCache(animeId);
+  const cleanId = animeId.replace(/^(anilist-|mal-|kitsu-)/, "");
+
+  // 1. Try AniList authoritative characters with voice actors
+  const anilistId = cached?.anilistId || (animeId.startsWith("anilist-") ? parseInt(cleanId, 10) : undefined);
+  if (anilistId && !isNaN(anilistId)) {
+    try {
+      const { fetchAniListCharacters } = await import("./anilist");
+      const list = await fetchAniListCharacters(anilistId);
+      if (list && list.length > 0) return list;
+    } catch {}
+  }
+
+  // 2. Try Jikan if MAL ID available
+  const malId = cached?.malId || (animeId.startsWith("mal-") ? parseInt(cleanId, 10) : undefined);
+  if (malId && !isNaN(malId)) {
+    try {
+      const res = await fetch(`https://api.jikan.moe/v4/anime/${malId}/characters`, {
+        headers: { "User-Agent": "NextGenAnime/1.0" },
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (Array.isArray(json?.data) && json.data.length > 0) {
+          return json.data.slice(0, 24).map((item: any) => {
+            const char = item.character;
+            const va = item.voice_actors?.find((v: any) => v.language === "Japanese") || item.voice_actors?.[0];
+            return {
+              id: String(char?.mal_id || Math.random()),
+              name: char?.name || "Unknown Character",
+              image: char?.images?.webp?.image_url || char?.images?.jpg?.image_url,
+              role: item.role ? item.role.toLowerCase() : "supporting",
+              voiceActor: va ? {
+                name: va.person?.name || "Voice Actor",
+                image: va.person?.images?.jpg?.image_url,
+                language: va.language,
+              } : undefined,
+            };
+          });
+        }
+      }
+    } catch {}
+  }
+
+  // 3. Fallback to Kitsu
   const { fetchKitsuCharacters } = await import("./kitsu");
   return fetchKitsuCharacters(animeId);
 }
 
 export async function getAnimeStaff(animeId: string): Promise<import("./types").StaffPerson[]> {
+  const cached = getFromCache(animeId);
+  const cleanId = animeId.replace(/^(anilist-|mal-|kitsu-)/, "");
+
+  // 1. Try AniList authoritative staff
+  const anilistId = cached?.anilistId || (animeId.startsWith("anilist-") ? parseInt(cleanId, 10) : undefined);
+  if (anilistId && !isNaN(anilistId)) {
+    try {
+      const { fetchAniListStaff } = await import("./anilist");
+      const list = await fetchAniListStaff(anilistId);
+      if (list && list.length > 0) return list;
+    } catch {}
+  }
+
+  // 2. Fallback to Kitsu
   const { fetchKitsuStaff } = await import("./kitsu");
   return fetchKitsuStaff(animeId);
 }

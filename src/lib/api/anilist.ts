@@ -662,4 +662,153 @@ export async function fetchAniListStreamingEpisodes(anilistId: number): Promise<
   }
 }
 
+/**
+ * Fetch characters & cast from AniList with voice actor mapping
+ */
+export async function fetchAniListCharacters(anilistId: number): Promise<import("./types").Character[]> {
+  try {
+    if (!anilistId || anilistId <= 0) return [];
+    const query = `
+      query ($id: Int) {
+        Media(id: $id) {
+          characters(sort: [ROLE, RELEVANCE], perPage: 24) {
+            edges {
+              role
+              node {
+                id
+                name {
+                  full
+                  native
+                }
+                image {
+                  large
+                  medium
+                }
+                description
+              }
+              voiceActors(language: JAPANESE, sort: [RELEVANCE]) {
+                id
+                name {
+                  full
+                }
+                image {
+                  large
+                  medium
+                }
+              }
+            }
+          }
+        }
+      }
+    `;
+    const res = await fetchWithTimeout(
+      ANILIST_API_URL,
+      {
+        method: "POST",
+        headers: ANILIST_HEADERS,
+        body: JSON.stringify({ query, variables: { id: anilistId } }),
+      },
+      4000
+    );
+    if (!res.ok) return [];
+    const json = await res.json();
+    const edges = json?.data?.Media?.characters?.edges;
+    if (!Array.isArray(edges)) return [];
+
+    return edges.map((edge: {
+      role?: string;
+      node?: {
+        id: number;
+        name?: { full?: string; native?: string };
+        image?: { large?: string; medium?: string };
+        description?: string;
+      };
+      voiceActors?: {
+        name?: { full?: string };
+        image?: { large?: string; medium?: string };
+      }[];
+    }) => {
+      const node = edge.node;
+      const va = edge.voiceActors?.[0];
+      return {
+        id: String(node?.id || Math.random()),
+        name: node?.name?.full || "Unknown Character",
+        nativeName: node?.name?.native || undefined,
+        image: node?.image?.large || node?.image?.medium,
+        description: node?.description || "",
+        role: edge.role ? edge.role.toLowerCase() : "supporting",
+        voiceActor: va?.name?.full ? {
+          name: va.name.full,
+          image: va.image?.large || va.image?.medium,
+          language: "Japanese",
+        } : undefined,
+      };
+    });
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Fetch staff & production crew from AniList
+ */
+export async function fetchAniListStaff(anilistId: number): Promise<import("./types").StaffPerson[]> {
+  try {
+    if (!anilistId || anilistId <= 0) return [];
+    const query = `
+      query ($id: Int) {
+        Media(id: $id) {
+          staff(sort: [RELEVANCE], perPage: 16) {
+            edges {
+              role
+              node {
+                id
+                name {
+                  full
+                }
+                image {
+                  large
+                  medium
+                }
+                description
+              }
+            }
+          }
+        }
+      }
+    `;
+    const res = await fetchWithTimeout(
+      ANILIST_API_URL,
+      {
+        method: "POST",
+        headers: ANILIST_HEADERS,
+        body: JSON.stringify({ query, variables: { id: anilistId } }),
+      },
+      4000
+    );
+    if (!res.ok) return [];
+    const json = await res.json();
+    const edges = json?.data?.Media?.staff?.edges;
+    if (!Array.isArray(edges)) return [];
+
+    return edges.map((edge: {
+      role?: string;
+      node?: {
+        id: number;
+        name?: { full?: string };
+        image?: { large?: string; medium?: string };
+        description?: string;
+      };
+    }) => ({
+      id: String(edge.node?.id || Math.random()),
+      name: edge.node?.name?.full || "Staff Member",
+      role: edge.role || "Production",
+      image: edge.node?.image?.large || edge.node?.image?.medium,
+      description: edge.node?.description || "",
+    }));
+  } catch {
+    return [];
+  }
+}
+
 

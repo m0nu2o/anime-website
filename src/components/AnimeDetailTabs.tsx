@@ -67,14 +67,17 @@ export default function AnimeDetailTabs({
   // Franchise multi-season extraction & chronological order
   const seasons: SeasonOption[] = React.useMemo(() => {
     if (franchiseEntries && franchiseEntries.length > 0) {
-      return franchiseEntries.map((fe) => ({
-        id: fe.id,
-        title: fe.title,
-        shortLabel: fe.partLabel ? `${fe.seasonLabel} (${fe.partLabel})` : fe.seasonLabel,
-        year: fe.year,
-        episodes: fe.episodes ?? undefined,
-        isCurrent: Boolean(fe.isCurrent || fe.id === anime.id),
-      }));
+      const seasonOnly = franchiseEntries.filter((fe) => fe.category === "season");
+      if (seasonOnly.length > 0) {
+        return seasonOnly.map((fe) => ({
+          id: fe.id,
+          title: fe.title,
+          shortLabel: fe.partLabel ? `${fe.seasonLabel} (${fe.partLabel})` : fe.seasonLabel,
+          year: fe.year,
+          episodes: fe.episodes ?? undefined,
+          isCurrent: Boolean(fe.isCurrent || fe.id === anime.id),
+        }));
+      }
     }
 
     const currentParsed = parseCleanSeasonInfo(title, 1);
@@ -87,19 +90,18 @@ export default function AnimeDetailTabs({
       isCurrent: true,
     };
 
-    const validRoles = ["prequel", "sequel", "parent", "side_story", "alternative_version"];
-    const seasonRelations = relations.filter(r => validRoles.includes(r.role?.toLowerCase()));
+    // Filter relations strictly for sequels / prequels of format TV
+    const validRoles = ["prequel", "sequel"];
+    const seasonRelations = relations.filter(
+      r => validRoles.includes(r.role?.toLowerCase()) && r.anime.format !== "MOVIE"
+    );
 
-    const relatedSeasons: SeasonOption[] = seasonRelations.map((r, idx) => {
-      const parsed = parseCleanSeasonInfo(r.anime.title, idx + 2);
-      let shortLabel = parsed.seasonLabel;
-      if (r.role === "side_story") shortLabel = "Side Story";
-      else if (r.anime.format === "MOVIE") shortLabel = "Movie";
-
+    const relatedSeasons: SeasonOption[] = seasonRelations.map((r) => {
+      const parsed = parseCleanSeasonInfo(r.anime.title, 1);
       return {
         id: r.anime.id,
         title: r.anime.title,
-        shortLabel,
+        shortLabel: parsed.seasonLabel,
         year: r.anime.year,
         episodes: r.anime.episodes,
         isCurrent: false,
@@ -113,6 +115,27 @@ export default function AnimeDetailTabs({
       return 1;
     });
   }, [anime, relations, title, episodes, franchiseEntries]);
+
+  // Franchise movies separated from TV series seasons
+  const franchiseMovies = React.useMemo(() => {
+    if (franchiseEntries && franchiseEntries.length > 0) {
+      return franchiseEntries.filter((fe) => fe.category === "movie");
+    }
+    return relations
+      .filter((r) => r.anime.format === "MOVIE" || r.role?.toLowerCase() === "movie")
+      .map((r) => ({
+        id: r.anime.id,
+        title: r.anime.title,
+        format: "MOVIE",
+        category: "movie" as const,
+        seasonNumber: 95,
+        seasonLabel: "Movie",
+        year: r.anime.year,
+        episodes: r.anime.episodes ?? 1,
+        isCurrent: r.anime.id === anime.id,
+        coverImage: r.anime.image,
+      }));
+  }, [franchiseEntries, relations, anime.id]);
 
   const [activeSeasonId, setActiveSeasonId] = useState<string>(anime.id);
   const [seasonEpisodesMap, setSeasonEpisodesMap] = useState<Record<string, Episode[]>>({
@@ -257,14 +280,13 @@ export default function AnimeDetailTabs({
           <span className={styles.tabBadge}>{characters.length}</span>
         </button>
 
-        {relations.length > 0 && (
+        {(relations.length > 0 || (franchiseEntries && franchiseEntries.length > 1)) && (
           <button
             onClick={() => setActiveTab("relations")}
             className={`${styles.tabBtn} ${activeTab === "relations" ? styles.activeTab : ""}`}
           >
             <GitBranch size={15} />
             <span>Franchise</span>
-            <span className={styles.tabBadge}>{relations.length}</span>
           </button>
         )}
 
@@ -391,6 +413,26 @@ export default function AnimeDetailTabs({
                         {s.year ? `${s.year} • ` : ""}{s.episodes ? `${s.episodes} eps` : "Season"}
                       </span>
                     </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Dedicated Theatrical Movies Row */}
+            {franchiseMovies.length > 0 && (
+              <div className={styles.moviesSelectorRow}>
+                <div className={styles.seasonLabel}>Theatrical Movies:</div>
+                <div className={styles.moviesList}>
+                  {franchiseMovies.map((m) => (
+                    <Link
+                      key={m.id}
+                      href={`/anime/${m.id}`}
+                      className={`${styles.movieCardPill} ${m.isCurrent ? styles.activeMovieCardPill : ""}`}
+                    >
+                      <Film size={14} className={styles.movieIcon} />
+                      <span className={styles.moviePillTitle}>{m.title}</span>
+                      {m.year && <span className={styles.moviePillYear}>({m.year})</span>}
+                    </Link>
                   ))}
                 </div>
               </div>

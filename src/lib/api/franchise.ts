@@ -233,8 +233,14 @@ export async function getFranchiseGraph(
           const titleStr = item.node.title?.english || item.node.title?.romaji || "";
           const eps = item.node.episodes;
 
-          // Skip unreleased phantom entries with 0 episodes
-          if (item.node.status === "NOT_YET_RELEASED" && (!eps || eps === 0)) {
+          // Skip unreleased phantom entries with 0 episodes unless they have an explicit upcoming season title
+          const hasExplicitSeasonInTitle =
+            /\bseason\s*\d+\b/i.test(titleStr) ||
+            /\b\d+(?:st|nd|rd|th)\s+season\b/i.test(titleStr) ||
+            /\b(II|III|IV|V|VI|VII|VIII)\b/.test(titleStr) ||
+            /\bfinal\s+season\b/i.test(titleStr);
+
+          if (item.node.status === "NOT_YET_RELEASED" && (!eps || eps === 0) && !hasExplicitSeasonInTitle) {
             continue;
           }
 
@@ -250,16 +256,36 @@ export async function getFranchiseGraph(
             continue;
           }
 
-          // Single-episode side stories or specials without explicit Season title belong to specials
-          const hasExplicitSeasonInTitle = /\bseason\s*\d+\b/i.test(titleStr) || /\b\d+(?:st|nd|rd|th)\s+season\b/i.test(titleStr) || /\b(II|III|IV|V)\b/.test(titleStr);
+          // Recaps and summaries always belong to specials
+          const isRecap =
+            rel === "SUMMARY" ||
+            /\brecap\b|\bsummary\b|\bsoushuuhen\b|\bdigest\b/i.test(titleStr);
+          if (isRecap) {
+            specialNodes.push(item);
+            continue;
+          }
+
+          // Spin-offs or side stories belong to specials unless explicitly marked as a mainline numbered season
+          const isSpinOff =
+            rel === "SPIN_OFF" ||
+            rel === "ALTERNATIVE" ||
+            rel === "OTHER" ||
+            /\b(?:spin-?off|chibi|gekijou|petit|mini)\b/i.test(titleStr);
+
+          if (isSpinOff && !hasExplicitSeasonInTitle) {
+            specialNodes.push(item);
+            continue;
+          }
+
+          // Single-episode items without explicit season title belong to specials
           if (eps === 1 && !hasExplicitSeasonInTitle) {
             specialNodes.push(item);
             continue;
           }
 
-          // Mainline TV series
+          // Mainline TV series (must be TV format and direct mainline/prequel/sequel relation, or explicit season title)
           const isMainlineRelation = rel === "CURRENT" || rel === "MAINLINE" || rel === "PREQUEL" || rel === "SEQUEL" || rel === "PARENT";
-          if ((fmt === "TV" || fmt === "TV_SHORT") && (isMainlineRelation || hasExplicitSeasonInTitle || (eps && eps > 1))) {
+          if ((fmt === "TV" || fmt === "TV_SHORT") && (isMainlineRelation || hasExplicitSeasonInTitle)) {
             tvNodes.push(item);
           } else {
             specialNodes.push(item);
@@ -303,7 +329,7 @@ export async function getFranchiseGraph(
           });
         });
 
-        // Ensure distinct TV series receive distinct season numbers unless they share an explicit multi-part title
+        // Resolve multi-part seasons without fabricating fictitious season numbers
         const seasonsMap = new Map<number, FranchiseEntry[]>();
         for (const entry of result) {
           if (entry.category === "season") {
@@ -313,29 +339,19 @@ export async function getFranchiseGraph(
           }
         }
 
-        for (const [sNum, group] of seasonsMap.entries()) {
+        for (const [, group] of seasonsMap.entries()) {
           if (group.length > 1) {
-            const hasExplicitParts = group.some(p => Boolean(p.partLabel));
-            if (!hasExplicitParts) {
-              group.forEach((p, idx) => {
-                p.seasonNumber = sNum + idx;
-                p.seasonLabel = `Season ${p.seasonNumber}`;
-                p.partNumber = null;
-                p.partLabel = null;
-              });
-            } else {
-              group.sort((a, b) => (a.year || 0) - (b.year || 0));
-              group.forEach((p, idx) => {
-                if (!p.partNumber) {
-                  p.partNumber = idx + 1;
-                  p.partLabel = `Part ${idx + 1}`;
-                }
-              });
-            }
+            group.sort((a, b) => (a.year || 0) - (b.year || 0));
+            group.forEach((p, idx) => {
+              if (!p.partLabel && !p.partNumber) {
+                p.partNumber = idx + 1;
+                p.partLabel = `Part ${idx + 1}`;
+              }
+            });
           }
         }
 
-        // Format Movies
+        // Format Movies with authentic titles
         movieNodes.forEach((item, index) => {
           const node = item.node;
           const title = node.title?.english || node.title?.romaji || node.title?.native || `Movie ${index + 1}`;
@@ -345,7 +361,7 @@ export async function getFranchiseGraph(
             format: "MOVIE",
             category: "movie",
             seasonNumber: 95,
-            seasonLabel: movieNodes.length > 1 ? `Movie ${index + 1}` : "Movie",
+            seasonLabel: "Movie",
             year: node.startDate?.year || node.seasonYear,
             episodes: node.episodes || 1,
             isCurrent: node.id === resolvedAnilistId,
@@ -364,7 +380,7 @@ export async function getFranchiseGraph(
             format: fmt,
             category: "special",
             seasonNumber: 96,
-            seasonLabel: specialNodes.length > 1 ? `Special ${index + 1}` : "Special",
+            seasonLabel: "Special",
             year: node.startDate?.year || node.seasonYear,
             episodes: node.episodes,
             isCurrent: node.id === resolvedAnilistId,
