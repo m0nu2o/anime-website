@@ -170,14 +170,11 @@ export default function TrendingHeroCarousel({ animeList }: TrendingHeroCarousel
           )}
 
           {/* Synopsis */}
-          <p 
-            className={styles.synopsis}
-            dangerouslySetInnerHTML={{ 
-              __html: (currentAnime.description || "Stream the newest episodes in ultra-high definition.")
-                .replace(/<[^>]+>/g, "")
-                .slice(0, 150) + (currentAnime.description && currentAnime.description.length > 150 ? "..." : "")
-            }}
-          />
+          <p className={styles.synopsis}>
+            {(currentAnime.description || "Stream the newest episodes in ultra-high definition.")
+              .replace(/<[^>]+>/g, "")
+              .slice(0, 150) + (currentAnime.description && currentAnime.description.length > 150 ? "..." : "")}
+          </p>
 
           {/* Action CTAs */}
           <div className={styles.actionRow}>

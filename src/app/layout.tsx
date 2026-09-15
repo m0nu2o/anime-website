@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import AnimeAmbientBackground from "@/components/AnimeAmbientBackground";
@@ -14,6 +14,10 @@ const inter = Inter({
   display: "swap",
 });
 
+export const viewport: Viewport = {
+  themeColor: "#08080c",
+};
+
 export const metadata: Metadata = {
   title: "NextGen Anime | Next-Generation Anime Platform",
   description: "A premium, cinematic anime discovery, watching, and interactive 3D simulation platform.",
@@ -25,6 +29,7 @@ export const metadata: Metadata = {
     shortcut: "/icon.svg",
     apple: "/icon.svg",
   },
+  manifest: "/manifest.json",
   openGraph: {
     title: "NextGen Anime | Next-Generation Anime Platform",
     description: "A premium, cinematic anime discovery, watching, and interactive 3D simulation platform.",

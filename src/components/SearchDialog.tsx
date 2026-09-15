@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Search as SearchIcon, X, Loader2 } from "lucide-react";
+import { Search as SearchIcon, X, Loader2, Play } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import styles from "./SearchDialog.module.css";
@@ -145,26 +145,36 @@ export default function SearchDialog() {
                   : null;
 
                 return (
-                  <Link
-                    href={`/anime/${anime.id}`}
-                    key={anime.id}
-                    className={styles.resultItem}
-                    onClick={handleClose}
-                  >
-                    <img src={anime.images.cover || "/placeholder-cover.svg"} alt="cover" className={styles.resultImage} />
-                    <div className={styles.resultInfo}>
-                      <h4>{anime.title.english || anime.title.romaji}</h4>
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.8rem", color: "var(--text-secondary, #94a3b8)" }}>
-                        <span>{anime.format || "TV"}</span>
-                        {anime.year && <span>• {anime.year}</span>}
-                        {score && (
-                          <span style={{ color: "#facc15", fontWeight: 700 }}>
-                            ★ {score}
-                          </span>
-                        )}
+                  <div key={anime.id} className={styles.resultItemWrapper}>
+                    <Link
+                      href={`/anime/${anime.id}`}
+                      className={styles.resultItem}
+                      onClick={handleClose}
+                    >
+                      <img src={anime.images.cover || "/placeholder-cover.svg"} alt="cover" className={styles.resultImage} />
+                      <div className={styles.resultInfo}>
+                        <h4>{anime.title.english || anime.title.romaji}</h4>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.8rem", color: "var(--text-secondary, #94a3b8)" }}>
+                          <span>{anime.format || "TV"}</span>
+                          {anime.year && <span>• {anime.year}</span>}
+                          {score && (
+                            <span style={{ color: "#facc15", fontWeight: 700 }}>
+                              ★ {score}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </Link>
+                    </Link>
+                    <Link
+                      href={`/watch/${anime.id}/1`}
+                      className={styles.quickWatchBtn}
+                      onClick={handleClose}
+                      title="Watch Episode 1"
+                    >
+                      <Play size={13} fill="currentColor" />
+                      <span>Watch</span>
+                    </Link>
+                  </div>
                 );
               })}
             </div>

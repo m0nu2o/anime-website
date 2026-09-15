@@ -13,20 +13,56 @@ export default function ContinueWatchingRow() {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
+    // Read from localStorage for guest users or as instantaneous fallback
+    const loadLocalStorageHistory = () => {
+      try {
+        const raw = localStorage.getItem("watchHistory");
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          const items: WatchHistoryItem[] = Object.entries(parsed)
+            .filter(([_, data]: [string, any]) => data && typeof data.episode === "number" && (data.currentTime > 5 || data.playback_position > 5))
+            .map(([animeId, data]: [string, any]) => ({
+              id: animeId,
+              user_id: user?.id || "guest",
+              anime_id: animeId,
+              anime_title: data.title || "Anime Episode",
+              anime_image: data.image || "/placeholder-cover.svg",
+              season: data.season || 1,
+              episode: data.episode || 1,
+              playback_position: data.currentTime || data.playback_position || 0,
+              duration: data.duration || 1440,
+              completed: Boolean(data.completed),
+              updated_at: new Date(data.timestamp || Date.now()).toISOString(),
+            }));
+          if (items.length > 0) {
+            setHistory(items.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()));
+          }
+        }
+      } catch {}
+    };
+
     if (!user) {
+      loadLocalStorageHistory();
       setLoaded(true);
       return;
     }
 
     getUserWatchHistory(user.id)
       .then(items => {
-        setHistory(items);
+        if (items && items.length > 0) {
+          setHistory(items);
+        } else {
+          loadLocalStorageHistory();
+        }
         setLoaded(true);
       })
-      .catch(() => setLoaded(true));
+      .catch(() => {
+        loadLocalStorageHistory();
+        setLoaded(true);
+      });
   }, [user]);
 
-  if (!user || !loaded || history.length === 0) {
+  if (!loaded || history.length === 0) {
     return null;
   }
 

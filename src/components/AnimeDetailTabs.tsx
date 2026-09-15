@@ -33,6 +33,7 @@ interface AnimeDetailTabsProps {
   staff: StaffPerson[];
   relations: AnimeRelation[];
   streamingLinks: StreamingLink[];
+  franchiseEntries?: import("@/lib/api/franchise").FranchiseEntry[];
   coverUrl: string;
   title: string;
 }
@@ -55,6 +56,7 @@ export default function AnimeDetailTabs({
   staff,
   relations,
   streamingLinks,
+  franchiseEntries,
   coverUrl,
   title,
 }: AnimeDetailTabsProps) {
@@ -64,6 +66,17 @@ export default function AnimeDetailTabs({
 
   // Franchise multi-season extraction & chronological order
   const seasons: SeasonOption[] = React.useMemo(() => {
+    if (franchiseEntries && franchiseEntries.length > 0) {
+      return franchiseEntries.map((fe) => ({
+        id: fe.id,
+        title: fe.title,
+        shortLabel: fe.partLabel ? `${fe.seasonLabel} (${fe.partLabel})` : fe.seasonLabel,
+        year: fe.year,
+        episodes: fe.episodes ?? undefined,
+        isCurrent: Boolean(fe.isCurrent || fe.id === anime.id),
+      }));
+    }
+
     const currentParsed = parseCleanSeasonInfo(title, 1);
     const current: SeasonOption = {
       id: anime.id,
@@ -99,7 +112,7 @@ export default function AnimeDetailTabs({
       if (a.isCurrent) return -1;
       return 1;
     });
-  }, [anime, relations, title, episodes]);
+  }, [anime, relations, title, episodes, franchiseEntries]);
 
   const [activeSeasonId, setActiveSeasonId] = useState<string>(anime.id);
   const [seasonEpisodesMap, setSeasonEpisodesMap] = useState<Record<string, Episode[]>>({

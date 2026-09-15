@@ -421,7 +421,12 @@ export default function AnimeAmbientBackground() {
   const pathname = usePathname();
   const isWatchPage = Boolean(pathname?.startsWith('/watch'));
 
-  if (fxMode === "off" || reducedMotion || !isVisible) {
+  const [isMobileScreen, setIsMobileScreen] = useState(false);
+  useEffect(() => {
+    setIsMobileScreen(window.innerWidth < 640);
+  }, []);
+
+  if (fxMode === "off" || reducedMotion || !isVisible || (isMobileScreen && isWatchPage)) {
     return (
       <div 
         style={{ 

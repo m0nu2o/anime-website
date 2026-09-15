@@ -65,6 +65,7 @@ export default function EpisodeComments({ animeId, episode }: EpisodeCommentsPro
   useEffect(() => {
     async function loadComments() {
       setLoading(true);
+      let loadedRemote = false;
       try {
         const { data, error } = await supabase
           .from("episode_comments")
@@ -73,14 +74,25 @@ export default function EpisodeComments({ animeId, episode }: EpisodeCommentsPro
           .eq("episode", episode)
           .order("created_at", { ascending: false });
 
-        if (!error && data) {
+        if (!error && Array.isArray(data) && data.length > 0) {
           setComments(data as CommentItem[]);
+          loadedRemote = true;
         }
       } catch (err) {
-        console.warn("Failed to load episode comments:", err);
-      } finally {
-        setLoading(false);
+        console.warn("Failed to load episode comments from remote DB:", err);
       }
+
+      // Hybrid Fallback: Load locally stored community comments if remote is empty or errored
+      if (!loadedRemote) {
+        try {
+          const localStored = localStorage.getItem(`ep_comments_${animeId}_${episode}`);
+          if (localStored) {
+            setComments(JSON.parse(localStored));
+          }
+        } catch {}
+      }
+
+      setLoading(false);
     }
 
     loadComments();
@@ -88,38 +100,66 @@ export default function EpisodeComments({ animeId, episode }: EpisodeCommentsPro
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !text.trim()) return;
+    if (!text.trim()) return;
 
     setSubmitting(true);
-    const authorName = profile?.username || user.email?.split("@")[0] || "User";
+    const authorName = profile?.username || user?.email?.split("@")[0] || "AnimeFan";
     const authorAvatar = profile?.avatar_url || undefined;
 
-    try {
-      const { data, error } = await supabase
-        .from("episode_comments")
-        .insert({
-          user_id: user.id,
-          anime_id: animeId,
-          episode,
-          username: authorName,
-          avatar_url: authorAvatar,
-          content: text.trim(),
-          is_spoiler: isSpoiler,
-          likes: 0,
-        })
-        .select()
-        .single();
+    const localItem: CommentItem = {
+      id: `local-${Date.now()}`,
+      user_id: user?.id || "guest",
+      anime_id: animeId,
+      episode,
+      username: authorName,
+      avatar_url: authorAvatar,
+      content: text.trim(),
+      is_spoiler: isSpoiler,
+      likes: 0,
+      created_at: new Date().toISOString(),
+    };
 
-      if (!error && data) {
-        setComments((prev) => [data as CommentItem, ...prev]);
-        setText("");
-        setIsSpoiler(false);
+    let postedRemote = false;
+
+    if (user) {
+      try {
+        const { data, error } = await supabase
+          .from("episode_comments")
+          .insert({
+            user_id: user.id,
+            anime_id: animeId,
+            episode,
+            username: authorName,
+            avatar_url: authorAvatar,
+            content: text.trim(),
+            is_spoiler: isSpoiler,
+            likes: 0,
+          })
+          .select()
+          .single();
+
+        if (!error && data) {
+          setComments((prev) => [data as CommentItem, ...prev]);
+          postedRemote = true;
+        }
+      } catch (err) {
+        console.warn("Remote comment insert failed, saving to local cache:", err);
       }
-    } catch (err) {
-      console.error("Failed to post comment:", err);
-    } finally {
-      setSubmitting(false);
     }
+
+    if (!postedRemote) {
+      setComments((prev) => {
+        const updated = [localItem, ...prev];
+        try {
+          localStorage.setItem(`ep_comments_${animeId}_${episode}`, JSON.stringify(updated.slice(0, 50)));
+        } catch {}
+        return updated;
+      });
+    }
+
+    setText("");
+    setIsSpoiler(false);
+    setSubmitting(false);
   };
 
   const handleLike = async (commentId: string, currentLikes: number) => {

@@ -33,7 +33,11 @@ export async function middleware(request: NextRequest) {
   });
 
   // Refresh session if expired - IMPORTANT: do not protect all routes, only sync cookies
-  const { data: { user } } = await supabase.auth.getUser();
+  let user = null;
+  try {
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  } catch {}
 
   // Route protection for strictly private routes
   const path = request.nextUrl.pathname;

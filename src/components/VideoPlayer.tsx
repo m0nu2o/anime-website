@@ -26,7 +26,8 @@ import {
   X,
   Check,
   PictureInPicture2,
-  Gauge
+  Gauge,
+  FastForward
 } from "lucide-react";
 import styles from "./VideoPlayer.module.css";
 
@@ -308,7 +309,8 @@ export default function VideoPlayer({
           history[animeId] = {
             episode: episodeNumber,
             currentTime: Math.floor(videoRef.current.currentTime),
-            duration: Math.floor(videoRef.current.duration || duration),
+            duration: Math.floor(videoRef.current.duration || duration || 1440),
+            title: animeTitle,
             timestamp: Date.now(),
           };
           localStorage.setItem("watchHistory", JSON.stringify(history));
@@ -687,13 +689,38 @@ export default function VideoPlayer({
     }
   }, [onNextEpisode, animeId, episodeNumber, nextEpisodeNumber, totalEpisodes, router, showStatus]);
 
-  // Video ended -> trigger next episode
-  const handleVideoEnded = () => {
+  // Auto-Next countdown state
+  const [autoNextCountdown, setAutoNextCountdown] = useState<number | null>(null);
+
+  // Video ended -> trigger sleek 5-second countdown to next episode
+  const handleVideoEnded = useCallback(() => {
     setIsPlaying(false);
-    if (autoNext) {
-      goToNextEpisode();
+    if (autoNext && nextEpisodeNumber) {
+      setAutoNextCountdown(5);
     }
-  };
+  }, [autoNext, nextEpisodeNumber]);
+
+  useEffect(() => {
+    if (autoNextCountdown === null) return;
+    if (autoNextCountdown <= 0) {
+      setAutoNextCountdown(null);
+      goToNextEpisode();
+      return;
+    }
+    const timer = setTimeout(() => {
+      setAutoNextCountdown((prev) => (prev !== null && prev > 0 ? prev - 1 : null));
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [autoNextCountdown, goToNextEpisode]);
+
+  // One-click Skip Intro (+85 seconds)
+  const handleSkipIntro = useCallback(() => {
+    if (!videoRef.current) return;
+    const target = Math.min(duration || 1400, videoRef.current.currentTime + 85);
+    videoRef.current.currentTime = target;
+    setCurrentTime(target);
+    showStatus("⏩ Skipped Intro (+85s)", "success");
+  }, [duration, showStatus]);
 
   // Toggle Play / Pause with Autoplay Policy check
   const togglePlay = () => {
@@ -1299,6 +1326,53 @@ export default function VideoPlayer({
                 <Play size={16} fill="#fff" />
                 Play Episode {episodeNumber}
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* Floating Skip Intro (OP) Button */}
+        {activeServer === "native_hls" && isPlaying && currentTime > 3 && currentTime < 180 && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleSkipIntro();
+            }}
+            className={styles.skipIntroBtn}
+            title="Skip Opening Theme (+85s)"
+          >
+            <FastForward size={14} /> Skip Intro (+85s)
+          </button>
+        )}
+
+        {/* Auto-Next Countdown Overlay */}
+        {autoNextCountdown !== null && nextEpisodeNumber && (
+          <div className={styles.autoNextOverlay}>
+            <div className={styles.autoNextCard}>
+              <span className={styles.autoNextSubtitle}>UP NEXT</span>
+              <h4 className={styles.autoNextTitle}>Episode {nextEpisodeNumber}</h4>
+              <p className={styles.autoNextCountdownText}>
+                Playing next episode in <strong>{autoNextCountdown}s</strong>
+              </p>
+              <div className={styles.autoNextActions}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAutoNextCountdown(null);
+                    goToNextEpisode();
+                  }}
+                  className={styles.autoNextPlayBtn}
+                >
+                  <Play size={14} fill="#fff" /> Play Now
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAutoNextCountdown(null)}
+                  className={styles.autoNextCancelBtn}
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         )}

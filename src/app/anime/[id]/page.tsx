@@ -5,6 +5,8 @@ import Navbar from "@/components/Navbar";
 import BackButton from "@/components/BackButton";
 import DetailActions from "@/components/DetailActions";
 import AnimeDetailTabs from "@/components/AnimeDetailTabs";
+import WatchlistStatusSelect from "@/components/WatchlistStatusSelect";
+import FavoriteButton from "@/components/FavoriteButton";
 import {
   getAnimeById,
   getAnimeEpisodes,
@@ -13,6 +15,7 @@ import {
   getAnimeRelations,
   getAnimeStreamingLinks,
 } from "@/lib/api";
+import { getFranchiseGraph } from "@/lib/api/franchise";
 import { 
   Star, 
   Play, 
@@ -45,13 +48,20 @@ export default async function AnimeDetailPage({ params }: { params: Promise<{ id
     notFound();
   }
 
-  // Parallel data fetching for comprehensive metadata
-  const [episodes, characters, staff, relations, streamingLinks] = await Promise.all([
+  // Parallel data fetching for comprehensive metadata & unified franchise relations
+  const [episodes, characters, staff, relations, streamingLinks, franchiseEntries] = await Promise.all([
     getAnimeEpisodes(anime.id, anime.title.english || anime.title.romaji, anime),
     getAnimeCharacters(anime.id),
     getAnimeStaff(anime.id),
     getAnimeRelations(anime.id),
     getAnimeStreamingLinks(anime.id),
+    getFranchiseGraph(
+      anime.id,
+      anime.title.english || anime.title.romaji || "Anime",
+      anime.anilistId,
+      anime.year,
+      anime.format
+    ),
   ]);
 
   const title = anime.title.english || anime.title.romaji || anime.title.native || "Unknown Title";
@@ -64,7 +74,8 @@ export default async function AnimeDetailPage({ params }: { params: Promise<{ id
     ? (anime.score > 10 ? (anime.score / 10).toFixed(1) : anime.score.toFixed(1)) 
     : null;
 
-  const studioName = anime.studios?.[0]?.name || (staff.find(s => s.role.toLowerCase().includes("director") || s.role.toLowerCase().includes("studio"))?.name);
+  const studioName = anime.studios?.[0]?.name || (staff.find((s: any) => s.role.toLowerCase().includes("director") || s.role.toLowerCase().includes("studio"))?.name);
+  const cleanDescription = (anime.description || "").replace(/<[^>]+>/g, "").trim();
 
   return (
     <>
@@ -88,92 +99,87 @@ export default async function AnimeDetailPage({ params }: { params: Promise<{ id
             <ChevronRight size={14} />
             <Link href="/discover">Browse</Link>
             <ChevronRight size={14} />
-            <span className={styles.activeCrumb}>{title}</span>
+            <span className={styles.currentCrumb}>{title}</span>
           </div>
         </div>
 
         {/* Hero Section */}
-        <div className={styles.heroCard}>
-          {/* Left Column: Poster & Quick Action */}
+        <div className={styles.heroSection}>
+          {/* Poster Column */}
           <div className={styles.posterColumn}>
             <div className={styles.posterWrapper}>
               <img src={coverUrl} alt={title} className={styles.posterImg} />
-              <div className={styles.statusBadge}>
-                {anime.status || "Finished Airing"}
-              </div>
+              
+              {/* Overlay Watch Action */}
+              <Link 
+                href={`/watch/${anime.id}/1`}
+                className={styles.watchNowFloatingBtn}
+              >
+                <Play size={18} fill="currentColor" /> Watch Ep 1
+              </Link>
             </div>
-
-            <Link href={`/watch/${anime.id}/1`} className={styles.primaryWatchBtn}>
-              <Play size={18} fill="#fff" />
-              <span>Watch Episode 1</span>
-            </Link>
-
-            <DetailActions
-              trailerUrl={anime.trailerUrl}
-              youtubeVideoId={anime.youtubeVideoId}
-              anime={anime}
-            />
+            
+            {/* Quick Actions (Watchlist + Favorite) */}
+            <div className={styles.actionButtons}>
+              <WatchlistStatusSelect anime={anime} />
+              <FavoriteButton anime={anime} />
+            </div>
           </div>
 
-          {/* Right Column: Title & Structured Metadata */}
-          <div className={styles.heroDetails}>
-            <div className={styles.titleBlock}>
+          {/* Details Column */}
+          <div className={styles.detailsColumn}>
+            <div className={styles.titlesBlock}>
               <h1 className={styles.mainTitle}>{title}</h1>
-              <div className={styles.subtitleRow}>
-                {subtitle && <span className={styles.romajiSubtitle}>{subtitle}</span>}
-                {nativeTitle && <span className={styles.nativeSubtitle}>{nativeTitle}</span>}
-              </div>
+              {subtitle && <p className={styles.subtitle}>{subtitle}</p>}
+              {nativeTitle && <p className={styles.nativeTitle}>{nativeTitle}</p>}
             </div>
 
-            {/* Uniform Labeled Metadata Chips */}
-            <div className={styles.metadataStrip}>
+            {/* Badges / Metrics Bar */}
+            <div className={styles.metaRow}>
               {scoreFormatted && (
-                <div className={styles.metaChip} title="User Rating">
-                  <Star size={14} fill="#facc15" color="#facc15" />
-                  <span className={styles.metaChipValue}>{scoreFormatted}</span>
-                  <span className={styles.metaChipLabel}>/ 10</span>
+                <div className={styles.metaPill}>
+                  <Star size={16} className={styles.starIcon} fill="currentColor" />
+                  <span className={styles.scoreText}>{scoreFormatted}</span>
                 </div>
               )}
 
-              {anime.rank && (
-                <div className={styles.metaChip} title="Popularity Rank">
-                  <Trophy size={14} className={styles.accentGold} />
-                  <span className={styles.metaChipValue}>#{anime.rank}</span>
-                  <span className={styles.metaChipLabel}>Rank</span>
+              {anime.format && (
+                <div className={styles.metaPill}>
+                  <Tv size={16} />
+                  <span>{anime.format}</span>
                 </div>
               )}
-
-              <div className={styles.metaChip} title="Broadcast Format">
-                <Tv size={14} className={styles.accentCyan} />
-                <span className={styles.metaChipValue}>{anime.format || anime.type || "TV Series"}</span>
-              </div>
-
-              {anime.duration ? (
-                <div className={styles.metaChip} title="Duration per Episode">
-                  <Clock size={14} />
-                  <span className={styles.metaChipValue}>{anime.duration}m</span>
-                  <span className={styles.metaChipLabel}>/ ep</span>
-                </div>
-              ) : null}
 
               {anime.year && (
-                <div className={styles.metaChip} title="Release Season">
-                  <Calendar size={14} />
-                  <span className={styles.metaChipValue}>{anime.season ? `${anime.season} ` : ""}{anime.year}</span>
+                <div className={styles.metaPill}>
+                  <Calendar size={16} />
+                  <span>{anime.year}</span>
+                </div>
+              )}
+
+              {anime.episodes && (
+                <div className={styles.metaPill}>
+                  <span>{anime.episodes} Episodes</span>
                 </div>
               )}
 
               {studioName && (
-                <div className={styles.metaChip} title="Animation Studio">
-                  <Building2 size={14} className={styles.accentRose} />
-                  <span className={styles.metaChipValue}>{studioName}</span>
+                <div className={styles.metaPill}>
+                  <span>{studioName}</span>
+                </div>
+              )}
+
+              {anime.status && (
+                <div className={`${styles.metaPill} ${styles.statusPill}`}>
+                  <span className={styles.statusDot} />
+                  <span className={styles.statusText}>{anime.status}</span>
                 </div>
               )}
             </div>
 
             {/* Genres */}
             {anime.genres && anime.genres.length > 0 && (
-              <div className={styles.genreRow}>
+              <div className={styles.genresList}>
                 {anime.genres.map((genre) => (
                   <Link 
                     key={genre} 
@@ -186,16 +192,11 @@ export default async function AnimeDetailPage({ params }: { params: Promise<{ id
               </div>
             )}
 
-            {/* Synopsis Brief Preview */}
-            {anime.description && (
-              <div 
-                className={styles.synopsisExcerpt}
-                dangerouslySetInnerHTML={{ 
-                  __html: anime.description.length > 340 
-                    ? anime.description.slice(0, 340) + "..." 
-                    : anime.description 
-                }}
-              />
+            {/* Synopsis Brief Preview (Clean Plain-Text Clamped, Safe from XSS) */}
+            {cleanDescription && (
+              <p className={styles.synopsisExcerpt}>
+                {cleanDescription.length > 340 ? cleanDescription.slice(0, 340) + "..." : cleanDescription}
+              </p>
             )}
           </div>
         </div>
@@ -209,6 +210,7 @@ export default async function AnimeDetailPage({ params }: { params: Promise<{ id
             staff={staff}
             relations={relations}
             streamingLinks={streamingLinks}
+            franchiseEntries={franchiseEntries}
             coverUrl={coverUrl}
             title={title}
           />

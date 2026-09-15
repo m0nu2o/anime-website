@@ -451,9 +451,12 @@
 }
 
 .episodesSidebar {
-  max-height: 640px;
+  max-height: calc(100vh - var(--navbar-height, 70px) - 24px);
+  min-height: 480px;
   position: sticky;
-  top: calc(var(--navbar-height, 70px) + 20px);
+  top: calc(var(--navbar-height, 70px) + 16px);
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .sidebarHeader {

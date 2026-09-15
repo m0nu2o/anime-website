@@ -1,11 +1,12 @@
 "use client";
 
-import React, { Suspense, useState } from "react";
+import React, { Suspense, useState, useEffect } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import BackButton from "@/components/BackButton";
 import VideoPlayer from "@/components/VideoPlayer";
 import { useAuth } from "@/lib/supabase/AuthContext";
+import { supabase } from "@/lib/supabase/client";
 import { Users, Send, Share2, Check, MessageCircle } from "lucide-react";
 import styles from "./page.module.css";
 
@@ -55,6 +56,30 @@ function WatchPartyContent() {
   );
   const [inputText, setInputText] = useState("");
 
+  // Supabase Realtime Broadcast: Listen for messages from other room participants
+  useEffect(() => {
+    if (!isValid || !roomId) return;
+
+    const channel = supabase.channel(`party_room_${roomId}`, {
+      config: { broadcast: { self: false } },
+    });
+
+    channel
+      .on("broadcast", { event: "chat_msg" }, ({ payload }) => {
+        if (payload?.message) {
+          setMessages((prev) => {
+            if (prev.some((m) => m.id === payload.message.id)) return prev;
+            return [...prev, payload.message];
+          });
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [roomId, isValid]);
+
   const handleCopyLink = () => {
     if (typeof window !== "undefined") {
       navigator.clipboard.writeText(window.location.href);
@@ -78,6 +103,18 @@ function WatchPartyContent() {
 
     setMessages((prev) => [...prev, newMsg]);
     setInputText("");
+
+    // Broadcast message to all active participants in this watch room
+    try {
+      const channel = supabase.channel(`party_room_${roomId}`);
+      channel.send({
+        type: "broadcast",
+        event: "chat_msg",
+        payload: { message: newMsg },
+      });
+    } catch (err) {
+      console.warn("Failed to broadcast watch party message:", err);
+    }
   };
 
   if (!isValid) {

@@ -440,7 +440,13 @@ const DUB_KEYWORDS = [
   "frieren", "shangri-la", "black clover", "attack on titan", "shingeki", "naruto",
   "boruto", "dragon ball", "dr. stone", "danmachi", "blue lock", "dandadan", "re:zero",
   "spy x family", "tower of god", "overlord", "shield hero", "konosuba", "tokyo ghoul",
-  "hunter x hunter", "vinland", "hell's paradise", "jigokuraku", "delicious in dungeon", "dungeon meshi"
+  "hunter x hunter", "vinland", "hell's paradise", "jigokuraku", "delicious in dungeon", "dungeon meshi",
+  "fairy tail", "sword art online", "death note", "code geass", "haikyuu", "one punch",
+  "mob psycho", "steins;gate", "tokyo revengers", "blue exorcist", "fire force", "bungo stray",
+  "fate", "jojo", "parasyte", "noragami", "akame ga kill", "psycho-pass", "assassination classroom",
+  "seven deadly sins", "mashle", "undead unluck", "classroom of the elite", "horimiya",
+  "kaguya", "oshi no ko", "elusive samurai", "wistoria", "roshidere", "nier", "trigun",
+  "evangelion", "inuyasha", "detective conan", "case closed"
 ];
 
 function checkKnownDubbedFranchise(title: string): boolean {
@@ -507,9 +513,9 @@ export async function getLatestAiringAnime(limit: number = 24): Promise<LatestEp
     }
   }
 
-  // Cross-check ReAnime live stream availability for up to 10 releases in parallel (runtime only)
+  // Cross-check ReAnime live stream availability for all primary releases in parallel (runtime only)
   if (releases.length > 0 && process.env.NEXT_PHASE !== "phase-production-build") {
-    const toCheck = releases.slice(0, 10);
+    const toCheck = releases.slice(0, 24);
     try {
       const { fetchReanimeServers } = await import("./reanime");
       await Promise.allSettled(
@@ -952,10 +958,43 @@ export async function getAnimeEpisodes(
   const statusStr = cached?.status?.toLowerCase() || "";
   const isFinished = statusStr.includes("finish") || statusStr.includes("complete");
 
-  const nextAiring = cached?.nextAiringEpisode?.episode;
-  const nextAiringTime = cached?.nextAiringEpisode?.airingAt ? cached.nextAiringEpisode.airingAt * 1000 : undefined;
-  const isAiringInFuture = typeof nextAiringTime === "number" && nextAiringTime > Date.now();
-  const latestFromAiring = nextAiring && nextAiring > 1 && isAiringInFuture ? nextAiring - 1 : 0;
+  let resolvedNextAiring = cached?.nextAiringEpisode?.episode;
+  let resolvedNextAiringTime = cached?.nextAiringEpisode?.airingAt ? cached.nextAiringEpisode.airingAt * 1000 : undefined;
+
+  // For ongoing series with unpopulated nextAiringEpisode, query AniList to find the exact latest broadcast milestone
+  if (!isFinished && !declaredTotal && (!resolvedNextAiring || resolvedNextAiring <= 1)) {
+    try {
+      let queryAniId = anilistId;
+      if (!queryAniId && resolvedTitle) {
+        const { fetchAniListAnime } = await import("./anilist");
+        const match = await fetchAniListAnime({ search: resolvedTitle, perPage: 1 });
+        if (match && match.length > 0) {
+          if (match[0].nextAiringEpisode) {
+            resolvedNextAiring = match[0].nextAiringEpisode.episode;
+            resolvedNextAiringTime = match[0].nextAiringEpisode.airingAt ? match[0].nextAiringEpisode.airingAt * 1000 : undefined;
+          }
+        }
+      } else if (queryAniId) {
+        const { fetchAniListAnimeById } = await import("./anilist");
+        const aniData = await fetchAniListAnimeById(queryAniId);
+        if (aniData?.nextAiringEpisode) {
+          resolvedNextAiring = aniData.nextAiringEpisode.episode;
+          resolvedNextAiringTime = aniData.nextAiringEpisode.airingAt ? aniData.nextAiringEpisode.airingAt * 1000 : undefined;
+        }
+      }
+    } catch {}
+  }
+
+  const isAiringInFuture = typeof resolvedNextAiringTime === "number" && resolvedNextAiringTime > Date.now();
+  let latestFromAiring = resolvedNextAiring && resolvedNextAiring > 1 && isAiringInFuture ? resolvedNextAiring - 1 : 0;
+
+  // High-water mark anchors for verified long-running ongoing franchises
+  const lowerTitle = (resolvedTitle || "").toLowerCase();
+  if (lowerTitle.includes("one piece") && !lowerTitle.includes("film") && !lowerTitle.includes("movie") && !lowerTitle.includes("special")) {
+    latestFromAiring = Math.max(latestFromAiring, 1122);
+  } else if ((lowerTitle.includes("detective conan") || lowerTitle.includes("case closed")) && !lowerTitle.includes("movie")) {
+    latestFromAiring = Math.max(latestFromAiring, 1145);
+  }
   
   const currentMaxInMap = mergedMap.size > 0 ? Math.max(...Array.from(mergedMap.keys())) : 0;
   const expectedTotal = declaredTotal 
@@ -973,7 +1012,7 @@ export async function getAnimeEpisodes(
           thumbnail: cached?.images?.cover || cached?.images?.largeCover || "/placeholder-cover.svg",
           status: (isFinished || epNum <= latestFromAiring) ? "released" : "upcoming",
         });
-      } else if (isFinished) {
+      } else if (isFinished || (latestFromAiring > 0 && epNum <= latestFromAiring)) {
         const ep = mergedMap.get(epNum)!;
         ep.status = "released";
       }
@@ -1255,4 +1294,5 @@ export async function getStudioAnime(studioId: string): Promise<Anime[]> {
 }
 
 export { calculateLatestReleasedEpisode, normalizeEpisodeReleaseStatuses } from "./episodesCanonical";
+export { getFranchiseGraph } from "./franchise";
 

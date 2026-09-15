@@ -143,9 +143,66 @@ export async function GET(req: NextRequest) {
     console.warn(`AniList genre query for "${displayName}" failed:`, err);
   }
 
-  // 2. Secondary Fallback: Static Genre Catalog
+  // 2. Secondary Dynamic Fallback: Kitsu API
+  try {
+    const { fetchKitsuAdvanced } = await import("@/lib/api/kitsu");
+    const kitsuRes = await fetchKitsuAdvanced({
+      genre: clean,
+      limit,
+      offset: (page - 1) * limit,
+    });
+    if (kitsuRes && Array.isArray(kitsuRes.anime) && kitsuRes.anime.length > 0) {
+      const results = kitsuRes.anime.map((item) => ({
+        id: item.id,
+        title: item.title.english || item.title.romaji || "Anime",
+        image: item.images.largeCover || item.images.cover || "/placeholder-cover.svg",
+        format: item.format || "TV",
+        status: item.status,
+        score: item.score,
+        episodes: item.episodes,
+        year: item.year,
+        genres: item.genres?.length ? item.genres : [displayName],
+      }));
+
+      return NextResponse.json({
+        success: true,
+        source: "kitsu",
+        genre: displayName,
+        page,
+        hasMore: kitsuRes.hasMore,
+        data: results,
+      }, {
+        headers: {
+          "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
+        },
+      });
+    }
+  } catch (kitsuErr) {
+    console.warn(`Kitsu genre fallback for "${displayName}" failed:`, kitsuErr);
+  }
+
+  // 3. Tertiary Fallback: Static Genre Catalog with Semantic Relatedness
   const catalogMap = catalogData as Record<string, any[]>;
-  const catalogItems = catalogMap[displayName] || catalogMap["Action"] || [];
+  let catalogItems = catalogMap[displayName];
+
+  if (!catalogItems || catalogItems.length === 0) {
+    const SEMANTIC_FALLBACKS: Record<string, string> = {
+      "demons": "Supernatural",
+      "demon": "Supernatural",
+      "vampire": "Supernatural",
+      "military": "Action",
+      "reincarnation": "Isekai",
+      "thriller": "Mystery",
+      "suspense": "Mystery",
+      "martial-arts": "Action",
+      "martial arts": "Action",
+      "super-power": "Action",
+      "super power": "Action",
+    };
+    const fallbackCategory = SEMANTIC_FALLBACKS[clean] || "Action";
+    catalogItems = catalogMap[fallbackCategory] || [];
+  }
+
   const startIndex = (page - 1) * limit;
   const slicedCatalog = catalogItems.slice(startIndex, startIndex + limit);
 

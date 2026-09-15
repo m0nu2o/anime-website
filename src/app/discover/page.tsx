@@ -6,6 +6,7 @@ import { discoverAnime } from "@/lib/api";
 import { GENRE_NAMES } from "@/lib/api/genres";
 import { Compass, Filter, Sparkles, RefreshCw } from "lucide-react";
 import Link from "next/link";
+import DiscoverFiltersBar from "@/components/DiscoverFiltersBar";
 import styles from "./page.module.css";
 
 export const metadata = {
@@ -91,92 +92,16 @@ export default async function DiscoverPage({
           </div>
         </div>
 
-        {/* Filter Bar */}
-        {/* Modern Interactive Genre Chips Bar */}
-        <div className={styles.genreBarContainer}>
-          <div className={styles.genreBarHeader}>
-            <span className={styles.genreBarLabel}>
-              <Sparkles size={14} className={styles.sparkleIcon} />
-              EXPLORE BY GENRE
-            </span>
-            {currentGenre !== "all" && (
-              <Link
-                href={`/discover?genre=all${currentSearch ? `&q=${encodeURIComponent(currentSearch)}` : ""}${currentFormat !== "all" ? `&format=${currentFormat}` : ""}${currentStatus !== "all" ? `&status=${currentStatus}` : ""}${currentScore !== "all" ? `&score=${currentScore}` : ""}${currentSort !== "popularity" ? `&sort=${currentSort}` : ""}`}
-                className={styles.clearGenreLink}
-              >
-                Reset Genre ({currentGenre.toUpperCase()}) ✕
-              </Link>
-            )}
-          </div>
-          <div className={styles.genreChipsGrid}>
-            {GENRES.map((g) => {
-              const val = g.toLowerCase();
-              const isActive = currentGenre.toLowerCase() === val;
-              const href = `/discover?genre=${encodeURIComponent(val)}${currentSearch ? `&q=${encodeURIComponent(currentSearch)}` : ""}${currentFormat !== "all" ? `&format=${currentFormat}` : ""}${currentStatus !== "all" ? `&status=${currentStatus}` : ""}${currentScore !== "all" ? `&score=${currentScore}` : ""}${currentSort !== "popularity" ? `&sort=${currentSort}` : ""}`;
-
-              return (
-                <Link
-                  key={g}
-                  href={href}
-                  className={`${styles.genreChip} ${isActive ? styles.genreChipActive : ""}`}
-                >
-                  {g}
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Filter Bar */}
-        <div className={styles.filterSection}>
-          <form method="GET" action="/discover" className={styles.filterForm}>
-            {/* Hidden active genre to preserve across form submit */}
-            <input type="hidden" name="genre" value={currentGenre} />
-
-            {/* Search */}
-            <div className={styles.searchBox}>
-              <input
-                type="text"
-                name="q"
-                defaultValue={currentSearch}
-                placeholder="Filter by title..."
-                className={styles.filterInput}
-              />
-            </div>
-
-            {/* Format */}
-            <select name="format" defaultValue={currentFormat} className={styles.filterSelect}>
-              {FORMATS.map((f) => (
-                <option key={f} value={f.toLowerCase()}>Format: {f}</option>
-              ))}
-            </select>
-
-            {/* Status */}
-            <select name="status" defaultValue={currentStatus} className={styles.filterSelect}>
-              {STATUSES.map((s) => (
-                <option key={s} value={s.toLowerCase()}>Status: {s.charAt(0).toUpperCase() + s.slice(1)}</option>
-              ))}
-            </select>
-
-            {/* Score */}
-            <select name="score" defaultValue={currentScore} className={styles.filterSelect}>
-              {SCORES.map((sc) => (
-                <option key={sc.value} value={sc.value}>Score: {sc.label}</option>
-              ))}
-            </select>
-
-            {/* Sort */}
-            <select name="sort" defaultValue={currentSort} className={styles.filterSelect}>
-              {SORTS.map((s) => (
-                <option key={s.value} value={s.value}>Sort: {s.label}</option>
-              ))}
-            </select>
-
-            <button type="submit" className={styles.applyBtn}>
-              <Filter size={16} /> Apply Filters
-            </button>
-          </form>
-        </div>
+        {/* Modern Interactive Discover Filters Bar */}
+        <DiscoverFiltersBar
+          currentSearch={currentSearch}
+          currentGenre={currentGenre}
+          currentFormat={currentFormat}
+          currentStatus={currentStatus}
+          currentScore={currentScore}
+          currentSort={currentSort}
+          currentYear={currentYear}
+        />
 
         {/* Results Metadata */}
         <div className={styles.resultsMetaRow}>
