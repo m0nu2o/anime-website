@@ -13,6 +13,7 @@ import styles from "./page.module.css";
 import WatchlistStatusSelect from "@/components/WatchlistStatusSelect";
 import FavoriteButton from "@/components/FavoriteButton";
 import EpisodeComments from "@/components/EpisodeComments";
+import WatchEpisodeSelector from "@/components/WatchEpisodeSelector";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -93,50 +94,6 @@ export default async function WatchEpisodePage({
   const currentEntry = franchiseEntries.find(e => e.id === anime.id) || franchiseEntries.find(e => e.isCurrent) || franchiseEntries[0];
   const currentSeasonLabel = currentEntry?.seasonLabel || "Season 1";
   const currentPartLabel = currentEntry?.partLabel || null;
-
-  interface SeasonGroup {
-    seasonLabel: string;
-    seasonNumber: number;
-    year?: number;
-    parts: FranchiseEntry[];
-  }
-
-  const seasonMap = new Map<string, SeasonGroup>();
-  for (const entry of franchiseEntries) {
-    const existing = seasonMap.get(entry.seasonLabel);
-    if (!existing) {
-      seasonMap.set(entry.seasonLabel, {
-        seasonLabel: entry.seasonLabel,
-        seasonNumber: entry.seasonNumber,
-        year: entry.year,
-        parts: [entry],
-      });
-    } else {
-      if (!existing.parts.some(p => p.id === entry.id)) {
-        existing.parts.push(entry);
-      }
-      if (!existing.year && entry.year) existing.year = entry.year;
-    }
-  }
-
-  for (const group of seasonMap.values()) {
-    group.parts.sort((a, b) => {
-      if (a.partNumber && b.partNumber) return a.partNumber - b.partNumber;
-      if (a.year && b.year) return a.year - b.year;
-      return 0;
-    });
-  }
-
-  const seasonsList = Array.from(seasonMap.values()).sort((a, b) => {
-    if (a.seasonNumber !== b.seasonNumber) return a.seasonNumber - b.seasonNumber;
-    if (a.year && b.year) return a.year - b.year;
-    return 0;
-  });
-
-  const activeSeasonGroup = seasonsList.find(s => s.parts.some(p => p.id === anime.id)) || seasonsList[0];
-  const hasMultiplePartsInActiveSeason = Boolean(
-    activeSeasonGroup && activeSeasonGroup.parts.length > 1 && activeSeasonGroup.parts.some(p => Boolean(p.partLabel))
-  );
 
   const currentEpIndex = currentEp ? releasedEpisodes.findIndex((e) => e.number === currentEpNum) : -1;
   const title = anime.title.english || anime.title.romaji || anime.title.native || "Anime";
@@ -273,124 +230,17 @@ export default async function WatchEpisodePage({
             </div>
           </div>
 
-          {/* Right Column: Episode Selector & Franchise Season Switcher */}
+          {/* Right Column: Redesigned Modern Episode Selector & Franchise Switcher */}
           <aside className={styles.episodesSidebar}>
-            <div className={styles.sidebarHeader}>
-              <div className={styles.sidebarTitleWrap}>
-                <Film size={18} className={styles.accentRose} />
-                <h3>Episodes ({displayEpisodeList.length > 0 ? displayEpisodeList.length : totalEpisodes})</h3>
-              </div>
-              <span className={styles.epCountNote}>
-                {releasedEpisodes.length} Released
-                {declaredTotal && declaredTotal > releasedEpisodes.length
-                  ? ` • ${declaredTotal - releasedEpisodes.length} Upcoming`
-                  : ""}
-              </span>
-            </div>
-
-            {seasonsList.length > 1 && (
-              <div className={styles.seasonSelectPills}>
-                {seasonsList.map((s) => {
-                  const isCurSeason = s.parts.some(p => p.id === anime.id);
-                  const targetEntry = isCurSeason
-                    ? (s.parts.find(p => p.id === anime.id) || s.parts[0])
-                    : s.parts[0];
-                  return (
-                    <Link
-                      key={s.seasonLabel}
-                      href={`/watch/${targetEntry.id}/1`}
-                      className={`${styles.seasonPill} ${isCurSeason ? styles.activeSeasonPill : ""}`}
-                      title={s.seasonLabel}
-                    >
-                      {s.seasonLabel}
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
-
-            {hasMultiplePartsInActiveSeason && activeSeasonGroup && (
-              <div className={styles.partSelectPills}>
-                <span className={styles.partGroupLabel}>Part / Cour:</span>
-                {activeSeasonGroup.parts.map((p) => {
-                  const isCurPart = p.id === anime.id;
-                  return (
-                    <Link
-                      key={p.id}
-                      href={`/watch/${p.id}/1`}
-                      className={`${styles.partPill} ${isCurPart ? styles.activePartPill : ""}`}
-                      title={p.title}
-                    >
-                      {p.partLabel || p.title}
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
-
-            {displayEpisodeList.length > 0 ? (
-              <div className={styles.episodesSidebarList}>
-                {displayEpisodeList.map((ep) => {
-                  const epNum = ep.number ?? 1;
-                  const isCur = epNum === currentEpNum;
-                  const isEpUpcoming = ep.status === "upcoming" || (!isFinished && ep.status !== "released" && epNum > latestReleasedNumber);
-
-                  if (isEpUpcoming) {
-                    return (
-                      <div
-                        key={ep.id}
-                        className={`${styles.epCardSmall} ${styles.epCardSmallLocked}`}
-                        title={`Episode ${epNum} is upcoming and not yet released.`}
-                      >
-                        <div className={styles.epThumbSmallWrap}>
-                          <img
-                            src={ep.thumbnail || anime.images.cover || "/placeholder-cover.svg"}
-                            alt={ep.title || `Episode ${epNum}`}
-                            className={styles.epThumbSmall}
-                          />
-                          <div className={styles.lockedSmallOverlay}>
-                            <Lock size={14} />
-                          </div>
-                        </div>
-                        <div className={styles.epSmallInfo}>
-                          <span className={styles.epSmallNum}>EP {epNum}</span>
-                          <span className={styles.epSmallStatus}>Upcoming</span>
-                        </div>
-                      </div>
-                    );
-                  }
-
-                  return (
-                    <Link
-                      key={ep.id}
-                      href={`/watch/${anime.id}/${epNum}`}
-                      className={`${styles.epCardSmall} ${isCur ? styles.activeEpCardSmall : ""}`}
-                    >
-                      <div className={styles.epThumbSmallWrap}>
-                        <img
-                          src={ep.thumbnail || anime.images.cover || "/placeholder-cover.svg"}
-                          alt={ep.title || `Episode ${epNum}`}
-                          className={styles.epThumbSmall}
-                        />
-                        {isCur && (
-                          <div className={styles.playingSmallOverlay}>
-                            <Play size={14} fill="#fff" />
-                          </div>
-                        )}
-                      </div>
-                      <div className={styles.epSmallInfo}>
-                        <span className={styles.epSmallNum}>EP {epNum}</span>
-                        <span className={styles.epSmallTitle}>{ep.title || `Episode ${epNum}`}</span>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className={styles.emptySidebarNotice}>
-                No episodes indexed for this title yet.
-              </div>
-            )}
+            <WatchEpisodeSelector
+              animeId={anime.id}
+              currentEpisodeNumber={currentEpNum}
+              episodes={displayEpisodeList}
+              franchiseEntries={franchiseEntries}
+              animeTitle={title}
+              coverImage={anime.images.cover || anime.images.largeCover}
+              isDubRequested={isDubRequested}
+            />
           </aside>
         </div>
 

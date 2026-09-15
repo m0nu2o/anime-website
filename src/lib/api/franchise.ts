@@ -96,9 +96,9 @@ export function parseCleanSeasonInfo(rawTitle: string, fallbackSeason: number = 
           seasonLabel = `Season ${seasonNumber}`;
         }
       } else if (partNumber && partNumber > 1) {
-        // e.g. "Cour 2" or "Part 2" without any Season indication belongs to Season 1 Part 2
-        seasonNumber = 1;
-        seasonLabel = "Season 1";
+        // Preserve fallbackSeason if provided
+        seasonNumber = fallbackSeason;
+        seasonLabel = `Season ${seasonNumber}`;
       }
     }
   }
@@ -173,7 +173,7 @@ export async function getFranchiseGraph(
       const queue: number[] = [resolvedAnilistId];
       const visited = new Set<number>([resolvedAnilistId]);
       const allNodesMap = new Map<number, { node: AniListRelationNode; relationType: string }>();
-      const MAX_DISCOVERED = 12;
+      const MAX_DISCOVERED = 20;
 
       while (queue.length > 0 && visited.size <= MAX_DISCOVERED) {
         const currentId = queue.shift()!;
@@ -202,16 +202,21 @@ export async function getFranchiseGraph(
           const fmt = node.format?.toUpperCase();
           if (fmt === "MANGA" || fmt === "NOVEL" || fmt === "ONE_SHOT") continue;
 
+          // Exclude unreleased phantom entries with no episodes and no start date
+          if (node.status === "NOT_YET_RELEASED" && !node.episodes && !node.startDate?.year) {
+            continue;
+          }
+
           const rel = edge.relationType;
-          // Traverse prequels and sequels to discover complete chronological timeline
-          if (rel === "PREQUEL" || rel === "SEQUEL") {
+          if (!allNodesMap.has(node.id)) {
+            allNodesMap.set(node.id, { node, relationType: rel });
+          }
+
+          // Traverse prequels and sequels of TV series to discover complete chronological timeline
+          if ((rel === "PREQUEL" || rel === "SEQUEL") && (fmt === "TV" || fmt === "TV_SHORT" || !fmt)) {
             if (!visited.has(node.id) && visited.size < MAX_DISCOVERED) {
               visited.add(node.id);
               queue.push(node.id);
-            }
-          } else if (rel === "PARENT" || rel === "SIDE_STORY" || rel === "SPIN_OFF" || rel === "ALTERNATIVE" || rel === "SUMMARY") {
-            if (!allNodesMap.has(node.id)) {
-              allNodesMap.set(node.id, { node, relationType: rel });
             }
           }
         }
@@ -225,6 +230,13 @@ export async function getFranchiseGraph(
         for (const item of allNodesMap.values()) {
           const fmt = item.node.format?.toUpperCase() || "";
           const rel = item.relationType;
+          const titleStr = item.node.title?.english || item.node.title?.romaji || "";
+          const eps = item.node.episodes;
+
+          // Skip unreleased phantom entries with 0 episodes
+          if (item.node.status === "NOT_YET_RELEASED" && (!eps || eps === 0)) {
+            continue;
+          }
 
           // Movies
           if (fmt === "MOVIE") {
@@ -232,17 +244,22 @@ export async function getFranchiseGraph(
             continue;
           }
 
-          // Explicit specials / OVAs / ONAs
-          if (fmt === "OVA" || fmt === "ONA" || fmt === "SPECIAL") {
+          // Explicit specials / OVAs / ONAs / Music
+          if (fmt === "OVA" || fmt === "ONA" || fmt === "SPECIAL" || fmt === "MUSIC") {
             specialNodes.push(item);
             continue;
           }
 
-          const isMainlineRelation = rel === "CURRENT" || rel === "MAINLINE" || rel === "PREQUEL" || rel === "SEQUEL" || rel === "PARENT";
-          const titleStr = item.node.title?.english || item.node.title?.romaji || "";
+          // Single-episode side stories or specials without explicit Season title belong to specials
           const hasExplicitSeasonInTitle = /\bseason\s*\d+\b/i.test(titleStr) || /\b\d+(?:st|nd|rd|th)\s+season\b/i.test(titleStr) || /\b(II|III|IV|V)\b/.test(titleStr);
+          if (eps === 1 && !hasExplicitSeasonInTitle) {
+            specialNodes.push(item);
+            continue;
+          }
 
-          if (isMainlineRelation || hasExplicitSeasonInTitle) {
+          // Mainline TV series
+          const isMainlineRelation = rel === "CURRENT" || rel === "MAINLINE" || rel === "PREQUEL" || rel === "SEQUEL" || rel === "PARENT";
+          if ((fmt === "TV" || fmt === "TV_SHORT") && (isMainlineRelation || hasExplicitSeasonInTitle || (eps && eps > 1))) {
             tvNodes.push(item);
           } else {
             specialNodes.push(item);
@@ -286,7 +303,7 @@ export async function getFranchiseGraph(
           });
         });
 
-        // Normalize part numbers if a season has multiple entries
+        // Ensure distinct TV series receive distinct season numbers unless they share an explicit multi-part title
         const seasonsMap = new Map<number, FranchiseEntry[]>();
         for (const entry of result) {
           if (entry.category === "season") {
@@ -296,15 +313,25 @@ export async function getFranchiseGraph(
           }
         }
 
-        for (const group of seasonsMap.values()) {
+        for (const [sNum, group] of seasonsMap.entries()) {
           if (group.length > 1) {
-            group.sort((a, b) => (a.year || 0) - (b.year || 0));
-            group.forEach((p, idx) => {
-              if (!p.partNumber) {
-                p.partNumber = idx + 1;
-                p.partLabel = `Part ${idx + 1}`;
-              }
-            });
+            const hasExplicitParts = group.some(p => Boolean(p.partLabel));
+            if (!hasExplicitParts) {
+              group.forEach((p, idx) => {
+                p.seasonNumber = sNum + idx;
+                p.seasonLabel = `Season ${p.seasonNumber}`;
+                p.partNumber = null;
+                p.partLabel = null;
+              });
+            } else {
+              group.sort((a, b) => (a.year || 0) - (b.year || 0));
+              group.forEach((p, idx) => {
+                if (!p.partNumber) {
+                  p.partNumber = idx + 1;
+                  p.partLabel = `Part ${idx + 1}`;
+                }
+              });
+            }
           }
         }
 
@@ -337,7 +364,7 @@ export async function getFranchiseGraph(
             format: fmt,
             category: "special",
             seasonNumber: 96,
-            seasonLabel: `${fmt} ${index + 1}`,
+            seasonLabel: specialNodes.length > 1 ? `Special ${index + 1}` : "Special",
             year: node.startDate?.year || node.seasonYear,
             episodes: node.episodes,
             isCurrent: node.id === resolvedAnilistId,

@@ -860,7 +860,11 @@ export async function getAnimeEpisodes(
   title?: string,
   animeObj?: import("./types").Anime | null
 ): Promise<import("./types").Episode[]> {
-  const cached = animeObj || getFromCache(animeId);
+  let animeRecord = animeObj || getFromCache(animeId);
+  if (!animeRecord || !animeRecord.episodes) {
+    animeRecord = await getAnimeById(animeId).catch(() => null) || animeRecord;
+  }
+  const cached = animeRecord;
   const resolvedTitle = title || cached?.title?.english || cached?.title?.romaji;
   const declaredTotal = typeof cached?.episodes === "number" && cached.episodes > 0 ? cached.episodes : null;
 
@@ -945,6 +949,9 @@ export async function getAnimeEpisodes(
   }
 
   // 4. Fill in any missing canonical episodes up to the verified release count or declared total
+  const statusStr = cached?.status?.toLowerCase() || "";
+  const isFinished = statusStr.includes("finish") || statusStr.includes("complete");
+
   const nextAiring = cached?.nextAiringEpisode?.episode;
   const nextAiringTime = cached?.nextAiringEpisode?.airingAt ? cached.nextAiringEpisode.airingAt * 1000 : undefined;
   const isAiringInFuture = typeof nextAiringTime === "number" && nextAiringTime > Date.now();
@@ -964,8 +971,11 @@ export async function getAnimeEpisodes(
           title: `Episode ${epNum}`,
           synopsis: `Episode ${epNum} of ${resolvedTitle || "Anime"}.`,
           thumbnail: cached?.images?.cover || cached?.images?.largeCover || "/placeholder-cover.svg",
-          status: epNum <= latestFromAiring ? "released" : "upcoming",
+          status: (isFinished || epNum <= latestFromAiring) ? "released" : "upcoming",
         });
+      } else if (isFinished) {
+        const ep = mergedMap.get(epNum)!;
+        ep.status = "released";
       }
     }
   }

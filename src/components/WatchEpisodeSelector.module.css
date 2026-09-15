@@ -1,0 +1,572 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+}
+
+/* 1. FRANCHISE CATEGORY TABS */
+.categoryBar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(14, 11, 26, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 4px;
+}
+
+.categoryTabBtn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.categoryTabBtn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.activeCategoryTab {
+  color: #fff !important;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.35), rgba(139, 92, 246, 0.25)) !important;
+  border: 1px solid rgba(168, 85, 247, 0.5);
+  box-shadow: 0 0 14px rgba(168, 85, 247, 0.25);
+}
+
+/* 2. FRANCHISE SEASONS/MOVIES PILLS */
+.franchisePillsWrapper {
+  width: 100%;
+  overflow: hidden;
+}
+
+.franchisePillsScroll {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(168, 85, 247, 0.4) transparent;
+}
+
+.franchisePillsScroll::-webkit-scrollbar {
+  height: 4px;
+}
+
+.franchisePillsScroll::-webkit-scrollbar-thumb {
+  background: rgba(168, 85, 247, 0.4);
+  border-radius: 4px;
+}
+
+.franchisePill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-muted, #94a3b8);
+  text-decoration: none;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.franchisePill:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.activeFranchisePill {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.3), rgba(236, 72, 153, 0.2)) !important;
+  border-color: rgba(168, 85, 247, 0.6) !important;
+  color: #fff !important;
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.3);
+}
+
+.pillLabel {
+  font-weight: 600;
+}
+
+.pillBadge {
+  font-size: 0.72rem;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.35);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* 3. EPISODES HEADER & CONTROL TOOLBAR */
+.selectorHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.headerLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.headerTitleWrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.accentIcon {
+  color: #a855f7;
+}
+
+.headerTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+}
+
+.totalBadge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 12px;
+  background: rgba(168, 85, 247, 0.2);
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  color: #c084fc;
+}
+
+.releaseMeta {
+  font-size: 0.75rem;
+  color: var(--text-muted, #94a3b8);
+}
+
+.viewModeToggle {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 3px;
+}
+
+.modeBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted, #94a3b8);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.modeBtn:hover {
+  color: #fff;
+}
+
+.activeModeBtn {
+  color: #fff !important;
+  background: rgba(168, 85, 247, 0.4) !important;
+}
+
+/* 4. RANGE CHUNKS SELECTOR */
+.rangeTabsWrapper {
+  width: 100%;
+  overflow: hidden;
+}
+
+.rangeTabsScroll {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 2px 0 6px 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(168, 85, 247, 0.35) transparent;
+}
+
+.rangeTabsScroll::-webkit-scrollbar {
+  height: 3px;
+}
+
+.rangeTabsScroll::-webkit-scrollbar-thumb {
+  background: rgba(168, 85, 247, 0.35);
+  border-radius: 3px;
+}
+
+.rangeTab {
+  padding: 5px 11px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.rangeTab:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.activeRangeTab {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.35), rgba(139, 92, 246, 0.2)) !important;
+  border-color: rgba(168, 85, 247, 0.6) !important;
+  color: #fff !important;
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.25);
+}
+
+/* 5. SEARCH & JUMP BAR */
+.searchBarRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.searchBox {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 10px;
+  color: var(--text-muted, #94a3b8);
+  pointer-events: none;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 8px 28px 8px 30px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: #fff;
+  font-size: 0.8rem;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.searchInput:focus {
+  border-color: rgba(168, 85, 247, 0.6);
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.2);
+}
+
+.clearSearchBtn {
+  position: absolute;
+  right: 8px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.75rem;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+.clearSearchBtn:hover {
+  color: #fff;
+}
+
+.jumpBox {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.jumpInput {
+  width: 60px;
+  padding: 8px 6px 8px 8px;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 0.8rem;
+  text-align: center;
+  outline: none;
+}
+
+.jumpInput::-webkit-inner-spin-button,
+.jumpInput::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.jumpBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 10px;
+  background: rgba(168, 85, 247, 0.2);
+  border: none;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  color: #c084fc;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.jumpBtn:hover {
+  background: rgba(168, 85, 247, 0.4);
+  color: #fff;
+}
+
+/* 6. COMPACT NUMBERED GRID VIEW */
+.gridContainer {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(46px, 1fr));
+  gap: 7px;
+  max-height: 480px;
+  overflow-y: auto;
+  padding-right: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(168, 85, 247, 0.4) rgba(0, 0, 0, 0.2);
+}
+
+.gridContainer::-webkit-scrollbar {
+  width: 5px;
+}
+
+.gridContainer::-webkit-scrollbar-thumb {
+  background: rgba(168, 85, 247, 0.4);
+  border-radius: 4px;
+}
+
+.gridChip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  color: #e2e8f0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: none;
+  position: relative;
+  transition: all 0.18s ease;
+  user-select: none;
+}
+
+.gridChip:hover {
+  background: rgba(168, 85, 247, 0.2);
+  border-color: rgba(168, 85, 247, 0.5);
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(168, 85, 247, 0.25);
+}
+
+.activeGridChip {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.4), rgba(236, 72, 153, 0.35)) !important;
+  border: 1.5px solid #a855f7 !important;
+  color: #fff !important;
+  box-shadow: 0 0 16px rgba(168, 85, 247, 0.5), inset 0 0 8px rgba(168, 85, 247, 0.3) !important;
+  animation: pulseGlow 2.5s infinite alternate ease-in-out;
+}
+
+@keyframes pulseGlow {
+  0% {
+    box-shadow: 0 0 12px rgba(168, 85, 247, 0.4);
+  }
+  100% {
+    box-shadow: 0 0 20px rgba(236, 72, 153, 0.6);
+  }
+}
+
+.playingDot {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 3px;
+  color: #fff;
+}
+
+.gridChipLocked {
+  opacity: 0.45;
+  background: rgba(0, 0, 0, 0.25);
+  border-color: rgba(255, 255, 255, 0.05);
+  cursor: not-allowed;
+  gap: 3px;
+}
+
+.lockedChipIcon {
+  color: #f43f5e;
+}
+
+/* 7. DETAILED CARD LIST VIEW */
+.listContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 480px;
+  overflow-y: auto;
+  padding-right: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(168, 85, 247, 0.4) rgba(0, 0, 0, 0.2);
+}
+
+.listContainer::-webkit-scrollbar {
+  width: 5px;
+}
+
+.listContainer::-webkit-scrollbar-thumb {
+  background: rgba(168, 85, 247, 0.4);
+  border-radius: 4px;
+}
+
+.listCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.listCard:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(168, 85, 247, 0.4);
+  transform: translateY(-1px);
+}
+
+.activeListCard {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.22), rgba(236, 72, 153, 0.14)) !important;
+  border-color: rgba(168, 85, 247, 0.6) !important;
+  box-shadow: 0 0 14px rgba(168, 85, 247, 0.25);
+}
+
+.listThumbWrap {
+  width: 88px;
+  height: 50px;
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+  background: #000;
+  flex-shrink: 0;
+}
+
+.listThumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.playingOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(168, 85, 247, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lockedOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f43f5e;
+}
+
+.listEpNumBadge {
+  position: absolute;
+  bottom: 2px;
+  left: 2px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+}
+
+.listDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+}
+
+.listTitle {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.listAirdate {
+  font-size: 0.72rem;
+  color: var(--text-muted, #94a3b8);
+}
+
+.listHeaderRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.upcomingBadge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #f43f5e;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(244, 63, 94, 0.15);
+  border: 1px solid rgba(244, 63, 94, 0.3);
+}
+
+.listCardLocked {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.emptyNotice {
+  padding: 24px 16px;
+  text-align: center;
+  font-size: 0.84rem;
+  color: var(--text-muted, #94a3b8);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+}

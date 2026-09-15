@@ -164,16 +164,47 @@ export default function AnimeDetailTabs({
 
   const effectiveEpisodeList = currentSeasonEpisodes;
 
+  // Range chunking for long series (> 40 episodes)
+  const [activeRangeIndex, setActiveRangeIndex] = useState(0);
+  const totalEpisodeCount = effectiveEpisodeList.length;
+  const chunkSize = totalEpisodeCount > 150 ? 100 : 50;
+
+  const ranges = React.useMemo(() => {
+    if (totalEpisodeCount <= 40) return [];
+    const res: { start: number; end: number; label: string }[] = [];
+    for (let start = 1; start <= totalEpisodeCount; start += chunkSize) {
+      const end = Math.min(start + chunkSize - 1, totalEpisodeCount);
+      res.push({ start, end, label: `${start}–${end}` });
+    }
+    return res;
+  }, [totalEpisodeCount, chunkSize]);
+
+  React.useEffect(() => {
+    setActiveRangeIndex(0);
+  }, [activeSeasonId]);
+
   // Filter episodes by search
   const filteredEpisodes = effectiveEpisodeList.filter((ep) =>
     String(ep.number ?? "").includes(episodeSearch) ||
     ep.title?.toLowerCase().includes(episodeSearch.toLowerCase())
   );
 
+  const displayedEpisodes = React.useMemo(() => {
+    if (episodeSearch.trim()) return filteredEpisodes;
+    if (ranges.length > 0 && ranges[activeRangeIndex]) {
+      const { start, end } = ranges[activeRangeIndex];
+      return filteredEpisodes.filter((ep) => {
+        const num = ep.number ?? 0;
+        return num >= start && num <= end;
+      });
+    }
+    return filteredEpisodes;
+  }, [filteredEpisodes, episodeSearch, ranges, activeRangeIndex]);
+
   const totalEpisodes = declaredTotalEpisodes;
   const firstReleasedEpisode = effectiveEpisodeList.find((ep) => typeof ep.number === "number" && ep.status !== "upcoming");
-  const playableEpisodes = filteredEpisodes.filter(
-    (ep): ep is (typeof filteredEpisodes)[number] & { number: number } =>
+  const playableEpisodes = displayedEpisodes.filter(
+    (ep): ep is (typeof displayedEpisodes)[number] & { number: number } =>
       typeof ep.number === "number"
   );
 
@@ -411,6 +442,36 @@ export default function AnimeDetailTabs({
               </div>
             </div>
 
+            {/* Range Pagination Tabs for long anime */}
+            {ranges.length > 1 && !episodeSearch.trim() && (
+              <div style={{ display: "flex", gap: "8px", overflowX: "auto", padding: "2px 0 14px 0", width: "100%", scrollbarWidth: "thin" }}>
+                {ranges.map((range, idx) => {
+                  const isActive = idx === activeRangeIndex;
+                  return (
+                    <button
+                      key={range.label}
+                      onClick={() => setActiveRangeIndex(idx)}
+                      style={{
+                        padding: "6px 14px",
+                        borderRadius: "8px",
+                        border: isActive ? "1px solid rgba(168, 85, 247, 0.6)" : "1px solid rgba(255, 255, 255, 0.1)",
+                        background: isActive ? "linear-gradient(135deg, rgba(168, 85, 247, 0.35), rgba(139, 92, 246, 0.2))" : "rgba(255, 255, 255, 0.04)",
+                        color: isActive ? "#fff" : "#94a3b8",
+                        fontSize: "0.82rem",
+                        fontWeight: 600,
+                        cursor: "pointer",
+                        whiteSpace: "nowrap",
+                        boxShadow: isActive ? "0 0 12px rgba(168, 85, 247, 0.3)" : "none",
+                        transition: "all 0.2s ease"
+                      }}
+                    >
+                      {range.label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
             {/* Episode Grid or Loading / Empty state */}
             {isLoadingSeasonEpisodes ? (
               <div className={styles.emptyCard}>
@@ -418,9 +479,9 @@ export default function AnimeDetailTabs({
                 <h3>Loading {activeSeason.shortLabel} Episodes...</h3>
                 <p>Retrieving authentic episode metadata and stream sync.</p>
               </div>
-            ) : filteredEpisodes.length > 0 ? (
+            ) : displayedEpisodes.length > 0 ? (
               <div className={styles.episodesGrid}>
-                {filteredEpisodes.map((ep) => {
+                {displayedEpisodes.map((ep) => {
                   const isUpcoming = ep.status === "upcoming";
                   if (isUpcoming) {
                     return (
