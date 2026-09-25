@@ -2,7 +2,7 @@ import Navbar from "@/components/Navbar";
 import AnimeCard from "@/components/AnimeCard";
 import ContinueWatchingRow from "@/components/ContinueWatchingRow";
 import TrendingHeroCarousel from "@/components/TrendingHeroCarousel";
-import { getTrendingAnime, getPopularAnime, getAllTimeFavorites, getSeasonalAnime, getLatestAiringAnime } from "@/lib/api";
+import { getTrendingAnime, getPopularAnime, getAllTimeFavorites, getSeasonalAnime } from "@/lib/api";
 import styles from "./page.module.css";
 import HomeExploreSections from "@/components/HomeExploreSections";
 import HomeCommunityPosts from "@/components/HomeCommunityPosts";
@@ -25,12 +25,11 @@ function getCurrentSeasonAndYear(): { season: string; label: string; year: numbe
 export default async function Home() {
   const { season: currentSeason, label: currentSeasonLabel, year: currentSeasonYear } = getCurrentSeasonAndYear();
 
-  const [trendingAnime, popularAnime, allTimeFavorites, seasonalAnime, latestReleases] = await Promise.all([
+  const [trendingAnime, popularAnime, allTimeFavorites, seasonalAnime] = await Promise.all([
     getTrendingAnime(15),
     getPopularAnime(15),
     getAllTimeFavorites(15),
     getSeasonalAnime(currentSeason, currentSeasonYear, 15).catch(() => []),
-    getLatestAiringAnime(24).catch(() => []),
   ]);
 
   return (
@@ -47,12 +46,11 @@ export default async function Home() {
         {/* Continue Watching for authenticated users */}
         <ContinueWatchingRow />
 
-        {/* Real Anime Sections: Latest Real Releases, Top 10 Leaderboard, Real API Genre Discovery */}
+        {/* Real Anime Sections: Top 10 Leaderboard, Real API Genre Discovery */}
         <HomeExploreSections
           trendingAnime={trendingAnime}
           popularAnime={popularAnime}
           seasonalAnime={seasonalAnime}
-          latestReleases={latestReleases}
         />
 
         {/* Trending Now Carousel */}

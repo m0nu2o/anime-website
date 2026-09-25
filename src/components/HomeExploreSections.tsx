@@ -4,13 +4,11 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { Anime } from "@/lib/api/types";
 import AnimeCard from "@/components/AnimeCard";
-import { LatestEpisodeRelease } from "@/lib/api";
 import styles from "./HomeExploreSections.module.css";
 import { 
   Play, 
   Flame, 
   Star, 
-  Clock, 
   Layers, 
   ArrowRight, 
   Loader2,
@@ -32,7 +30,6 @@ interface HomeExploreSectionsProps {
   trendingAnime: Anime[];
   popularAnime: Anime[];
   seasonalAnime: Anime[];
-  latestReleases: LatestEpisodeRelease[];
 }
 
 function normalizeGenreAnime(item: Record<string, unknown>): Anime {
@@ -68,7 +65,6 @@ export default function HomeExploreSections({
   trendingAnime,
   popularAnime,
   seasonalAnime,
-  latestReleases,
 }: HomeExploreSectionsProps) {
 
 
@@ -196,72 +192,7 @@ export default function HomeExploreSections({
   return (
     <div className={styles.exploreWrapper}>
       {/* ============================================================
-          SECTION 1: LATEST RELEASES / FRESH DROPS (100% REAL BROADCASTS)
-          ============================================================ */}
-      <section className={styles.section}>
-        <div className={styles.sectionHeader}>
-          <div className={styles.headerLeft}>
-            <span className={styles.sectionBadge}>
-              <span className={styles.livePulse} />
-              REAL-TIME SIMULCAST
-            </span>
-            <h2 className={styles.sectionTitle}>
-              <Clock size={20} className={styles.titleIcon} />
-              Latest Released Episodes
-            </h2>
-          </div>
-          <div className={styles.headerRightGroup}>
-            <Link href="/calendar" className={styles.headerAction}>
-              <span>Broadcast Schedule</span>
-              <ArrowRight size={14} />
-            </Link>
-          </div>
-        </div>
-
-        {latestReleases && latestReleases.length > 0 ? (
-          <div className={styles.episodesGrid}>
-            {latestReleases.map((item) => (
-              <Link 
-                key={item.id} 
-                href={`/watch/${item.animeId}/${item.episode}`} 
-                className={styles.episodeCard}
-                title={`Watch ${item.title} Episode ${item.episode}`}
-              >
-                <div className={styles.cardImageContainer}>
-                  <img src={item.image} alt={item.title} className={styles.cardImage} loading="lazy" />
-                  <div className={styles.cardOverlay}>
-                    <div className={styles.playBadge}>
-                      <Play size={16} fill="white" />
-                    </div>
-                  </div>
-                  <div className={styles.episodeTag}>
-                    <span>EP {item.episode ?? "—"}</span>
-                  </div>
-                </div>
-                <div className={styles.cardDetails}>
-                  <h3 className={styles.cardTitle}>{item.title}</h3>
-                  <div className={styles.cardMeta}>
-                    <span className={styles.format}>{item.format || "TV"}</span>
-                    {item.score && (
-                      <>
-                        <span className={styles.dot}>•</span>
-                        <span className={styles.scoreText}>★ {(item.score / 10).toFixed(1)}</span>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <div className={styles.emptyEpisodes}>
-            <span>No newly aired episodes are indexed right now.</span>
-          </div>
-        )}
-      </section>
-
-      {/* ============================================================
-          SECTION 2: TOP 10 RANKED LEADERBOARD WITH TIMEFRAME TABS
+          SECTION 1: TOP 10 RANKED LEADERBOARD WITH TIMEFRAME TABS
           ============================================================ */}
       <section className={styles.section}>
         <div className={styles.leaderboardSectionHeader}>

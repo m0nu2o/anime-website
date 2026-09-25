@@ -78,8 +78,37 @@ export default function Footer() {
           <p className={styles.copyright}>
             &copy; {new Date().getFullYear()} NextGenAnime Platform. All anime rights, artwork, and trademarks belong to their respective studios and creators.
           </p>
-          <div className={styles.madeWith}>
-            <span>Crafted with</span> <Heart size={14} className={styles.heartIcon} /> <span>for anime fans worldwide</span>
+          <div className={styles.metaRow}>
+            <a
+              href="https://instagram.com/itxz_baka"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.instagramBadge}
+              title="Follow @itxz_baka on Instagram"
+              aria-label="Instagram @itxz_baka"
+            >
+              <svg
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className={styles.instagramIcon}
+                aria-hidden="true"
+              >
+                <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+              </svg>
+              <span>@itxz_baka</span>
+            </a>
+            <span className={styles.metaDivider}>•</span>
+            <div className={styles.madeWith}>
+              <span>Crafted with</span> <Heart size={14} className={styles.heartIcon} /> <span>for anime fans worldwide</span>
+            </div>
           </div>
         </div>
       </div>
