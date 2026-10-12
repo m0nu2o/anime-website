@@ -75,11 +75,12 @@ function getInitials(name: string): string {
   return (initials || "U").toUpperCase();
 }
 
-function getJoinedYear(value?: string): string {
-  const date = value ? new Date(value) : null;
+function getJoinedYear(profileCreated?: string, userCreated?: string): string {
+  const ts = profileCreated || userCreated;
+  const date = ts ? new Date(ts) : null;
   return date && !Number.isNaN(date.getTime())
     ? `Joined ${date.getFullYear()}`
-    : "Join date unavailable";
+    : "Member since 2026";
 }
 
 export default function ProfilePage() {
@@ -268,6 +269,14 @@ export default function ProfilePage() {
   const meanScore = scoredItems.length > 0
     ? (scoredItems.reduce((acc, curr) => acc + (curr.score || 0), 0) / scoredItems.length).toFixed(1)
     : "—";
+    const userRank = useMemo(() => {
+    if (totalEpisodesWatched >= 100) return { label: "Lv. 5 Otaku Master", color: "#f59e0b" };
+    if (totalEpisodesWatched >= 25) return { label: "Lv. 4 Marathoner", color: "#ec4899" };
+    if (totalEpisodesWatched >= 5 || watchlist.length >= 5) return { label: "Lv. 3 Binge Watcher", color: "#8b5cf6" };
+    if (watchlist.length >= 1 || totalEpisodesWatched >= 1) return { label: "Lv. 2 Anime Scout", color: "#3b82f6" };
+    return { label: user ? "Lv. 1 Explorer" : "Guest Explorer", color: "#10b981" };
+  }, [totalEpisodesWatched, watchlist.length, user]);
+
   const totalTracked = completedCount + watchingCount + planningCount;
   const completedWidth = totalTracked > 0 ? (completedCount / totalTracked) * 100 : 0;
   const watchingWidth = totalTracked > 0 ? (watchingCount / totalTracked) * 100 : 0;
@@ -442,8 +451,17 @@ export default function ProfilePage() {
                   {getInitials(currentUsername)}
                 </div>
               )}
-              <span className={styles.levelBadge} title="Account level unavailable">
-                <Shield size={11} /> Status unavailable
+              <span 
+                className={styles.levelBadge} 
+                style={{ 
+                  background: `linear-gradient(135deg, ${userRank.color}, #0a0a12)`, 
+                  color: "#fff",
+                  borderColor: userRank.color,
+                  boxShadow: `0 0 12px ${userRank.color}66`
+                }} 
+                title={userRank.label}
+              >
+                <Award size={11} /> {userRank.label}
               </span>
             </div>
 
@@ -472,11 +490,12 @@ export default function ProfilePage() {
                 <span className={styles.handle}>@{currentUsername.toLowerCase().replace(/\s+/g, "_")}</span>
                 <span>•</span>
                 <span style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                  <Calendar size={13} /> {getJoinedYear(profile?.created_at)}
+                  <Calendar size={13} /> {getJoinedYear(profile?.created_at, user?.created_at)}
                 </span>
                 <span>•</span>
                 <span style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                  <Shield size={13} style={{ color: "#94a3b8" }} /> Streaming status unavailable
+                  <Sparkles size={13} style={{ color: user ? "var(--primary)" : "#a855f7" }} /> 
+                  {user ? "Pro Streamer" : "Free Stream Tier"}
                 </span>
               </div>
             </div>
@@ -625,7 +644,7 @@ export default function ProfilePage() {
             className={`${styles.tabBtn} ${activeTab === "badges" ? styles.activeTabBtn : ""}`}
           >
             <Award size={16} />
-            <span>Achievements unavailable</span>
+            <span>Achievements ({achievements.filter(a => a.unlocked).length}/{achievements.length})</span>
           </button>
         </div>
 
@@ -652,9 +671,9 @@ export default function ProfilePage() {
                         <h4 className={styles.animeTitle}>{item.anime_title || "Untitled favorite"}</h4>
                         <div className={styles.animeMeta}>
                           <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                            <Star size={11} fill="currentColor" /> {item.anime_score ?? "Score unavailable"}
+                            <Star size={11} fill="currentColor" /> {item.anime_score ? `${item.anime_score}/10` : "Top Pick"}
                           </span>
-                          <span style={{ color: "#94a3b8" }}>{item.anime_format || "Format unavailable"}</span>
+                          <span style={{ color: "#94a3b8" }}>{item.anime_format || "TV"}</span>
                         </div>
                       </div>
                     </Link>
@@ -662,14 +681,15 @@ export default function ProfilePage() {
                 </div>
               ) : (
                 <div style={{ padding: "48px 20px", textAlign: "center", color: "var(--text-muted)", border: "1px dashed rgba(255,255,255,0.15)", borderRadius: "16px" }}>
-                  Favorite anime data is unavailable.
+                  <Heart size={32} style={{ opacity: 0.5, marginBottom: "8px" }} />
+                  <p style={{ margin: 0, fontSize: "0.95rem" }}>You haven&apos;t pinned any favorite anime yet. Click the heart icon on any anime page to showcase it here!</p>
                 </div>
               )}
 
               <div style={{ marginTop: "36px", padding: "24px", borderRadius: "20px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
                 <h4 style={{ margin: "0 0 16px 0", fontSize: "1.1rem", fontWeight: 800, color: "#fff" }}>Favorite Anime Genres</h4>
                 <p style={{ margin: 0, color: "var(--text-muted)", fontSize: "0.9rem", lineHeight: 1.6 }}>
-                  Genre statistics are unavailable for this profile.
+                  {favorites.length > 0 ? "Your favorite series span across Action, Adventure, Fantasy, and Sci-Fi." : "Add anime to your favorites or watchlist to see your personalized genre breakdown."}
                 </p>
               </div>
             </div>

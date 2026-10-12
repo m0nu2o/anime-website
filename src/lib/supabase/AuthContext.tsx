@@ -134,6 +134,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           display_name: cleanUsername,
         });
       }
+      if (!data.session) {
+        const loginRes = await supabase.auth.signInWithPassword({ email, password });
+        if (loginRes.data?.session) {
+          setSession(loginRes.data.session);
+          setUser(loginRes.data.user);
+          if (loginRes.data.user) {
+            await fetchProfile(loginRes.data.user);
+          }
+        }
+      }
       closeAuthModal();
       return {};
     } catch (err: unknown) {

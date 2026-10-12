@@ -44,6 +44,10 @@ const ROMAN_NUMERAL_MAP: Record<string, number> = {
 /**
  * Parses clean season and part info from a title without assigning bogus "Prequel" or "Season 0" names.
  */
+const CHINESE_NUMERAL_MAP: Record<string, number> = {
+  一: 1, 二: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9, 十: 10
+};
+
 export function parseCleanSeasonInfo(rawTitle: string, fallbackSeason: number = 1): {
   seasonNumber: number;
   seasonLabel: string;
@@ -56,6 +60,15 @@ export function parseCleanSeasonInfo(rawTitle: string, fallbackSeason: number = 
 
   let partNumber: number | null = null;
   let partLabel: string | null = null;
+
+  // Chinese Season match: 第2季 or 第二季
+  const cnSeasonMatch = t.match(/第([0-9]+)季/) || t.match(/第([一二三四五六七八九十]+)季/);
+  if (cnSeasonMatch) {
+    const val = cnSeasonMatch[1];
+    seasonNumber = /^[0-9]+$/.test(val) ? parseInt(val, 10) : (CHINESE_NUMERAL_MAP[val] || fallbackSeason);
+    seasonLabel = `Season ${seasonNumber}`;
+  }
+
   const pMatch =
     t.match(/\bpart\s*(\d+)\b/i) ||
     t.match(/\bcour\s*(\d+)\b/i) ||
@@ -72,12 +85,15 @@ export function parseCleanSeasonInfo(rawTitle: string, fallbackSeason: number = 
   } else if (/\bthe\s+final\s+chapters\b/i.test(t)) {
     partNumber = 3;
     partLabel = "Final Chapters";
+  } else if (/传承篇/.test(t)) {
+    partNumber = 2;
+    partLabel = "Inheritance Arc";
   }
 
   if (/\bfinal\s+season\b/i.test(t)) {
     seasonLabel = "Final Season";
     seasonNumber = 90;
-  } else {
+  } else if (!cnSeasonMatch) {
     const sMatch =
       t.match(/\bseason\s*(\d+)\b/i) ||
       t.match(/\b(\d+)(?:st|nd|rd|th)\s+season\b/i) ||
@@ -95,10 +111,19 @@ export function parseCleanSeasonInfo(rawTitle: string, fallbackSeason: number = 
           seasonNumber = ROMAN_NUMERAL_MAP[val];
           seasonLabel = `Season ${seasonNumber}`;
         }
-      } else if (partNumber && partNumber > 1) {
-        // Preserve fallbackSeason if provided
-        seasonNumber = fallbackSeason;
-        seasonLabel = `Season ${seasonNumber}`;
+      } else {
+        // Trailing season number e.g. "Quanzhi Gaoshou 2" or "全职高手2"
+        const trailingDigitMatch = t.match(/[\s\u4e00-\u9fa5]+(\d+)$/);
+        if (trailingDigitMatch) {
+          const num = parseInt(trailingDigitMatch[1], 10);
+          if (num >= 2 && num <= 10) {
+            seasonNumber = num;
+            seasonLabel = `Season ${seasonNumber}`;
+          }
+        } else if (partNumber && partNumber > 1) {
+          seasonNumber = fallbackSeason;
+          seasonLabel = `Season ${seasonNumber}`;
+        }
       }
     }
   }

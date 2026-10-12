@@ -74,7 +74,7 @@ const getDownloadLabel = (quality: string): string => {
   return quality;
 };
 
-const EDGE_PROXY_URL = process.env.NEXT_PUBLIC_CLOUDFLARE_WORKER_URL || "";
+const EDGE_PROXY_URL = process.env.NEXT_PUBLIC_CLOUDFLARE_WORKER_URL || "https://tblbvrgzoovujszpztvr.supabase.co/functions/v1/anime-proxy";
 
 async function queryEdgeFlixServers(targetAniId: string, ep: number) {
   if (!EDGE_PROXY_URL) return null;

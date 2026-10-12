@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { StreamResponse, StreamSource } from "@/lib/api/types";
+import { matchDonghua, dynamicSearchDonghuaOnAniList } from "@/lib/api/donghua";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +29,19 @@ async function resolveIds(
 ): Promise<ResolvedIds> {
   let resolvedAnilistId = directAnilistId?.trim() || undefined;
   let resolvedMalId = malId?.trim() || undefined;
+
+  // 0. Dedicated Donghua Resolution Layer (Zero impact on standard anime)
+  const donghuaMatch = matchDonghua({
+    animeId,
+    anilistId: resolvedAnilistId,
+    malId: resolvedMalId,
+    title,
+  });
+  if (donghuaMatch) {
+    resolvedAnilistId = String(donghuaMatch.anilistId);
+    if (donghuaMatch.malId) resolvedMalId = String(donghuaMatch.malId);
+    return { anilistId: resolvedAnilistId, malId: resolvedMalId };
+  }
 
   if (animeId?.startsWith("mal-")) {
     resolvedMalId = animeId.replace("mal-", "");
@@ -96,12 +110,20 @@ async function resolveIds(
   // 4. Search AniList directly by title if still missing
   if (!resolvedAnilistId && title) {
     try {
-      const { fetchAniListAnime } = await import("@/lib/api/anilist");
-      const results = await fetchAniListAnime({ search: title, perPage: 1 });
-      if (results && results.length > 0 && results[0].anilistId) {
-        resolvedAnilistId = String(results[0].anilistId);
-        if (results[0].malId && !resolvedMalId) {
-          resolvedMalId = String(results[0].malId);
+      // If title includes Chinese characters or potential Donghua naming, try Donghua search first
+      if (/[\u4e00-\u9fa5]/.test(title)) {
+        const dynId = await dynamicSearchDonghuaOnAniList(title);
+        if (dynId) resolvedAnilistId = String(dynId);
+      }
+
+      if (!resolvedAnilistId) {
+        const { fetchAniListAnime } = await import("@/lib/api/anilist");
+        const results = await fetchAniListAnime({ search: title, perPage: 1 });
+        if (results && results.length > 0 && results[0].anilistId) {
+          resolvedAnilistId = String(results[0].anilistId);
+          if (results[0].malId && !resolvedMalId) {
+            resolvedMalId = String(results[0].malId);
+          }
         }
       }
     } catch {}

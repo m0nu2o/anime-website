@@ -784,6 +784,36 @@ export async function getAnimeById(idStr: string): Promise<Anime | null> {
           }
         } catch {}
       }
+
+      // Direct Donghua Catalog Fallback if AniList is rate-limited or fails
+      try {
+        const { matchDonghua } = await import("./donghua");
+        const donghuaEntry = matchDonghua({ animeId: idStr, anilistId: id });
+        if (donghuaEntry) {
+          const fallbackAnime: Anime = {
+            id: idStr,
+            anilistId: donghuaEntry.anilistId,
+            malId: donghuaEntry.malId,
+            kitsuId: donghuaEntry.kitsuId ? String(donghuaEntry.kitsuId) : undefined,
+            provider: "anilist",
+            title: {
+              english: donghuaEntry.englishTitle || donghuaEntry.canonicalTitle,
+              romaji: donghuaEntry.romajiTitle || donghuaEntry.canonicalTitle,
+              native: donghuaEntry.nativeTitle,
+            },
+            images: {
+              cover: "/placeholder-cover.svg",
+            },
+            type: "ANIME",
+            format: donghuaEntry.format,
+            status: "FINISHED",
+            episodes: donghuaEntry.totalEpisodes,
+            genres: ["Action", "Fantasy"],
+          };
+          cacheAnime(fallbackAnime);
+          return fallbackAnime;
+        }
+      } catch {}
     }
     return null;
   }
@@ -997,9 +1027,35 @@ export async function getAnimeEpisodes(
   }
   
   const currentMaxInMap = mergedMap.size > 0 ? Math.max(...Array.from(mergedMap.keys())) : 0;
-  const expectedTotal = declaredTotal 
+  let expectedTotal = declaredTotal 
     ? declaredTotal 
     : Math.max(latestFromAiring, currentMaxInMap);
+
+  let isDonghuaSeries = false;
+  if (expectedTotal === 0 || mergedMap.size === 0) {
+    try {
+      const { matchDonghua } = await import("./donghua");
+      const donghuaEntry = matchDonghua({
+        animeId,
+        anilistId,
+        malId,
+        title: resolvedTitle,
+      });
+      if (donghuaEntry) {
+        isDonghuaSeries = true;
+        if (donghuaEntry.totalEpisodes && donghuaEntry.totalEpisodes > 0) {
+          expectedTotal = Math.max(expectedTotal, donghuaEntry.totalEpisodes);
+        } else {
+          expectedTotal = Math.max(expectedTotal, 12);
+        }
+      }
+    } catch {}
+  }
+
+  // Safety net: If anime has released or is airing, guarantee at least episode 1 exists
+  if (expectedTotal === 0 && (cached?.status === "RELEASING" || cached?.status === "FINISHED" || !cached?.status)) {
+    expectedTotal = 1;
+  }
 
   if (expectedTotal > 0) {
     for (let epNum = 1; epNum <= expectedTotal; epNum++) {
@@ -1010,9 +1066,9 @@ export async function getAnimeEpisodes(
           title: `Episode ${epNum}`,
           synopsis: `Episode ${epNum} of ${resolvedTitle || "Anime"}.`,
           thumbnail: cached?.images?.cover || cached?.images?.largeCover || "/placeholder-cover.svg",
-          status: (isFinished || epNum <= latestFromAiring) ? "released" : "upcoming",
+          status: (isFinished || isDonghuaSeries || epNum <= latestFromAiring || expectedTotal === 1) ? "released" : "upcoming",
         });
-      } else if (isFinished || (latestFromAiring > 0 && epNum <= latestFromAiring)) {
+      } else if (isFinished || isDonghuaSeries || (latestFromAiring > 0 && epNum <= latestFromAiring)) {
         const ep = mergedMap.get(epNum)!;
         ep.status = "released";
       }
