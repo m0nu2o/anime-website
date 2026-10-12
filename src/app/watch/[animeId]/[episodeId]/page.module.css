@@ -1,50 +1,57 @@
 .watchPage {
-  padding-top: calc(var(--navbar-height) + 24px);
+  padding-top: calc(var(--navbar-height, 70px) + 20px);
   padding-bottom: 80px;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding-left: 24px;
+  padding-right: 24px;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 1;
 }
 
 .breadcrumb {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.88rem;
-  color: var(--text-muted);
-  margin-bottom: 20px;
+  font-size: 0.84rem;
+  color: var(--text-muted, #94a3b8);
+  margin-bottom: 18px;
   flex-wrap: wrap;
 }
 
 .breadcrumb a {
-  color: var(--text-muted);
+  color: var(--text-muted, #94a3b8);
   text-decoration: none;
-  transition: color var(--transition-fast);
+  transition: color var(--transition-fast, 0.2s ease);
 }
 
 .breadcrumb a:hover {
-  color: var(--primary);
+  color: var(--primary, #f43f5e);
 }
 
 .currentCrumb {
-  color: var(--text-main);
+  color: var(--text-main, #f1f5f9);
   font-weight: 600;
 }
 
-/* Dual Grid Layout */
+/* Dual Grid Layout — Balanced Two-Column Theater */
 .dualGrid {
   display: grid;
-  grid-template-columns: 1fr 360px;
-  gap: 32px;
+  grid-template-columns: minmax(0, 1fr) 390px;
+  gap: 28px;
   align-items: start;
   margin-bottom: 32px;
 }
 
 .rowTwo {
-  margin-top: 16px;
+  margin-top: 20px;
 }
 
 .playerCol {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
   min-width: 0;
 }
 
@@ -56,7 +63,7 @@
 .episodeMeta {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 18px;
 }
 
 .titleRow {
@@ -68,18 +75,22 @@
 }
 
 .epBadge {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 700;
-  color: var(--primary);
+  color: var(--primary, #f43f5e);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  display: inline-block;
+  margin-bottom: 4px;
 }
 
 .epTitle {
-  font-size: 1.6rem;
+  font-size: 1.5rem;
   font-weight: 800;
-  color: var(--text-main);
-  margin-top: 4px;
+  color: var(--text-main, #fff);
+  margin-top: 2px;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
 }
 
 .navButtons {
@@ -93,28 +104,28 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  height: 38px;
+  gap: 6px;
+  height: 40px;
   padding: 0 16px;
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: var(--radius-md, 10px);
-  color: var(--text-main);
-  font-size: 0.86rem;
+  color: var(--text-main, #f1f5f9);
+  font-size: 0.85rem;
   font-weight: 700;
   text-decoration: none;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 4px 12px rgba(0, 0, 0, 0.3);
-  transition: color var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  transition: all 0.2s ease;
 }
 
 .navBtn:hover:not(.disabledNav) {
   color: #fff;
-  background: linear-gradient(135deg, rgba(244, 63, 94, 0.32), rgba(99, 102, 241, 0.22));
-  border-color: rgba(244, 63, 94, 0.55);
-  box-shadow: 0 0 18px rgba(244, 63, 94, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.24);
   transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
 }
 
 .disabledNav {
@@ -438,20 +449,20 @@
 /* Sidebars (Episodes & Recommended) */
 .episodesSidebar,
 .recommendedSidebar {
-  background: var(--glass-standard-bg, rgba(18, 18, 28, 0.78));
+  background: var(--glass-standard-bg, rgba(14, 14, 22, 0.85));
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: var(--radius-xl, 20px);
-  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: var(--radius-xl, 18px);
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.16), 0 20px 48px rgba(0, 0, 0, 0.6);
+  gap: 14px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .episodesSidebar {
-  max-height: calc(100vh - var(--navbar-height, 70px) - 24px);
+  max-height: calc(100vh - var(--navbar-height, 70px) - 32px);
   min-height: 480px;
   position: sticky;
   top: calc(var(--navbar-height, 70px) + 16px);
@@ -596,7 +607,19 @@
   border: 1px dashed rgba(255, 255, 255, 0.08);
 }
 
+@media (max-width: 1200px) {
+  .dualGrid {
+    grid-template-columns: minmax(0, 1fr) 350px;
+    gap: 20px;
+  }
+}
+
 @media (max-width: 1024px) {
+  .watchPage {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
   .dualGrid {
     grid-template-columns: 1fr;
     gap: 24px;
@@ -605,9 +628,39 @@
   .episodesSidebar {
     position: static;
     max-height: none;
+    min-height: auto;
   }
 
   .episodesSidebarList {
     max-height: 400px;
+  }
+}
+
+@media (max-width: 640px) {
+  .watchPage {
+    padding-top: calc(var(--navbar-height, 70px) + 12px);
+    padding-left: 12px;
+    padding-right: 12px;
+    padding-bottom: 48px;
+  }
+
+  .titleRow {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .navButtons {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .navBtn {
+    flex: 1;
+    text-align: center;
+  }
+
+  .epTitle {
+    font-size: 1.25rem;
   }
 }

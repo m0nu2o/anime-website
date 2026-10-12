@@ -451,9 +451,13 @@ export default function AnimeAmbientBackground() {
     stealth: 0.4,
   };
 
-  const currentOpacity = customOpacity !== null ? customOpacity : (opacityMap[fxMode as keyof typeof opacityMap] || 0.60);
-  const currentBloom = isWatchPage ? 0.45 : (bloomStrengthMap[fxMode as keyof typeof bloomStrengthMap] || 1.0);
-  const effectiveQuality = isWatchPage && quality === "high" ? "medium" : quality;
+  const currentOpacity = customOpacity !== null 
+    ? customOpacity 
+    : isWatchPage 
+      ? 0.06 
+      : (opacityMap[fxMode as keyof typeof opacityMap] || 0.60);
+  const currentBloom = isWatchPage ? 0.08 : (bloomStrengthMap[fxMode as keyof typeof bloomStrengthMap] || 1.0);
+  const effectiveQuality = isWatchPage ? "minimal" : quality;
 
   return (
     <div 

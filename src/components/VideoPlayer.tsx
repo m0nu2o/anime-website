@@ -27,7 +27,8 @@ import {
   Check,
   PictureInPicture2,
   Gauge,
-  FastForward
+  FastForward,
+  ExternalLink
 } from "lucide-react";
 import styles from "./VideoPlayer.module.css";
 
@@ -239,6 +240,16 @@ export default function VideoPlayer({
 
   // Primary title slug for embedding
   const cleanTitle = animeTitle.replace(/\([^)]*\)/g, "").trim();
+
+  // Retry Stream State & Trigger
+  const [retryKey, setRetryKey] = useState(0);
+  const handleRetryStream = useCallback(() => {
+    setIsLoadingStream(true);
+    setIsBuffering(true);
+    const cacheKey = `${animeId || cleanTitle}_${episodeNumber}`;
+    globalStreamCache.delete(cacheKey);
+    setRetryKey((prev) => prev + 1);
+  }, [animeId, cleanTitle, episodeNumber]);
 
   // Load language preference and volume on mount
   useEffect(() => {
@@ -518,7 +529,7 @@ export default function VideoPlayer({
       isCancelled = true;
       controller.abort();
     };
-  }, [cleanTitle, episodeNumber, isDub, malId, animeId, anilistId]);
+  }, [cleanTitle, episodeNumber, isDub, malId, animeId, anilistId, retryKey]);
 
   // Smart Preload Next Episode metadata in background (loads into instant-access memory cache)
   useEffect(() => {
@@ -1208,8 +1219,8 @@ export default function VideoPlayer({
           </div>
         )}
 
-        {/* Loading Overlay with Spinner — only for native HLS, not embed */}
-        {isBuffering && activeServer === "native_hls" && streamSources.length > 0 && (
+        {/* Buffering Indicator for Native HLS */}
+        {!isLoadingStream && isBuffering && activeServer === "native_hls" && streamSources.length > 0 && (
           <div className={styles.loadingOverlay}>
             <div className={styles.loadingSpinner} />
             <p className={styles.loadingText}>
@@ -1217,15 +1228,22 @@ export default function VideoPlayer({
             </p>
           </div>
         )}
-        {/* Slim loading bar for embed fetch */}
-        {isLoadingStream && activeServer !== "native_hls" && embedUrls.length === 0 && (
-          <div className={styles.loadingOverlay}>
-            <div className={styles.loadingSpinner} />
-            <p className={styles.loadingText}>Finding stream sources...</p>
-          </div>
-        )}
 
-        {activeServer === "native_hls" && streamSources.length > 0 ? (
+        {/* 1. Loading State */}
+        {isLoadingStream ? (
+          <div className={styles.playerLoadingScreen}>
+            <div className={styles.playerLoadingPulseWrap}>
+              <div className={styles.playerLoadingSpinner} />
+              <Play size={20} className={styles.playerLoadingPlayIcon} />
+            </div>
+            <div className={styles.playerLoadingTextWrap}>
+              <h4 className={styles.playerLoadingTitle}>Connecting to Stream Servers</h4>
+              <p className={styles.playerLoadingSubtitle}>
+                Buffering {cleanTitle} • Episode {episodeNumber}
+              </p>
+            </div>
+          </div>
+        ) : activeServer === "native_hls" && streamSources.length > 0 ? (
           <div className={styles.videoWrapper} onClick={togglePlay}>
             <video
               ref={videoRef}
@@ -1243,7 +1261,7 @@ export default function VideoPlayer({
               playsInline
             />
 
-              {/* Center Play Overlay when paused */}
+            {/* Center Play Overlay when paused */}
             {!isPlaying && (
               <div className={styles.centerPlayOverlay}>
                 <div className={styles.playIconPulse}>
@@ -1269,41 +1287,63 @@ export default function VideoPlayer({
             );
           })()
         ) : (
-          <>
-            {/* Streaming State Handling: EXTERNAL_STREAM_AVAILABLE vs NO_VERIFIED_SOURCE */}
-            {!isLoadingStream && filteredEmbeds.length === 0 && streamSources.length === 0 && (
-              <div className={styles.placeholderFrame}>
-                <div className={styles.notice}>
-                  {externalStreamLink ? (
-                    <>
-                      <h3>Watch officially on {externalStreamLink.site}</h3>
-                      <p>
-                        No direct player stream was found for Episode {episodeNumber} on our edge mirrors.
-                        You can stream this episode officially on <strong>{externalStreamLink.site}</strong>.
-                      </p>
-                      <div style={{ marginTop: "16px" }}>
-                        <a
-                          href={externalStreamLink.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={styles.autoplayResumeBtn}
-                          style={{ display: "inline-flex", alignItems: "center", gap: "8px", textDecoration: "none" }}
-                        >
-                          <Film size={16} />
-                          <span>Watch on {externalStreamLink.site}</span>
-                        </a>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <h3>Streaming Unavailable</h3>
-                      <p>No verified stream source was found for this episode. Please check back later.</p>
-                    </>
-                  )}
-                </div>
+          <div className={styles.playerErrorScreen}>
+            <div className={styles.playerErrorCard}>
+              <div className={styles.playerErrorIconWrap}>
+                <AlertCircle size={32} className={styles.playerErrorIcon} />
               </div>
-            )}
-          </>
+              <h3 className={styles.playerErrorTitle}>Playback Source Unavailable</h3>
+              <p className={styles.playerErrorDesc}>
+                {externalStreamLink
+                  ? `No direct stream mirror was found for Episode ${episodeNumber}. You can watch this episode officially on ${externalStreamLink.site}.`
+                  : `We were unable to connect to a streaming server for Episode ${episodeNumber}. The mirror cluster may be temporarily synchronizing or unavailable.`}
+              </p>
+
+              <div className={styles.playerErrorActions}>
+                <button
+                  type="button"
+                  onClick={handleRetryStream}
+                  className={styles.playerRetryBtn}
+                >
+                  <RefreshCw size={15} />
+                  <span>Retry Connection</span>
+                </button>
+
+                {filteredEmbeds.length > 0 && (
+                  <div className={styles.playerAltMirrors}>
+                    <span className={styles.playerAltLabel}>Alternative Servers:</span>
+                    <div className={styles.playerAltPills}>
+                      {filteredEmbeds.map((emb, idx) => (
+                        <button
+                          key={emb.url}
+                          type="button"
+                          onClick={() => {
+                            setActiveServer("gogo_embed");
+                            setActiveEmbedIdx(idx);
+                          }}
+                          className={`${styles.playerAltServerBtn} ${activeEmbedIdx === idx && activeServer === "gogo_embed" ? styles.playerAltServerBtnActive : ""}`}
+                        >
+                          {emb.label || `Server ${idx + 1}`}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {externalStreamLink && (
+                  <a
+                    href={externalStreamLink.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={styles.playerOfficialBtn}
+                  >
+                    <ExternalLink size={15} />
+                    <span>Watch on {externalStreamLink.site}</span>
+                  </a>
+                )}
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Autoplay Blocked Notification Overlay */}

@@ -7,6 +7,7 @@ import {
   Film, 
   Play, 
   Lock, 
+  Check,
   Search, 
   LayoutGrid, 
   List, 
@@ -97,6 +98,30 @@ export default function WatchEpisodeSelector({
   // Search query state
   const [searchQuery, setSearchQuery] = useState("");
   const [jumpEpInput, setJumpEpInput] = useState("");
+
+  // Track watched episodes from local watch history
+  const [watchedEpisodes, setWatchedEpisodes] = useState<Set<number>>(new Set());
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !animeId) return;
+    try {
+      const raw = localStorage.getItem("watchHistory");
+      if (raw) {
+        const history = JSON.parse(raw);
+        const item = history[animeId];
+        if (item && item.episode) {
+          const set = new Set<number>();
+          for (let i = 1; i < item.episode; i++) {
+            set.add(i);
+          }
+          if (item.currentTime && item.duration && item.currentTime / item.duration > 0.8) {
+            set.add(item.episode);
+          }
+          setWatchedEpisodes(set);
+        }
+      }
+    } catch {}
+  }, [animeId, currentEpisodeNumber]);
 
   // Calculate episode statistics
   const releasedEpisodes = useMemo(
@@ -390,6 +415,7 @@ export default function WatchEpisodeSelector({
             const epNum = ep.number ?? 1;
             const isCur = epNum === currentEpisodeNumber;
             const isUpcoming = ep.status === "upcoming";
+            const isWatched = watchedEpisodes.has(epNum);
 
             if (isUpcoming) {
               return (
@@ -409,14 +435,24 @@ export default function WatchEpisodeSelector({
                 key={ep.id}
                 ref={isCur ? activeEpRef : null}
                 href={`/watch/${animeId}/${epNum}${dubQuery}`}
-                className={`${styles.gridChip} ${isCur ? styles.activeGridChip : ""}`}
-                title={ep.title || `Episode ${epNum}`}
+                className={`${styles.gridChip} ${
+                  isCur
+                    ? styles.activeGridChip
+                    : isWatched
+                    ? styles.gridChipWatched
+                    : ""
+                }`}
+                title={ep.title ? `Episode ${epNum}: ${ep.title}${isWatched ? " (Watched)" : ""}` : `Episode ${epNum}${isWatched ? " (Watched)" : ""}`}
               >
-                {isCur && (
+                {isCur ? (
                   <span className={styles.playingDot}>
                     <Play size={10} fill="#fff" />
                   </span>
-                )}
+                ) : isWatched ? (
+                  <span className={styles.watchedDot}>
+                    <Check size={10} className={styles.watchedIcon} />
+                  </span>
+                ) : null}
                 <span>{epNum}</span>
               </Link>
             );
@@ -429,6 +465,7 @@ export default function WatchEpisodeSelector({
             const epNum = ep.number ?? 1;
             const isCur = epNum === currentEpisodeNumber;
             const isUpcoming = ep.status === "upcoming";
+            const isWatched = watchedEpisodes.has(epNum);
 
             if (isUpcoming) {
               return (
@@ -465,7 +502,13 @@ export default function WatchEpisodeSelector({
                 key={ep.id}
                 ref={isCur ? activeEpRef : null}
                 href={`/watch/${animeId}/${epNum}${dubQuery}`}
-                className={`${styles.listCard} ${isCur ? styles.activeListCard : ""}`}
+                className={`${styles.listCard} ${
+                  isCur
+                    ? styles.activeListCard
+                    : isWatched
+                    ? styles.listCardWatched
+                    : ""
+                }`}
               >
                 <div className={styles.listThumbWrap}>
                   <img
@@ -481,9 +524,17 @@ export default function WatchEpisodeSelector({
                   <span className={styles.listEpNumBadge}>EP {epNum}</span>
                 </div>
                 <div className={styles.listDetails}>
-                  <span className={styles.listTitle}>
-                    {ep.title || `Episode ${epNum}`}
-                  </span>
+                  <div className={styles.listHeaderRow}>
+                    <span className={styles.listTitle}>
+                      {ep.title || `Episode ${epNum}`}
+                    </span>
+                    {isWatched && !isCur && (
+                      <span className={styles.watchedBadge}>Watched</span>
+                    )}
+                  </div>
+                  {ep.airdate && (
+                    <span className={styles.listAirdate}>{ep.airdate}</span>
+                  )}
                 </div>
               </Link>
             );
